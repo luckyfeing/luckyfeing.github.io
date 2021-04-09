@@ -31,11 +31,14 @@
 <meta property="og:site_name" content="个人博客">
 <meta property="og:description" content="什么是表分区表分区，是指根据一定规则，将数据库中的一张表分解成多个更小的，容易管理的部分。从逻辑上看，只有一张表，但是底层却是由多个物理分区组成。 表分区与分表的区别分表：指的是通过一定规则，将一张表分解成多张不同的表。比如将用户订单记录根据时间成多个表。 分表与分区的区别在于：分区从逻辑上来讲只有一张表，而分表则是将一张表分解成多张表。 表分区有什么好处1、存储更多数据。分区表的数据可以分布在不">
 <meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/12/24/mysql%E4%B9%8B%E5%88%86%E5%8C%BA%E5%8F%8A%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/%E5%88%86%E8%A1%A8.jpg">
+<meta property="og:image" content="http://example.com/2020/12/24/mysql%E4%B9%8B%E5%88%86%E5%8C%BA%E5%8F%8A%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/%E5%8F%8C%E5%86%99.jpg">
 <meta property="article:published_time" content="2020-12-24T09:23:09.000Z">
-<meta property="article:modified_time" content="2020-12-24T09:31:38.430Z">
+<meta property="article:modified_time" content="2021-04-09T02:04:35.405Z">
 <meta property="article:author" content="灰(｢･ω･)｢嘿灰">
 <meta property="article:tag" content="mysql">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/12/24/mysql%E4%B9%8B%E5%88%86%E5%8C%BA%E5%8F%8A%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/%E5%88%86%E8%A1%A8.jpg">
 
 
 <link rel="canonical" href="http://example.com/2020/12/24/mysql%E4%B9%8B%E5%88%86%E5%8C%BA%E5%8F%8A%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/">
@@ -199,7 +202,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <section class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E8%A1%A8%E5%88%86%E5%8C%BA"><span class="nav-number">1.</span> <span class="nav-text">什么是表分区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%A8%E5%88%86%E5%8C%BA%E4%B8%8E%E5%88%86%E8%A1%A8%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">2.</span> <span class="nav-text">表分区与分表的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%A8%E5%88%86%E5%8C%BA%E6%9C%89%E4%BB%80%E4%B9%88%E5%A5%BD%E5%A4%84"><span class="nav-number">3.</span> <span class="nav-text">表分区有什么好处</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%8C%BA%E8%A1%A8%E7%9A%84%E9%99%90%E5%88%B6%E5%9B%A0%E7%B4%A0"><span class="nav-number">4.</span> <span class="nav-text">分区表的限制因素</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E5%BD%93%E5%89%8DMySQL%E6%98%AF%E5%90%A6%E6%94%AF%E6%8C%81%E5%88%86%E5%8C%BA"><span class="nav-number">5.</span> <span class="nav-text">如何判断当前MySQL是否支持分区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MySQL%E6%94%AF%E6%8C%81%E7%9A%84%E5%88%86%E5%8C%BA%E7%B1%BB%E5%9E%8B%E6%9C%89%E5%93%AA%E4%BA%9B"><span class="nav-number">6.</span> <span class="nav-text">MySQL支持的分区类型有哪些</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9E%82%E7%9B%B4%E6%8B%86%E5%88%86"><span class="nav-number">7.</span> <span class="nav-text">垂直拆分</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B0%B4%E5%B9%B3%E6%8B%86%E5%88%86"><span class="nav-number">8.</span> <span class="nav-text">水平拆分</span></a></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E8%A1%A8%E5%88%86%E5%8C%BA"><span class="nav-number">1.</span> <span class="nav-text">什么是表分区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%A8%E5%88%86%E5%8C%BA%E4%B8%8E%E5%88%86%E8%A1%A8%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">2.</span> <span class="nav-text">表分区与分表的区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%A8%E5%88%86%E5%8C%BA%E6%9C%89%E4%BB%80%E4%B9%88%E5%A5%BD%E5%A4%84"><span class="nav-number">3.</span> <span class="nav-text">表分区有什么好处</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%8C%BA%E8%A1%A8%E7%9A%84%E9%99%90%E5%88%B6%E5%9B%A0%E7%B4%A0"><span class="nav-number">4.</span> <span class="nav-text">分区表的限制因素</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E5%BD%93%E5%89%8DMySQL%E6%98%AF%E5%90%A6%E6%94%AF%E6%8C%81%E5%88%86%E5%8C%BA"><span class="nav-number">5.</span> <span class="nav-text">如何判断当前MySQL是否支持分区</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MySQL%E6%94%AF%E6%8C%81%E7%9A%84%E5%88%86%E5%8C%BA%E7%B1%BB%E5%9E%8B%E6%9C%89%E5%93%AA%E4%BA%9B"><span class="nav-number">6.</span> <span class="nav-text">MySQL支持的分区类型有哪些</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9E%82%E7%9B%B4%E6%8B%86%E5%88%86"><span class="nav-number">7.</span> <span class="nav-text">垂直拆分</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B0%B4%E5%B9%B3%E6%8B%86%E5%88%86"><span class="nav-number">8.</span> <span class="nav-text">水平拆分</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B0%B4%E5%B9%B3%E6%8B%86%E5%88%86%E5%AE%9E%E4%BE%8B"><span class="nav-number">9.</span> <span class="nav-text">水平拆分实例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%94%AF%E4%B8%80%E4%B8%BB%E9%94%AE"><span class="nav-number">9.1.</span> <span class="nav-text">唯一主键</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E8%A1%A8"><span class="nav-number">9.2.</span> <span class="nav-text">分表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#C%E7%AB%AF%E6%9F%A5%E8%AF%A2"><span class="nav-number">9.3.</span> <span class="nav-text">C端查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E7%AB%AF%E6%9F%A5%E8%AF%A2"><span class="nav-number">9.4.</span> <span class="nav-text">其他端查询</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">9.5.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
         </section>
         <!--/noindex-->
 
@@ -213,7 +216,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">106</span>
+          <span class="site-state-item-count">107</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -290,10 +293,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">Posted on</span>
-      
 
-      <time title="Created: 2020-12-24 17:23:09 / Modified: 17:31:38" itemprop="dateCreated datePublished" datetime="2020-12-24T17:23:09+08:00">2020-12-24</time>
+      <time title="Created: 2020-12-24 17:23:09" itemprop="dateCreated datePublished" datetime="2020-12-24T17:23:09+08:00">2020-12-24</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2021-04-09 10:04:35" itemprop="dateModified" datetime="2021-04-09T10:04:35+08:00">2021-04-09</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -340,6 +349,31 @@
 <li>业务拆分</li>
 </ul>
 <h2 id="水平拆分"><a href="#水平拆分" class="headerlink" title="水平拆分"></a>水平拆分</h2><p>分表-》分库</p>
+<h2 id="水平拆分实例"><a href="#水平拆分实例" class="headerlink" title="水平拆分实例"></a>水平拆分实例</h2><p>当业务规模达到一定规模之后，像淘宝日订单量在5000万单以上，美团3000万单以上。数据库面对海量的数据压力，分库分表就是必须进行的操作了。而分库分表之后一些常规的查询可能都会产生问题，最常见的就是比如分页查询的问题。一般我们把分表的字段称作shardingkey，比如订单表按照用户ID作为shardingkey，那么如果查询条件中不带用户ID查询怎么做分页？又比如更多的多维度的查询都没有shardingkey又怎么查询？</p>
+<h3 id="唯一主键"><a href="#唯一主键" class="headerlink" title="唯一主键"></a>唯一主键</h3><p>一般我们数据库的主键都是自增的，那么分表之后主键冲突的问题就是一个无法避免的问题，最简单的办法就是以一个唯一的业务字段作为唯一的主键，比如订单表的订单号肯定是全局唯一的。</p>
+<p>常见的分布式生成唯一ID的方式很多，最常见的雪花算法Snowflake、滴滴Tinyid、美团Leaf。以雪花算法举例来说，一毫秒可以生成4194304多个ID。</p>
+<p>第一位不使用，默认都是0，41位时间戳精确到毫秒，可以容纳69年的时间，10位工作机器ID高5位是数据中心ID，低5位是节点ID，12位序列号每个节点每毫秒累加，累计可以达到2^12 4096个ID。</p>
+<h3 id="分表"><a href="#分表" class="headerlink" title="分表"></a>分表</h3><p>第一步，分表后要怎么保证订单号的唯一搞定了，现在考虑下分表的问题。首先根据自身的业务量和增量来考虑分表的大小。</p>
+<p>举个例子，现在我们日单量是10万单，预估一年后可以达到日100万单，根据业务属性，一般我们就支持查询半年内的订单，超过半年的订单需要做归档处理。</p>
+<p>那么以日订单100万半年的数量级来看，不分表的话我们订单量将达到100万X180=1.8亿，以这个数据量级部分表的话肯定单表是扛不住的，就算你能扛RT的时间你也根本无法接受吧。根据经验单表几百万的数量对于数据库是没什么压力的，那么只要分256张表就足够了，1.8亿/256≈70万，如果为了保险起见，也可以分到512张表。那么考虑一下，如果业务量再增长10倍达到1000万单每天，分表1024就是比较合适的选择。</p>
+<p>通过分表加上超过半年的数据归档之后，单表70万的数据就足以应对大部分场景了。接下来对订单号hash，然后对256取模的就可以落到具体的哪张表了。</p>
+<p><img src="/2020/12/24/mysql%E4%B9%8B%E5%88%86%E5%8C%BA%E5%8F%8A%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/%E5%88%86%E8%A1%A8.jpg" alt="img"></p>
+<p>那么，因为唯一主键都是以订单号作为依据，以前你写的那些根据主键ID做查询的就不能用了，这就涉及到了历史一些查询功能的修改。不过这都不是事儿对吧，都改成以订单号来查就行了。这都不是问题，问题在我们的标题说的点上。</p>
+<h3 id="C端查询"><a href="#C端查询" class="headerlink" title="C端查询"></a>C端查询</h3><p>说了半天，总算到了正题了，那么分表之后查询和分页查询的问题怎么解决？</p>
+<p>首先说带shardingkey的查询，比如就通过订单号查询，不管你分页还是怎么样都是能直接定位到具体的表来查询的，显然查询是不会有什么问题的。</p>
+<p>如果不是shardingkey的话，上面举例说的以订单号作为shardingkey的话，像APP、小程序这种一般都是通过用户ID查询，那这时候我们通过订单号做的sharding怎么办？很多公司订单表直接用用户ID做shardingkey，那么很简单，直接查就完了。那么订单号怎么办，一个很简单的办法就是在订单号上带上用户ID的属性。举个很简单的例子，原本41位的时间戳你觉得用不完，用户ID是10位的，订单号的生成规则带上用户ID，落具体表的时候根据订单号中10位用户ID hash取模，这样无论根据订单号还是用户ID查询效果都是一样的。</p>
+<p>当然，这种方式只是举例，具体的订单号生成的规则，多少位，包含哪些因素根据自己的业务和实现机制来决定。</p>
+<p>好，那么无论你是订单号还是用户ID作为shardingkey，按照以上的两种方式都可以解决问题了。那么还有一个问题就是如果既不是订单号又不是用户ID查询怎么办？最直观的例子就是来自商户端或者后台的查询，商户端都是以商户或者说卖家的ID作为查询条件来查的，后台的查询条件可能就更复杂了，像我碰到的有些后台查询条件能有几十个，这怎么查？？？别急，接下来分开说B端和后台的复杂查询。</p>
+<p>现实中真正的流量大头都是来自于用户端C端，所以本质上解决了用户端的问题，这个问题就解了大半，剩下来自商户卖家端B端、后台支持运营业务的查询流量并不会很大，这个问题就好解。</p>
+<h3 id="其他端查询"><a href="#其他端查询" class="headerlink" title="其他端查询"></a>其他端查询</h3><p>针对B端的非shardingkey的查询有两个办法解决。</p>
+<p>双写，双写就是下单的数据落两份，C端和B端的各自保存一份，C端用你可以用单号、用户ID做shardingkey都行，B端就用商家卖家的ID作为shardingkey就好了。有些同学会说了，你双写不影响性能吗？因为对于B端来说轻微的延迟是可以接受的，所以可以采取异步的方式去落B端订单。你想想你去淘宝买个东西下单了，卖家稍微延迟个一两秒收到这个订单的消息有什么关系吗？你点个外卖商户晚一两秒收到这个订单有什么太大影响吗？</p>
+<p><img src="/2020/12/24/mysql%E4%B9%8B%E5%88%86%E5%8C%BA%E5%8F%8A%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/%E5%8F%8C%E5%86%99.jpg" alt="img"></p>
+<p>这是一个解决方案，另外一个方案就是走离线数仓或者ES查询，订单数据落库之后，不管你通过binlog还是MQ消息的都形式，把数据同步到数仓或者ES，他们支持的数量级对于这种查询条件来说就很简单了。同样这种方式肯定是稍微有延迟的，但是这种可控范围的延迟是可以接受的。</p>
+<p>而针对管理后台的查询，比如运营、业务、产品需要看数据，他们天然需要复杂的查询条件，同样走ES或者数仓都可以做得到。如果不用这个方案，又要不带shardingkey的分页查询，兄弟，这就只能扫全表查询聚合数据，然后手动做分页了，但是这样查出来的结果是有限制的。</p>
+<p>比如你256个片，查询的时候循环扫描所有的分片，每个片取20条数据，最后聚合数据手工分页，那必然是不可能查到全量的数据的。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>分库分表后的查询问题，对于有经验的同学来说其实这个问题都知道，但是我相信其实大部分同学做的业务可能都没来到这个数量级，分库分表可能都停留在概念阶段，面试被问到后就手足无措了，因为没有经验不知道怎么办。</p>
+<p>分库分表首先是基于现有的业务量和未来的增量做出判断，比如拼多多这种日单量5000万的，半年数据得有百亿级别了，那都得分到4096张表了对吧，但是实际的操作是一样的，对于你们的业务分4096那就没有必要了，根据业务做出合理的选择。</p>
+<p>对于基于shardingkey的查询我们可以很简单的解决，对于非shardingkey的查询可以通过落双份数据和数仓、ES的方案来解决，当然，如果分表后数据量很小的话，建好索引，扫全表查询其实也不是什么问题。</p>
 
     </div>
 

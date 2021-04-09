@@ -31,15 +31,15 @@
 <meta property="og:site_name" content="个人博客">
 <meta property="og:description" content="作者：疯狂创客圈出处：https:&#x2F;&#x2F;www.cnblogs.com&#x2F;crazymakercircle&#x2F;p&#x2F;11664812.html Springcloud 高并发 配置 简介在微服务架构的应用中， Feign、Hystrix，Ribbon三者都是必不可少的，可以说已经成为铁三角。 疯狂创客圈（笔者尼恩创建的高并发研习社群）中，有不少小伙伴问到尼恩，关于Feign、Hystrix，Ribbon三">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="https://img-blog.csdnimg.cn/20191012221343851.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2NyYXp5bWFrZXJjaXJjbGU=,size_16,color_FFFFFF,t_70">
+<meta property="og:image" content="http://example.com/2020/11/17/Fegin%E4%B8%8EHystrix%E5%8F%8ARibbon%E5%85%B3%E7%B3%BB/20191012221343851.png">
 <meta property="article:published_time" content="2020-11-17T07:29:59.000Z">
-<meta property="article:modified_time" content="2020-11-17T08:43:35.613Z">
+<meta property="article:modified_time" content="2021-03-26T09:47:52.968Z">
 <meta property="article:author" content="灰(｢･ω･)｢嘿灰">
 <meta property="article:tag" content="Ribbon">
 <meta property="article:tag" content="Fegin">
 <meta property="article:tag" content="Hystrix">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://img-blog.csdnimg.cn/20191012221343851.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2NyYXp5bWFrZXJjaXJjbGU=,size_16,color_FFFFFF,t_70">
+<meta name="twitter:image" content="http://example.com/2020/11/17/Fegin%E4%B8%8EHystrix%E5%8F%8ARibbon%E5%85%B3%E7%B3%BB/20191012221343851.png">
 
 
 <link rel="canonical" href="http://example.com/2020/11/17/Fegin%E4%B8%8EHystrix%E5%8F%8ARibbon%E5%85%B3%E7%B3%BB/">
@@ -217,7 +217,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">106</span>
+          <span class="site-state-item-count">107</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -294,10 +294,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">Posted on</span>
-      
 
-      <time title="Created: 2020-11-17 15:29:59 / Modified: 16:43:35" itemprop="dateCreated datePublished" datetime="2020-11-17T15:29:59+08:00">2020-11-17</time>
+      <time title="Created: 2020-11-17 15:29:59" itemprop="dateCreated datePublished" datetime="2020-11-17T15:29:59+08:00">2020-11-17</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2021-03-26 17:47:52" itemprop="dateModified" datetime="2021-03-26T17:47:52+08:00">2021-03-26</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -339,7 +345,7 @@
 <p>另一方面微服务在互相调用的过程中，为了防止某个微服务的故障消耗掉整个系统所有微服务的连接资源，所以在实施微服务调用的过程中我们会要求在调用方实施针对被调用微服务的熔断逻辑。而要实现这个逻辑场景在Spring Cloud微服务框架下我们是通过Hystrix这个框架来实现的。</p>
 <p>调用方会针对被调用微服务设置调用超时时间，一旦超时就会进入熔断逻辑，而这个故障指标信息也会返回给Hystrix组件，Hystrix组件会根据熔断情况判断被调微服务的故障情况从而打开熔断器，之后所有针对该微服务的请求就会直接进入熔断逻辑，直到被调微服务故障恢复，Hystrix断路器关闭为止。</p>
 <p>三者之间的关系图，大致如下：</p>
-<p><a target="_blank" rel="noopener" href="https://img-blog.csdnimg.cn/20191012221343851.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2NyYXp5bWFrZXJjaXJjbGU=,size_16,color_FFFFFF,t_70"><img src="https://img-blog.csdnimg.cn/20191012221343851.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L2NyYXp5bWFrZXJjaXJjbGU=,size_16,color_FFFFFF,t_70" alt="在这里插入图片描述"></a></p>
+<p><img src="/2020/11/17/Fegin%E4%B8%8EHystrix%E5%8F%8ARibbon%E5%85%B3%E7%B3%BB/20191012221343851.png" alt="在这里插入图片描述"></p>
 <h3 id="Feign典型配置说明"><a href="#Feign典型配置说明" class="headerlink" title="Feign典型配置说明"></a>Feign典型配置说明</h3><p>Feign自身可以支持多种HttpClient工具包，例如OkHttp及Apache HttpClient，针对Apache HttpClient的典型配置如下：</p>
 <figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">feign:</span></span><br><span class="line">  <span class="comment">#替换掉JDK默认HttpURLConnection实现的 Http Client</span></span><br><span class="line">  <span class="attr">httpclient:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">hystrix:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">client:</span></span><br><span class="line">    <span class="attr">config:</span></span><br><span class="line">      <span class="attr">default:</span></span><br><span class="line">       <span class="comment">#连接超时时间</span></span><br><span class="line">        <span class="attr">connectTimeout:</span> <span class="number">5000</span></span><br><span class="line">       <span class="comment">#读取超时时间</span></span><br><span class="line">        <span class="attr">readTimeout:</span> <span class="number">5000</span></span><br></pre></td></tr></table></figure>
 

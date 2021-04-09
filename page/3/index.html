@@ -209,7 +209,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">106</span>
+          <span class="site-state-item-count">107</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -254,6 +254,386 @@
       
 
       
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/15/nacos%E7%9B%91%E6%8E%A7/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/" class="post-title-link" itemprop="url">nacos监控</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+      
+
+      <time title="Created: 2021-01-15 13:53:07 / Modified: 13:59:14" itemprop="dateCreated datePublished" datetime="2021-01-15T13:53:07+08:00">2021-01-15</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>Nacos 0.8.0版本完善了监控系统，支持通过暴露metrics数据接入第三方监控系统监控Nacos运行状态，目前支持prometheus、elastic search和influxdb，下面结合prometheus和grafana如何监控Nacos，官网<a target="_blank" rel="noopener" href="http://monitor.nacos.io/">grafana监控页面</a>。与elastic search和influxdb结合可自己查找相关资料</p>
+<h2 id="搭建Nacos集群暴露metrics数据"><a href="#搭建Nacos集群暴露metrics数据" class="headerlink" title="搭建Nacos集群暴露metrics数据"></a>搭建Nacos集群暴露metrics数据</h2><p>按照<a target="_blank" rel="noopener" href="https://nacos.io/zh-cn/docs/deployment.html">部署文档</a>搭建好Nacos集群</p>
+<p>配置application.properties文件，暴露metrics数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">management.endpoints.web.exposure.include&#x3D;*</span><br></pre></td></tr></table></figure>
+
+<p>访问{ip}:8848/nacos/actuator/prometheus，看是否能访问到metrics数据</p>
+<h2 id="搭建prometheus采集Nacos-metrics数据"><a href="#搭建prometheus采集Nacos-metrics数据" class="headerlink" title="搭建prometheus采集Nacos metrics数据"></a>搭建prometheus采集Nacos metrics数据</h2><p>下载你想安装的prometheus版本，地址为<a target="_blank" rel="noopener" href="https://prometheus.io/download/">download prometheus</a></p>
+<h3 id="linux-amp-mac"><a href="#linux-amp-mac" class="headerlink" title="linux &amp; mac"></a>linux &amp; mac</h3><p>解压prometheus压缩包</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">tar xvfz prometheus-*.tar.gz</span><br><span class="line">cd prometheus-*</span><br></pre></td></tr></table></figure>
+
+<p>修改配置文件prometheus.yml采集Nacos metrics数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">metrics_path: &#39;&#x2F;nacos&#x2F;actuator&#x2F;prometheus&#39;</span><br><span class="line">static_configs:</span><br><span class="line">  - targets: [&#39;&#123;ip1&#125;:8848&#39;,&#39;&#123;ip2&#125;:8848&#39;,&#39;&#123;ip3&#125;:8848&#39;]</span><br></pre></td></tr></table></figure>
+
+<p>启动prometheus服务</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;prometheus --config.file&#x3D;&quot;prometheus.yml&quot;</span><br></pre></td></tr></table></figure>
+
+<h3 id="windows"><a href="#windows" class="headerlink" title="windows"></a>windows</h3><p>下载对应的windows版本并解压</p>
+<p>修改配置文件prometheus.yml采集Nacos metrics数据</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">metrics_path: &#39;&#x2F;nacos&#x2F;actuator&#x2F;prometheus&#39;</span><br><span class="line">static_configs:</span><br><span class="line">  - targets: [&#39;&#123;ip1&#125;:8848&#39;,&#39;&#123;ip2&#125;:8848&#39;,&#39;&#123;ip3&#125;:8848&#39;]</span><br></pre></td></tr></table></figure>
+
+<p>启动prometheus服务</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">prometheus.exe --config.file&#x3D;prometheus.yml</span><br></pre></td></tr></table></figure>
+
+<p>通过访问http://{ip}:9090/graph可以看到prometheus的采集数据，在搜索栏搜索nacos_monitor可以搜索到Nacos数据说明采集数据成功 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1LThVCQvoK1RjSZFwXXciCFXa-2832-1576.png" alt="IMAGE"></p>
+<h2 id="搭建grafana图形化展示metrics数据"><a href="#搭建grafana图形化展示metrics数据" class="headerlink" title="搭建grafana图形化展示metrics数据"></a>搭建grafana图形化展示metrics数据</h2><p>和prometheus在同一台机器上安装grafana，使用 yum 安装grafana</p>
+<h3 id="mac"><a href="#mac" class="headerlink" title="mac"></a>mac</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">brew install grafana</span><br><span class="line">brew services start grafana</span><br></pre></td></tr></table></figure>
+
+<h3 id="linux"><a href="#linux" class="headerlink" title="linux"></a>linux</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo yum install https:&#x2F;&#x2F;s3-us-west-2.amazonaws.com&#x2F;grafana-releases&#x2F;release&#x2F;grafana-5.2.4-1.x86_64.rpm</span><br><span class="line">sudo service grafana-server start</span><br></pre></td></tr></table></figure>
+
+<h3 id="windows-1"><a href="#windows-1" class="headerlink" title="windows"></a>windows</h3><p>参考文档：<a target="_blank" rel="noopener" href="http://docs.grafana.org/installation/windows/">http://docs.grafana.org/installation/windows/</a></p>
+<p>访问grafana: http://{ip}:3000</p>
+<p>配置prometheus数据源 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1bTafCOLaK1RjSZFxXXamPFXa-2832-1568.png" alt="IMAGE"></p>
+<p>导入Nacos grafana监控<a target="_blank" rel="noopener" href="https://github.com/nacos-group/nacos-template/blob/master/nacos-grafana.json">模版</a> <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1JadVCPDpK1RjSZFrXXa78VXa-2742-1338.png" alt="IMAGE"></p>
+<p>Nacos监控分为三个模块:</p>
+<ul>
+<li>nacos monitor展示核心监控项 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1PMpUCQvoK1RjSZFDXXXY3pXa-2832-1584.png" alt="IMAGE"></li>
+<li>nacos detail展示指标的变化曲线 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1ZBF4CNjaK1RjSZFAXXbdLFXa-2742-1480.png" alt="IMAGE"></li>
+<li>nacos alert为告警项 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1ALlUCFzqK1RjSZFCXXbbxVXa-2742-1476.png" alt="IMAGE"></li>
+</ul>
+<h2 id="配置grafana告警"><a href="#配置grafana告警" class="headerlink" title="配置grafana告警"></a>配置grafana告警</h2><p>当Nacos运行出现问题时，需要grafana告警通知相关负责人。grafana支持多种告警方式，常用的有邮件，钉钉和webhook方式</p>
+<h3 id="钉钉告警"><a href="#钉钉告警" class="headerlink" title="钉钉告警"></a>钉钉告警</h3><p>钉钉可以通过配置钉钉机器人 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1eJ0RCSzqK1RjSZFjXXblCFXa-2742-1482.png" alt="IMAGE"></p>
+<p>配置钉钉通知url <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1ERtQCSzqK1RjSZFjXXblCFXa-2832-1578.png" alt="IMAGE"></p>
+<p>测试告警项 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1KvXPCHPpK1RjSZFFXXa5PpXa-996-504.png" alt="IMAGE"></p>
+<h3 id="邮件告警"><a href="#邮件告警" class="headerlink" title="邮件告警"></a>邮件告警</h3><p>修改defaults.ini配置文件，增加邮件告警</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">#################################### SMTP &#x2F; Emailing ##########################</span><br><span class="line">[smtp]</span><br><span class="line">enabled &#x3D; true</span><br><span class="line">host &#x3D; smtp.126.com:25</span><br><span class="line">user &#x3D; xxxxxx</span><br><span class="line">password &#x3D; xxxxx</span><br><span class="line">;cert_file &#x3D;</span><br><span class="line">;key_file &#x3D;</span><br><span class="line">skip_verify &#x3D; true</span><br><span class="line">from_address &#x3D; xxxxxx@126.com</span><br><span class="line"></span><br><span class="line">[emails]</span><br><span class="line">;welcome_email_on_sign_up &#x3D; false</span><br></pre></td></tr></table></figure>
+
+<p>配置通知邮箱 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB12qyhCNnaK1RjSZFtXXbC2VXa-2832-1576.png" alt="IMAGE"></p>
+<h2 id="Nacos-metrics含义"><a href="#Nacos-metrics含义" class="headerlink" title="Nacos metrics含义"></a>Nacos metrics含义</h2><h3 id="jvm-metrics"><a href="#jvm-metrics" class="headerlink" title="jvm metrics"></a>jvm metrics</h3><table>
+<thead>
+<tr>
+<th>指标</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>system_cpu_usage</td>
+<td>CPU使用率</td>
+</tr>
+<tr>
+<td>system_load_average_1m</td>
+<td>load</td>
+</tr>
+<tr>
+<td>jvm_memory_used_bytes</td>
+<td>内存使用字节，包含各种内存区</td>
+</tr>
+<tr>
+<td>jvm_memory_max_bytes</td>
+<td>内存最大字节，包含各种内存区</td>
+</tr>
+<tr>
+<td>jvm_gc_pause_seconds_count</td>
+<td>gc次数，包含各种gc</td>
+</tr>
+<tr>
+<td>jvm_gc_pause_seconds_sum</td>
+<td>gc耗时，包含各种gc</td>
+</tr>
+<tr>
+<td>jvm_threads_daemon</td>
+<td>线程数</td>
+</tr>
+</tbody></table>
+<h3 id="Nacos-监控指标"><a href="#Nacos-监控指标" class="headerlink" title="Nacos 监控指标"></a>Nacos 监控指标</h3><table>
+<thead>
+<tr>
+<th>指标</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>http_server_requests_seconds_count</td>
+<td>http请求次数，包括多种(url,方法,code)</td>
+</tr>
+<tr>
+<td>http_server_requests_seconds_sum</td>
+<td>http请求总耗时，包括多种(url,方法,code)</td>
+</tr>
+<tr>
+<td>nacos_timer_seconds_sum</td>
+<td>Nacos config水平通知耗时</td>
+</tr>
+<tr>
+<td>nacos_timer_seconds_count</td>
+<td>Nacos config水平通知次数</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’longPolling’}</td>
+<td>Nacos config长连接数</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’configCount’}</td>
+<td>Nacos config配置个数</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’dumpTask’}</td>
+<td>Nacos config配置落盘任务堆积数</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’notifyTask’}</td>
+<td>Nacos config配置水平通知任务堆积数</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’getConfig’}</td>
+<td>Nacos config读配置统计数</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’publish’}</td>
+<td>Nacos config写配置统计数</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’ipCount’}</td>
+<td>Nacos naming ip个数</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’domCount’}</td>
+<td>Nacos naming域名个数</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’failedPush’}</td>
+<td>Nacos naming推送失败数</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’avgPushCost’}</td>
+<td>Nacos naming平均推送耗时</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’leaderStatus’}</td>
+<td>Nacos naming角色状态</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’maxPushCost’}</td>
+<td>Nacos naming最大推送耗时</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’mysqlhealthCheck’}</td>
+<td>Nacos naming mysql健康检查次数</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’httpHealthCheck’}</td>
+<td>Nacos naming http健康检查次数</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’tcpHealthCheck’}</td>
+<td>Nacos naming tcp健康检查次数</td>
+</tr>
+</tbody></table>
+<h3 id="nacos-异常指标"><a href="#nacos-异常指标" class="headerlink" title="nacos 异常指标"></a>nacos 异常指标</h3><table>
+<thead>
+<tr>
+<th>指标</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>nacos_exception_total{name=’db’}</td>
+<td>数据库异常</td>
+</tr>
+<tr>
+<td>nacos_exception_total{name=’configNotify’}</td>
+<td>Nacos config水平通知失败</td>
+</tr>
+<tr>
+<td>nacos_exception_total{name=’unhealth’}</td>
+<td>Nacos config server之间健康检查异常</td>
+</tr>
+<tr>
+<td>nacos_exception_total{name=’disk’}</td>
+<td>Nacos naming写磁盘异常</td>
+</tr>
+<tr>
+<td>nacos_exception_total{name=’leaderSendBeatFailed’}</td>
+<td>Nacos naming leader发送心跳异常</td>
+</tr>
+<tr>
+<td>nacos_exception_total{name=’illegalArgument’}</td>
+<td>请求参数不合法</td>
+</tr>
+<tr>
+<td>nacos_exception_total{name=’nacos’}</td>
+<td>Nacos请求响应内部错误异常（读写失败，没权限，参数错误）</td>
+</tr>
+</tbody></table>
+<h3 id="client-metrics"><a href="#client-metrics" class="headerlink" title="client metrics"></a>client metrics</h3><table>
+<thead>
+<tr>
+<th>指标</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>nacos_monitor{name=’subServiceCount’}</td>
+<td>订阅的服务数</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’pubServiceCount’}</td>
+<td>发布的服务数</td>
+</tr>
+<tr>
+<td>nacos_monitor{name=’configListenSize’}</td>
+<td>监听的配置数</td>
+</tr>
+<tr>
+<td>nacos_client_request_seconds_count</td>
+<td>请求的次数，包括多种(url,方法,code)</td>
+</tr>
+<tr>
+<td>nacos_client_request_seconds_sum</td>
+<td>请求的总耗时，包括多种(url,方法,code)</td>
+</tr>
+</tbody></table>
+<h2 id="Nacos-Sync监控"><a href="#Nacos-Sync监控" class="headerlink" title="Nacos-Sync监控"></a>Nacos-Sync监控</h2><p>随着Nacos 0.9版本发布，Nacos-Sync 0.3版本支持了metrics监控，能通过metrics数据观察Nacos-Sync服务的运行状态，提升了Nacos-Sync的在生产环境的监控能力。 整体的监控体系的搭建参考<a target="_blank" rel="noopener" href="https://nacos.io/zh-cn/docs/monitor-guide.html">Nacos监控手册</a></p>
+<h2 id="grafana监控Nacos-Sync"><a href="#grafana监控Nacos-Sync" class="headerlink" title="grafana监控Nacos-Sync"></a>grafana监控Nacos-Sync</h2><p>和Nacos监控一样，Nacos-Sync也提供了监控模版，导入监控<a target="_blank" rel="noopener" href="https://github.com/nacos-group/nacos-template/blob/master/nacos-sync-grafana">模版</a></p>
+<p>Nacos-Sync监控同样也分为三个模块:</p>
+<ul>
+<li>nacos-sync monitor展示核心监控项 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1GeNWKmzqK1RjSZFHXXb3CpXa-2834-1588.png" alt="monitor"></li>
+<li>nacos-sync detail和alert展示监控曲线和告警 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1kP8UKbvpK1RjSZPiXXbmwXXa-2834-1570.png" alt="detail"></li>
+</ul>
+<h2 id="Nacos-Sync-metrics含义"><a href="#Nacos-Sync-metrics含义" class="headerlink" title="Nacos-Sync metrics含义"></a>Nacos-Sync metrics含义</h2><p>Nacos-Sync的metrics分为jvm层和应用层</p>
+<h3 id="jvm-metrics-1"><a href="#jvm-metrics-1" class="headerlink" title="jvm metrics"></a>jvm metrics</h3><table>
+<thead>
+<tr>
+<th>指标</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>system_cpu_usage</td>
+<td>CPU使用率</td>
+</tr>
+<tr>
+<td>system_load_average_1m</td>
+<td>load</td>
+</tr>
+<tr>
+<td>jvm_memory_used_bytes</td>
+<td>内存使用字节，包含各种内存区</td>
+</tr>
+<tr>
+<td>jvm_memory_max_bytes</td>
+<td>内存最大字节，包含各种内存区</td>
+</tr>
+<tr>
+<td>jvm_gc_pause_seconds_count</td>
+<td>gc次数，包含各种gc</td>
+</tr>
+<tr>
+<td>jvm_gc_pause_seconds_sum</td>
+<td>gc耗时，包含各种gc</td>
+</tr>
+<tr>
+<td>jvm_threads_daemon</td>
+<td>线程数</td>
+</tr>
+</tbody></table>
+<h2 id="应用层-metrics"><a href="#应用层-metrics" class="headerlink" title="应用层 metrics"></a>应用层 metrics</h2><table>
+<thead>
+<tr>
+<th>指标</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>nacosSync_task_size</td>
+<td>同步任务数</td>
+</tr>
+<tr>
+<td>nacosSync_cluster_size</td>
+<td>集群数</td>
+</tr>
+<tr>
+<td>nacosSync_add_task_rt</td>
+<td>同步任务执行耗时</td>
+</tr>
+<tr>
+<td>nacosSync_delete_task_rt</td>
+<td>删除任务耗时</td>
+</tr>
+<tr>
+<td>nacosSync_dispatcher_task</td>
+<td>从数据库中分发任务</td>
+</tr>
+<tr>
+<td>nacosSync_sync_task_error</td>
+<td>所有同步执行时的异常</td>
+</tr>
+</tbody></table>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
     
 
 
@@ -895,10 +1275,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">Posted on</span>
-      
 
-      <time title="Created: 2020-12-24 17:23:09 / Modified: 17:31:38" itemprop="dateCreated datePublished" datetime="2020-12-24T17:23:09+08:00">2020-12-24</time>
+      <time title="Created: 2020-12-24 17:23:09" itemprop="dateCreated datePublished" datetime="2020-12-24T17:23:09+08:00">2020-12-24</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2021-04-09 10:04:35" itemprop="dateModified" datetime="2021-04-09T10:04:35+08:00">2021-04-09</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -945,6 +1331,31 @@
 <li>业务拆分</li>
 </ul>
 <h2 id="水平拆分"><a href="#水平拆分" class="headerlink" title="水平拆分"></a>水平拆分</h2><p>分表-》分库</p>
+<h2 id="水平拆分实例"><a href="#水平拆分实例" class="headerlink" title="水平拆分实例"></a>水平拆分实例</h2><p>当业务规模达到一定规模之后，像淘宝日订单量在5000万单以上，美团3000万单以上。数据库面对海量的数据压力，分库分表就是必须进行的操作了。而分库分表之后一些常规的查询可能都会产生问题，最常见的就是比如分页查询的问题。一般我们把分表的字段称作shardingkey，比如订单表按照用户ID作为shardingkey，那么如果查询条件中不带用户ID查询怎么做分页？又比如更多的多维度的查询都没有shardingkey又怎么查询？</p>
+<h3 id="唯一主键"><a href="#唯一主键" class="headerlink" title="唯一主键"></a>唯一主键</h3><p>一般我们数据库的主键都是自增的，那么分表之后主键冲突的问题就是一个无法避免的问题，最简单的办法就是以一个唯一的业务字段作为唯一的主键，比如订单表的订单号肯定是全局唯一的。</p>
+<p>常见的分布式生成唯一ID的方式很多，最常见的雪花算法Snowflake、滴滴Tinyid、美团Leaf。以雪花算法举例来说，一毫秒可以生成4194304多个ID。</p>
+<p>第一位不使用，默认都是0，41位时间戳精确到毫秒，可以容纳69年的时间，10位工作机器ID高5位是数据中心ID，低5位是节点ID，12位序列号每个节点每毫秒累加，累计可以达到2^12 4096个ID。</p>
+<h3 id="分表"><a href="#分表" class="headerlink" title="分表"></a>分表</h3><p>第一步，分表后要怎么保证订单号的唯一搞定了，现在考虑下分表的问题。首先根据自身的业务量和增量来考虑分表的大小。</p>
+<p>举个例子，现在我们日单量是10万单，预估一年后可以达到日100万单，根据业务属性，一般我们就支持查询半年内的订单，超过半年的订单需要做归档处理。</p>
+<p>那么以日订单100万半年的数量级来看，不分表的话我们订单量将达到100万X180=1.8亿，以这个数据量级部分表的话肯定单表是扛不住的，就算你能扛RT的时间你也根本无法接受吧。根据经验单表几百万的数量对于数据库是没什么压力的，那么只要分256张表就足够了，1.8亿/256≈70万，如果为了保险起见，也可以分到512张表。那么考虑一下，如果业务量再增长10倍达到1000万单每天，分表1024就是比较合适的选择。</p>
+<p>通过分表加上超过半年的数据归档之后，单表70万的数据就足以应对大部分场景了。接下来对订单号hash，然后对256取模的就可以落到具体的哪张表了。</p>
+<p><img src="/2020/12/24/mysql%E4%B9%8B%E5%88%86%E5%8C%BA%E5%8F%8A%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/%E5%88%86%E8%A1%A8.jpg" alt="img"></p>
+<p>那么，因为唯一主键都是以订单号作为依据，以前你写的那些根据主键ID做查询的就不能用了，这就涉及到了历史一些查询功能的修改。不过这都不是事儿对吧，都改成以订单号来查就行了。这都不是问题，问题在我们的标题说的点上。</p>
+<h3 id="C端查询"><a href="#C端查询" class="headerlink" title="C端查询"></a>C端查询</h3><p>说了半天，总算到了正题了，那么分表之后查询和分页查询的问题怎么解决？</p>
+<p>首先说带shardingkey的查询，比如就通过订单号查询，不管你分页还是怎么样都是能直接定位到具体的表来查询的，显然查询是不会有什么问题的。</p>
+<p>如果不是shardingkey的话，上面举例说的以订单号作为shardingkey的话，像APP、小程序这种一般都是通过用户ID查询，那这时候我们通过订单号做的sharding怎么办？很多公司订单表直接用用户ID做shardingkey，那么很简单，直接查就完了。那么订单号怎么办，一个很简单的办法就是在订单号上带上用户ID的属性。举个很简单的例子，原本41位的时间戳你觉得用不完，用户ID是10位的，订单号的生成规则带上用户ID，落具体表的时候根据订单号中10位用户ID hash取模，这样无论根据订单号还是用户ID查询效果都是一样的。</p>
+<p>当然，这种方式只是举例，具体的订单号生成的规则，多少位，包含哪些因素根据自己的业务和实现机制来决定。</p>
+<p>好，那么无论你是订单号还是用户ID作为shardingkey，按照以上的两种方式都可以解决问题了。那么还有一个问题就是如果既不是订单号又不是用户ID查询怎么办？最直观的例子就是来自商户端或者后台的查询，商户端都是以商户或者说卖家的ID作为查询条件来查的，后台的查询条件可能就更复杂了，像我碰到的有些后台查询条件能有几十个，这怎么查？？？别急，接下来分开说B端和后台的复杂查询。</p>
+<p>现实中真正的流量大头都是来自于用户端C端，所以本质上解决了用户端的问题，这个问题就解了大半，剩下来自商户卖家端B端、后台支持运营业务的查询流量并不会很大，这个问题就好解。</p>
+<h3 id="其他端查询"><a href="#其他端查询" class="headerlink" title="其他端查询"></a>其他端查询</h3><p>针对B端的非shardingkey的查询有两个办法解决。</p>
+<p>双写，双写就是下单的数据落两份，C端和B端的各自保存一份，C端用你可以用单号、用户ID做shardingkey都行，B端就用商家卖家的ID作为shardingkey就好了。有些同学会说了，你双写不影响性能吗？因为对于B端来说轻微的延迟是可以接受的，所以可以采取异步的方式去落B端订单。你想想你去淘宝买个东西下单了，卖家稍微延迟个一两秒收到这个订单的消息有什么关系吗？你点个外卖商户晚一两秒收到这个订单有什么太大影响吗？</p>
+<p><img src="/2020/12/24/mysql%E4%B9%8B%E5%88%86%E5%8C%BA%E5%8F%8A%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/%E5%8F%8C%E5%86%99.jpg" alt="img"></p>
+<p>这是一个解决方案，另外一个方案就是走离线数仓或者ES查询，订单数据落库之后，不管你通过binlog还是MQ消息的都形式，把数据同步到数仓或者ES，他们支持的数量级对于这种查询条件来说就很简单了。同样这种方式肯定是稍微有延迟的，但是这种可控范围的延迟是可以接受的。</p>
+<p>而针对管理后台的查询，比如运营、业务、产品需要看数据，他们天然需要复杂的查询条件，同样走ES或者数仓都可以做得到。如果不用这个方案，又要不带shardingkey的分页查询，兄弟，这就只能扫全表查询聚合数据，然后手动做分页了，但是这样查出来的结果是有限制的。</p>
+<p>比如你256个片，查询的时候循环扫描所有的分片，每个片取20条数据，最后聚合数据手工分页，那必然是不可能查到全量的数据的。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>分库分表后的查询问题，对于有经验的同学来说其实这个问题都知道，但是我相信其实大部分同学做的业务可能都没来到这个数量级，分库分表可能都停留在概念阶段，面试被问到后就手足无措了，因为没有经验不知道怎么办。</p>
+<p>分库分表首先是基于现有的业务量和未来的增量做出判断，比如拼多多这种日单量5000万的，半年数据得有百亿级别了，那都得分到4096张表了对吧，但是实际的操作是一样的，对于你们的业务分4096那就没有必要了，根据业务做出合理的选择。</p>
+<p>对于基于shardingkey的查询我们可以很简单的解决，对于非shardingkey的查询可以通过落双份数据和数仓、ES的方案来解决，当然，如果分表后数据量很小的话，建好索引，扫全表查询其实也不是什么问题。</p>
 
       
     </div>
@@ -1419,79 +1830,6 @@
 <h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/cjsblog/p/10752245.html">https://www.cnblogs.com/cjsblog/p/10752245.html</a></p>
 <p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s?__biz=MzkzNTEwOTAxMA==&mid=2247488185&idx=1&sn=f07ee035bc8c276e4d72b4ffb9627e1e&chksm=c2b25a44f5c5d3523985e4161e42ae0d1b4c8273915760d3ec53afbbd5fe0066178d5ade1673&scene=132#wechat_redirect">缓存一致性问题怎么解决</a></p>
 
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/23/Redis%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
-      <meta itemprop="description" content="学习还是需要记录">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="个人博客">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2020/12/23/Redis%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" class="post-title-link" itemprop="url">Redis之数据结构</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-      
-
-      <time title="Created: 2020-12-23 13:21:05 / Modified: 13:30:58" itemprop="dateCreated datePublished" datetime="2020-12-23T13:21:05+08:00">2020-12-23</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          
       
     </div>
 

@@ -209,7 +209,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">106</span>
+          <span class="site-state-item-count">107</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -254,6 +254,79 @@
       
 
       
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/02/26/mysql%E6%8E%8C%E6%8F%A1%E7%82%B9/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/02/26/mysql%E6%8E%8C%E6%8F%A1%E7%82%B9/" class="post-title-link" itemprop="url">mysql掌握点</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+      
+
+      <time title="Created: 2021-02-26 10:37:26 / Modified: 10:46:58" itemprop="dateCreated datePublished" datetime="2021-02-26T10:37:26+08:00">2021-02-26</time>
+    </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
     
 
 
@@ -672,10 +745,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">Posted on</span>
-      
 
-      <time title="Created: 2021-02-07 14:07:13 / Modified: 14:12:03" itemprop="dateCreated datePublished" datetime="2021-02-07T14:07:13+08:00">2021-02-07</time>
+      <time title="Created: 2021-02-07 14:07:13" itemprop="dateCreated datePublished" datetime="2021-02-07T14:07:13+08:00">2021-02-07</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2021-03-26 14:08:25" itemprop="dateModified" datetime="2021-03-26T14:08:25+08:00">2021-03-26</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -698,7 +777,7 @@
     <div class="post-body" itemprop="articleBody">
           <h2 id="Spring容器启动"><a href="#Spring容器启动" class="headerlink" title="Spring容器启动"></a>Spring容器启动</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">AnnotationConfigApplicationContext</span><span class="params">(Class&lt;?&gt;... annotatedClasses)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 会初始化一个BeanFactory,为默认的DefaultListableBeanFactory</span></span><br><span class="line">    <span class="comment">// 会初始化一个beanDefinition的读取器，同时向容器中注册了7个spring的后置处理器(包括BeanPostProcessor和BeanFactoryPostProcessor)</span></span><br><span class="line">    <span class="comment">// 会初始化一个扫描器，后面似乎并没有用到这个扫描器，在refresh()中使用的是重新new的一个扫描器。</span></span><br><span class="line">    <span class="keyword">this</span>();</span><br><span class="line">    <span class="comment">// 将配置类注册进BeanDefinitionMap中</span></span><br><span class="line">    <span class="comment">//将传入的配置类annotatedClasses解析成BeanDefinition(实际类型为AnnotatedGenericBeanDefinition)，然后放入到BeanDefinitionMap中，这样后面在ConfigurationClassPostProcessor中能解析annotatedClasses，例如demo中的AppConfig类，只有解析了AppConfig类，才能知道Spring要扫描哪些包(因为在AppConfig类中添加了@ComponentScan注解)，只有知道要扫描哪些包了，才能扫描出需要交给Spring管理的bean有哪些，这样才能利用Spring来创建bean。</span></span><br><span class="line">    register(annotatedClasses);</span><br><span class="line">    refresh();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h2 id="spring容器刷新"><a href="#spring容器刷新" class="headerlink" title="spring容器刷新"></a>spring容器刷新</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"> <span class="number">1</span><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">refresh</span><span class="params">()</span> <span class="keyword">throws</span> BeansException, IllegalStateException </span>&#123;</span><br><span class="line"> <span class="number">2</span>    <span class="keyword">synchronized</span> (<span class="keyword">this</span>.startupShutdownMonitor) &#123;</span><br><span class="line"> <span class="number">3</span>        <span class="comment">// Prepare this context for refreshing.</span></span><br><span class="line"> <span class="number">4</span>        <span class="comment">// 初始化属性配置文件、检验必须属性以及监听器</span></span><br><span class="line"> <span class="number">5</span>        prepareRefresh();</span><br><span class="line"> <span class="number">6</span>        <span class="comment">// Tell the subclass to refresh the internal bean factory.</span></span><br><span class="line"> <span class="number">7</span>        <span class="comment">// 给beanFactory设置序列化id</span></span><br><span class="line"> <span class="number">8</span>        ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();</span><br><span class="line"> <span class="number">9</span>        <span class="comment">// 向beanFactory中注册了两个BeanPostProcessor,以及三个和环境相关的bean</span></span><br><span class="line"><span class="number">10</span>        <span class="comment">// 这两个后置处理器为ApplicationContextAwareProcessor和ApplicationListenerDetector</span></span><br><span class="line"><span class="number">11</span>        <span class="comment">// 前一个后置处理是为实现了ApplicationContextAware接口的类，回调setApplicationContext()方法，</span></span><br><span class="line"><span class="number">12</span>        <span class="comment">// 后一个处理器时用来检测ApplicationListener类的，当某个Bean实现了ApplicationListener接口的bean被创建好后，会被加入到监听器列表中</span></span><br><span class="line"><span class="number">13</span>        prepareBeanFactory(beanFactory);</span><br><span class="line"><span class="number">14</span>        <span class="keyword">try</span> &#123;</span><br><span class="line"><span class="number">15</span>            <span class="comment">// Allows post-processing of the bean factory in context subclasses.</span></span><br><span class="line"><span class="number">16</span>            <span class="comment">// 空方法，由子类实现</span></span><br><span class="line"><span class="number">17</span>            postProcessBeanFactory(beanFactory);</span><br><span class="line"><span class="number">18</span>            <span class="comment">// 执行所有的BeanFactoryPostProcessor，包括自定义的，以及spring内置的。默认情况下，容器中只有一个BeanFactoryPostProcessor,即：Spring内置的，ConfigurationClassPostProcessor(这个类很重要)</span></span><br><span class="line"><span class="number">19</span>            <span class="comment">// 会先执行实现了BeanDefinitionRegistryPostProcessor接口的类，然后执行BeanFactoryPostProcessor的类</span></span><br><span class="line"><span class="number">20</span>            <span class="comment">// ConfigurationClassPostProcessor类的postProcessorBeanFactory()方法进行了@Configuration类的解析，@ComponentScan的扫描，以及@Import注解的处理</span></span><br><span class="line"><span class="number">21</span>            <span class="comment">// 经过这一步以后,会将所有交由spring管理的bean所对应的BeanDefinition放入到beanFactory的beanDefinitionMap中</span></span><br><span class="line"><span class="number">22</span>            <span class="comment">// 同时ConfigurationClassPostProcessor类的postProcessorBeanFactory()方法执行完后，向容器中添加了一个后置处理器————ImportAwareBeanPostProcessor</span></span><br><span class="line"><span class="number">23</span>            invokeBeanFactoryPostProcessors(beanFactory);</span><br><span class="line"><span class="number">24</span>            <span class="comment">// 注册所有的BeanPostProcessor，因为在方法里面调用了getBean()方法，所以在这一步，实际上已经将所有的BeanPostProcessor实例化了</span></span><br><span class="line"><span class="number">25</span>            <span class="comment">// 为什么要在这一步就将BeanPostProcessor实例化呢？因为后面要实例化bean，而BeanPostProcessor是用来干预bean的创建过程的，所以必须在bean实例化之前就实例化所有的BeanPostProcessor(包括开发人员自己定义的)</span></span><br><span class="line"><span class="number">26</span>            <span class="comment">// 最后再重新注册了ApplicationListenerDetector，这样做的目的是为了将ApplicationListenerDetector放入到后置处理器的最末端</span></span><br><span class="line"><span class="number">27</span>            registerBeanPostProcessors(beanFactory);</span><br><span class="line"><span class="number">28</span>            <span class="comment">// Initialize message source for this context.</span></span><br><span class="line"><span class="number">29</span>           <span class="comment">// 初始化MessageSource，用来做消息国际化。在一般项目中不会用到消息国际化</span></span><br><span class="line"><span class="number">30</span>            initMessageSource();</span><br><span class="line"><span class="number">31</span>            <span class="comment">// Initialize event multicaster for this context.</span></span><br><span class="line"><span class="number">32</span>            <span class="comment">// 初始化事件广播器，如果容器中存在了名字为applicationEventMulticaster的广播器，则使用该广播器</span></span><br><span class="line"><span class="number">33</span>            <span class="comment">// 如果没有，则初始化一个SimpleApplicationEventMulticaster</span></span><br><span class="line"><span class="number">34</span>            <span class="comment">// 事件广播器的用途是，发布事件，并且为所发布的时间找到对应的事件监听器。</span></span><br><span class="line"><span class="number">35</span>            initApplicationEventMulticaster();</span><br><span class="line"><span class="number">36</span></span><br><span class="line"><span class="number">37</span>            <span class="comment">// Initialize other special beans in specific context subclasses.</span></span><br><span class="line"><span class="number">38</span>            <span class="comment">// 执行其他的初始化操作，例如和SpringMVC整合时，需要初始化一些其他的bean，但是对于纯spring工程来说，onFresh方法是一个空方法</span></span><br><span class="line"><span class="number">39</span>            onRefresh();</span><br><span class="line"><span class="number">40</span></span><br><span class="line"><span class="number">41</span>            <span class="comment">// Check for listener beans and register them.</span></span><br><span class="line"><span class="number">42</span>            <span class="comment">// 这一步会将自定义的listener的bean名称放入到事件广播器中</span></span><br><span class="line"><span class="number">43</span>            <span class="comment">// 同时还会将早期的ApplicationEvent发布(对于单独的spring工程来说，在此时不会有任何ApplicationEvent发布，但是和springMVC整合时，springMVC会执行onRefresh()方法，在这里会发布事件)</span></span><br><span class="line"><span class="number">44</span>            registerListeners();</span><br><span class="line"><span class="number">45</span>            <span class="comment">// 实例化剩余的非懒加载的单例bean(注意：剩余、非懒加载、单例)</span></span><br><span class="line"><span class="number">46</span>            <span class="comment">// 为什么说是剩余呢？如果开发人员自定义了BeanPosrProcessor，而BeanPostProcessor在前面已经实例化了，所以在这里不会再实例化，因此这里使用剩余一词</span></span><br><span class="line"><span class="number">47</span>            finishBeanFactoryInitialization(beanFactory);</span><br><span class="line"><span class="number">48</span>            <span class="comment">// 结束refresh，主要干了一件事，就是发布一个事件ContextRefreshEvent，通知大家spring容器refresh结束了。</span></span><br><span class="line"><span class="number">49</span>            finishRefresh();</span><br><span class="line"><span class="number">50</span>        &#125;</span><br><span class="line"><span class="number">51</span>        <span class="keyword">catch</span> (BeansException ex) &#123;</span><br><span class="line"><span class="number">52</span>            <span class="comment">// 出异常后销毁bean</span></span><br><span class="line"><span class="number">53</span>            destroyBeans();</span><br><span class="line"><span class="number">54</span>            <span class="comment">// Reset &#x27;active&#x27; flag.</span></span><br><span class="line"><span class="number">55</span>            cancelRefresh(ex);</span><br><span class="line"><span class="number">56</span>            <span class="comment">// Propagate exception to caller.</span></span><br><span class="line"><span class="number">57</span>            <span class="keyword">throw</span> ex;</span><br><span class="line"><span class="number">58</span>        &#125;</span><br><span class="line"><span class="number">59</span>        <span class="keyword">finally</span> &#123;</span><br><span class="line"><span class="number">60</span>           <span class="comment">// 在bean的实例化过程中，会缓存很多信息，例如bean的注解信息，但是当单例bean实例化完成后，这些缓存信息已经不会再使用了，所以可以释放这些内存资源了</span></span><br><span class="line"><span class="number">61</span>            resetCommonCaches();</span><br><span class="line"><span class="number">62</span>        &#125;</span><br><span class="line"><span class="number">63</span>    &#125;</span><br><span class="line"><span class="number">64</span>&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="spring容器刷新"><a href="#spring容器刷新" class="headerlink" title="spring容器刷新"></a>spring容器刷新</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br></pre></td><td class="code"><pre><span class="line"> <span class="number">1</span><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">refresh</span><span class="params">()</span> <span class="keyword">throws</span> BeansException, IllegalStateException </span>&#123;</span><br><span class="line"> <span class="number">2</span>    <span class="keyword">synchronized</span> (<span class="keyword">this</span>.startupShutdownMonitor) &#123;</span><br><span class="line"> <span class="number">3</span>        <span class="comment">// Prepare this context for refreshing.</span></span><br><span class="line"> <span class="number">4</span>        <span class="comment">// 初始化属性配置文件、检验必须属性以及监听器</span></span><br><span class="line"> <span class="number">5</span>        prepareRefresh();</span><br><span class="line"> <span class="number">6</span>        <span class="comment">// Tell the subclass to refresh the internal bean factory.</span></span><br><span class="line"> <span class="number">7</span>        <span class="comment">// 给beanFactory设置序列化id</span></span><br><span class="line"> <span class="number">8</span>        ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();</span><br><span class="line"> <span class="number">9</span>        <span class="comment">// 向beanFactory中注册了两个BeanPostProcessor,以及三个和环境相关的bean</span></span><br><span class="line"><span class="number">10</span>        <span class="comment">// 这两个后置处理器为ApplicationContextAwareProcessor和ApplicationListenerDetector</span></span><br><span class="line"><span class="number">11</span>        <span class="comment">// 前一个后置处理是为实现了ApplicationContextAware接口的类，回调setApplicationContext()方法，</span></span><br><span class="line"><span class="number">12</span>        <span class="comment">// 后一个处理器时用来检测ApplicationListener类的，当某个Bean实现了ApplicationListener接口的bean被创建好后，会被加入到监听器列表中</span></span><br><span class="line"><span class="number">13</span>        prepareBeanFactory(beanFactory);</span><br><span class="line"><span class="number">14</span>        <span class="keyword">try</span> &#123;</span><br><span class="line"><span class="number">15</span>            <span class="comment">// Allows post-processing of the bean factory in context subclasses.</span></span><br><span class="line"><span class="number">16</span>            <span class="comment">// 空方法，由子类实现</span></span><br><span class="line"><span class="number">17</span>            postProcessBeanFactory(beanFactory);</span><br><span class="line"><span class="number">18</span>            <span class="comment">// 执行所有的BeanFactoryPostProcessor，包括自定义的，以及spring内置的。默认情况下，容器中只有一个BeanFactoryPostProcessor,即：Spring内置的，ConfigurationClassPostProcessor(这个类很重要)</span></span><br><span class="line"><span class="number">19</span>            <span class="comment">// 会先执行实现了BeanDefinitionRegistryPostProcessor接口的类，然后执行BeanFactoryPostProcessor的类</span></span><br><span class="line"><span class="number">20</span>            <span class="comment">// ConfigurationClassPostProcessor类的postProcessBeanFactory()方法进行了@Configuration类的解析，@ComponentScan的扫描，以及@Import注解的处理</span></span><br><span class="line"><span class="number">21</span>            <span class="comment">// 经过这一步以后,会将所有交由spring管理的bean所对应的BeanDefinition放入到beanFactory的beanDefinitionMap中</span></span><br><span class="line"><span class="number">22</span>            <span class="comment">// 同时ConfigurationClassPostProcessor类的postProcessBeanFactory()方法执行完后，向容器中添加了一个后置处理器————ImportAwareBeanPostProcessor</span></span><br><span class="line"><span class="number">23</span>            invokeBeanFactoryPostProcessors(beanFactory);</span><br><span class="line"><span class="number">24</span>            <span class="comment">// 注册所有的BeanPostProcessor，因为在方法里面调用了getBean()方法，所以在这一步，实际上已经将所有的BeanPostProcessor实例化了</span></span><br><span class="line"><span class="number">25</span>            <span class="comment">// 为什么要在这一步就将BeanPostProcessor实例化呢？因为后面要实例化bean，而BeanPostProcessor是用来干预bean的创建过程的，所以必须在bean实例化之前就实例化所有的BeanPostProcessor(包括开发人员自己定义的)</span></span><br><span class="line"><span class="number">26</span>            <span class="comment">// 最后再重新注册了ApplicationListenerDetector，这样做的目的是为了将ApplicationListenerDetector放入到后置处理器的最末端</span></span><br><span class="line"><span class="number">27</span>            registerBeanPostProcessors(beanFactory);</span><br><span class="line"><span class="number">28</span>            <span class="comment">// Initialize message source for this context.</span></span><br><span class="line"><span class="number">29</span>           <span class="comment">// 初始化MessageSource，用来做消息国际化。在一般项目中不会用到消息国际化</span></span><br><span class="line"><span class="number">30</span>            initMessageSource();</span><br><span class="line"><span class="number">31</span>            <span class="comment">// Initialize event multicaster for this context.</span></span><br><span class="line"><span class="number">32</span>            <span class="comment">// 初始化事件广播器，如果容器中存在了名字为applicationEventMulticaster的广播器，则使用该广播器</span></span><br><span class="line"><span class="number">33</span>            <span class="comment">// 如果没有，则初始化一个SimpleApplicationEventMulticaster</span></span><br><span class="line"><span class="number">34</span>            <span class="comment">// 事件广播器的用途是，发布事件，并且为所发布的时间找到对应的事件监听器。</span></span><br><span class="line"><span class="number">35</span>            initApplicationEventMulticaster();</span><br><span class="line"><span class="number">36</span></span><br><span class="line"><span class="number">37</span>            <span class="comment">// Initialize other special beans in specific context subclasses.</span></span><br><span class="line"><span class="number">38</span>            <span class="comment">// 执行其他的初始化操作，例如和SpringMVC整合时，需要初始化一些其他的bean，但是对于纯spring工程来说，onFresh方法是一个空方法</span></span><br><span class="line"><span class="number">39</span>            onRefresh();</span><br><span class="line"><span class="number">40</span></span><br><span class="line"><span class="number">41</span>            <span class="comment">// Check for listener beans and register them.</span></span><br><span class="line"><span class="number">42</span>            <span class="comment">// 这一步会将自定义的listener的bean名称放入到事件广播器中</span></span><br><span class="line"><span class="number">43</span>            <span class="comment">// 同时还会将早期的ApplicationEvent发布(对于单独的spring工程来说，在此时不会有任何ApplicationEvent发布，但是和springMVC整合时，springMVC会执行onRefresh()方法，在这里会发布事件)</span></span><br><span class="line"><span class="number">44</span>            registerListeners();</span><br><span class="line"><span class="number">45</span>            <span class="comment">// 实例化剩余的非懒加载的单例bean(注意：剩余、非懒加载、单例)</span></span><br><span class="line"><span class="number">46</span>            <span class="comment">// 为什么说是剩余呢？如果开发人员自定义了BeanPosrProcessor，而BeanPostProcessor在前面已经实例化了，所以在这里不会再实例化，因此这里使用剩余一词</span></span><br><span class="line"><span class="number">47</span>            finishBeanFactoryInitialization(beanFactory);</span><br><span class="line"><span class="number">48</span>            <span class="comment">// 结束refresh，主要干了一件事，就是发布一个事件ContextRefreshEvent，通知大家spring容器refresh结束了。</span></span><br><span class="line"><span class="number">49</span>            finishRefresh();</span><br><span class="line"><span class="number">50</span>        &#125;</span><br><span class="line"><span class="number">51</span>        <span class="keyword">catch</span> (BeansException ex) &#123;</span><br><span class="line"><span class="number">52</span>            <span class="comment">// 出异常后销毁bean</span></span><br><span class="line"><span class="number">53</span>            destroyBeans();</span><br><span class="line"><span class="number">54</span>            <span class="comment">// Reset &#x27;active&#x27; flag.</span></span><br><span class="line"><span class="number">55</span>            cancelRefresh(ex);</span><br><span class="line"><span class="number">56</span>            <span class="comment">// Propagate exception to caller.</span></span><br><span class="line"><span class="number">57</span>            <span class="keyword">throw</span> ex;</span><br><span class="line"><span class="number">58</span>        &#125;</span><br><span class="line"><span class="number">59</span>        <span class="keyword">finally</span> &#123;</span><br><span class="line"><span class="number">60</span>           <span class="comment">// 在bean的实例化过程中，会缓存很多信息，例如bean的注解信息，但是当单例bean实例化完成后，这些缓存信息已经不会再使用了，所以可以释放这些内存资源了</span></span><br><span class="line"><span class="number">61</span>            resetCommonCaches();</span><br><span class="line"><span class="number">62</span>        &#125;</span><br><span class="line"><span class="number">63</span>    &#125;</span><br><span class="line"><span class="number">64</span>&#125;</span><br></pre></td></tr></table></figure>
 
 <h2 id="三级缓存"><a href="#三级缓存" class="headerlink" title="三级缓存"></a>三级缓存</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//1.beanName先从map中获取</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Object&gt; singletonObjects = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;(<span class="number">256</span>);</span><br><span class="line"><span class="comment">//2.判断beanName是否在singletonsCurrentlyInCreation中</span></span><br><span class="line"><span class="comment">/** Names of beans that are currently in creation. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Set&lt;String&gt; singletonsCurrentlyInCreation = Collections.newSetFromMap(<span class="keyword">new</span> ConcurrentHashMap&lt;&gt;(<span class="number">16</span>));</span><br><span class="line"><span class="comment">//3.如果存在singletonsCurrentlyInCreation中，则从earlySingletonObjects中获取，</span></span><br><span class="line"><span class="comment">/** Cache of early singleton objects: bean name to bean instance. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, Object&gt; earlySingletonObjects = <span class="keyword">new</span> HashMap&lt;&gt;(<span class="number">16</span>);</span><br><span class="line"><span class="comment">//4. 如果为空，从singletonFactories中获取ObjectFactory，如果singletonFactory不为空，获取bean</span></span><br><span class="line"><span class="comment">// 存入earlySingletonObjects中，删除singletonFactories中的beanName</span></span><br><span class="line"><span class="comment">/** Cache of singleton factories: bean name to ObjectFactory. */</span></span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> Map&lt;String, ObjectFactory&lt;?&gt;&gt; singletonFactories = <span class="keyword">new</span> HashMap&lt;&gt;(<span class="number">16</span>);</span><br></pre></td></tr></table></figure>
 
@@ -740,6 +819,10 @@
 <h3 id="AOP通知"><a href="#AOP通知" class="headerlink" title="AOP通知"></a>AOP通知</h3><p>前置通知：org.springframework.aop.MethodBeforeAdvice<br>后置通知：org.springframework.aop.AfterReturningAdvice<br>环绕通知：org.aopalliance.intercept.MethodInterceptor<br>异常通知：org.springframework.aop.ThrowsAdvice</p>
 <p>[<a target="_blank" rel="noopener" href="https://www.cnblogs.com/chaoesha/p/13037368.html">面试官：什么是AOP？Spring AOP和AspectJ的区别是什么？</a></p>
 <p><img src="/2021/02/07/spring%E7%9A%84bean%E5%8A%A0%E8%BD%BD%E5%8F%8A%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/20160113113029764" alt="img"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> Object <span class="title">wrapIfNecessary</span><span class="params">(Object bean, String beanName, Object cacheKey)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (StringUtils.hasLength(beanName) &amp;&amp; <span class="keyword">this</span>.targetSourcedBeans.contains(beanName)) &#123;</span><br><span class="line">        <span class="keyword">return</span> bean;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (Boolean.FALSE.equals(<span class="keyword">this</span>.advisedBeans.get(cacheKey))) &#123;</span><br><span class="line">        <span class="keyword">return</span> bean;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (isInfrastructureClass(bean.getClass()) || shouldSkip(bean.getClass(), beanName)) &#123;</span><br><span class="line">        <span class="keyword">this</span>.advisedBeans.put(cacheKey, Boolean.FALSE);</span><br><span class="line">        <span class="keyword">return</span> bean;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Create proxy if we have advice.</span></span><br><span class="line">    Object[] specificInterceptors = getAdvicesAndAdvisorsForBean(bean.getClass(), beanName, <span class="keyword">null</span>);</span><br><span class="line">    <span class="keyword">if</span> (specificInterceptors != DO_NOT_PROXY) &#123;</span><br><span class="line">        <span class="keyword">this</span>.advisedBeans.put(cacheKey, Boolean.TRUE);</span><br><span class="line">        Object proxy = createProxy(</span><br><span class="line">            bean.getClass(), beanName, specificInterceptors, <span class="keyword">new</span> SingletonTargetSource(bean));</span><br><span class="line">        <span class="keyword">this</span>.proxyTypes.put(cacheKey, proxy.getClass());</span><br><span class="line">        <span class="keyword">return</span> proxy;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">this</span>.advisedBeans.put(cacheKey, Boolean.FALSE);</span><br><span class="line">    <span class="keyword">return</span> bean;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
 <h2 id="工具类"><a href="#工具类" class="headerlink" title="工具类"></a>工具类</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//属性占位符工具类</span></span><br><span class="line">PropertyPlaceholderHelper</span><br><span class="line"><span class="comment">//资源工具类</span></span><br><span class="line">ResourceUtils</span><br><span class="line"><span class="comment">//注解</span></span><br><span class="line">AnnotationAttributes extends LinkedHashMap&lt;String, Object&gt;</span><br><span class="line"><span class="comment">//</span></span><br><span class="line">ClassUtils</span><br><span class="line"><span class="comment">//</span></span><br><span class="line">WebApplicationContextUtils</span><br><span class="line"><span class="comment">//</span></span><br><span class="line">AnnotatedElementUtils</span><br><span class="line"><span class="comment">//</span></span><br><span class="line">AnnotationUtils</span><br></pre></td></tr></table></figure>
 
 
@@ -1392,386 +1475,6 @@ AdvisorAdapterRegistry registry = GlobalAdvisorAdapterRegistry.getInstance();
 <p><strong>执行mvn命令生成数据库文档</strong></p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mvn clean package screw:run</span><br></pre></td></tr></table></figure>
 
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
-    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/15/nacos%E7%9B%91%E6%8E%A7/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.gif">
-      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
-      <meta itemprop="description" content="学习还是需要记录">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="个人博客">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/" class="post-title-link" itemprop="url">nacos监控</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">Posted on</span>
-      
-
-      <time title="Created: 2021-01-15 13:53:07 / Modified: 13:59:14" itemprop="dateCreated datePublished" datetime="2021-01-15T13:53:07+08:00">2021-01-15</time>
-    </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">In</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
-        </span>
-    </span>
-
-  
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <p>Nacos 0.8.0版本完善了监控系统，支持通过暴露metrics数据接入第三方监控系统监控Nacos运行状态，目前支持prometheus、elastic search和influxdb，下面结合prometheus和grafana如何监控Nacos，官网<a target="_blank" rel="noopener" href="http://monitor.nacos.io/">grafana监控页面</a>。与elastic search和influxdb结合可自己查找相关资料</p>
-<h2 id="搭建Nacos集群暴露metrics数据"><a href="#搭建Nacos集群暴露metrics数据" class="headerlink" title="搭建Nacos集群暴露metrics数据"></a>搭建Nacos集群暴露metrics数据</h2><p>按照<a target="_blank" rel="noopener" href="https://nacos.io/zh-cn/docs/deployment.html">部署文档</a>搭建好Nacos集群</p>
-<p>配置application.properties文件，暴露metrics数据</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">management.endpoints.web.exposure.include&#x3D;*</span><br></pre></td></tr></table></figure>
-
-<p>访问{ip}:8848/nacos/actuator/prometheus，看是否能访问到metrics数据</p>
-<h2 id="搭建prometheus采集Nacos-metrics数据"><a href="#搭建prometheus采集Nacos-metrics数据" class="headerlink" title="搭建prometheus采集Nacos metrics数据"></a>搭建prometheus采集Nacos metrics数据</h2><p>下载你想安装的prometheus版本，地址为<a target="_blank" rel="noopener" href="https://prometheus.io/download/">download prometheus</a></p>
-<h3 id="linux-amp-mac"><a href="#linux-amp-mac" class="headerlink" title="linux &amp; mac"></a>linux &amp; mac</h3><p>解压prometheus压缩包</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">tar xvfz prometheus-*.tar.gz</span><br><span class="line">cd prometheus-*</span><br></pre></td></tr></table></figure>
-
-<p>修改配置文件prometheus.yml采集Nacos metrics数据</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">metrics_path: &#39;&#x2F;nacos&#x2F;actuator&#x2F;prometheus&#39;</span><br><span class="line">static_configs:</span><br><span class="line">  - targets: [&#39;&#123;ip1&#125;:8848&#39;,&#39;&#123;ip2&#125;:8848&#39;,&#39;&#123;ip3&#125;:8848&#39;]</span><br></pre></td></tr></table></figure>
-
-<p>启动prometheus服务</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">.&#x2F;prometheus --config.file&#x3D;&quot;prometheus.yml&quot;</span><br></pre></td></tr></table></figure>
-
-<h3 id="windows"><a href="#windows" class="headerlink" title="windows"></a>windows</h3><p>下载对应的windows版本并解压</p>
-<p>修改配置文件prometheus.yml采集Nacos metrics数据</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">metrics_path: &#39;&#x2F;nacos&#x2F;actuator&#x2F;prometheus&#39;</span><br><span class="line">static_configs:</span><br><span class="line">  - targets: [&#39;&#123;ip1&#125;:8848&#39;,&#39;&#123;ip2&#125;:8848&#39;,&#39;&#123;ip3&#125;:8848&#39;]</span><br></pre></td></tr></table></figure>
-
-<p>启动prometheus服务</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">prometheus.exe --config.file&#x3D;prometheus.yml</span><br></pre></td></tr></table></figure>
-
-<p>通过访问http://{ip}:9090/graph可以看到prometheus的采集数据，在搜索栏搜索nacos_monitor可以搜索到Nacos数据说明采集数据成功 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1LThVCQvoK1RjSZFwXXciCFXa-2832-1576.png" alt="IMAGE"></p>
-<h2 id="搭建grafana图形化展示metrics数据"><a href="#搭建grafana图形化展示metrics数据" class="headerlink" title="搭建grafana图形化展示metrics数据"></a>搭建grafana图形化展示metrics数据</h2><p>和prometheus在同一台机器上安装grafana，使用 yum 安装grafana</p>
-<h3 id="mac"><a href="#mac" class="headerlink" title="mac"></a>mac</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">brew install grafana</span><br><span class="line">brew services start grafana</span><br></pre></td></tr></table></figure>
-
-<h3 id="linux"><a href="#linux" class="headerlink" title="linux"></a>linux</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">sudo yum install https:&#x2F;&#x2F;s3-us-west-2.amazonaws.com&#x2F;grafana-releases&#x2F;release&#x2F;grafana-5.2.4-1.x86_64.rpm</span><br><span class="line">sudo service grafana-server start</span><br></pre></td></tr></table></figure>
-
-<h3 id="windows-1"><a href="#windows-1" class="headerlink" title="windows"></a>windows</h3><p>参考文档：<a target="_blank" rel="noopener" href="http://docs.grafana.org/installation/windows/">http://docs.grafana.org/installation/windows/</a></p>
-<p>访问grafana: http://{ip}:3000</p>
-<p>配置prometheus数据源 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1bTafCOLaK1RjSZFxXXamPFXa-2832-1568.png" alt="IMAGE"></p>
-<p>导入Nacos grafana监控<a target="_blank" rel="noopener" href="https://github.com/nacos-group/nacos-template/blob/master/nacos-grafana.json">模版</a> <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1JadVCPDpK1RjSZFrXXa78VXa-2742-1338.png" alt="IMAGE"></p>
-<p>Nacos监控分为三个模块:</p>
-<ul>
-<li>nacos monitor展示核心监控项 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1PMpUCQvoK1RjSZFDXXXY3pXa-2832-1584.png" alt="IMAGE"></li>
-<li>nacos detail展示指标的变化曲线 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1ZBF4CNjaK1RjSZFAXXbdLFXa-2742-1480.png" alt="IMAGE"></li>
-<li>nacos alert为告警项 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1ALlUCFzqK1RjSZFCXXbbxVXa-2742-1476.png" alt="IMAGE"></li>
-</ul>
-<h2 id="配置grafana告警"><a href="#配置grafana告警" class="headerlink" title="配置grafana告警"></a>配置grafana告警</h2><p>当Nacos运行出现问题时，需要grafana告警通知相关负责人。grafana支持多种告警方式，常用的有邮件，钉钉和webhook方式</p>
-<h3 id="钉钉告警"><a href="#钉钉告警" class="headerlink" title="钉钉告警"></a>钉钉告警</h3><p>钉钉可以通过配置钉钉机器人 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1eJ0RCSzqK1RjSZFjXXblCFXa-2742-1482.png" alt="IMAGE"></p>
-<p>配置钉钉通知url <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1ERtQCSzqK1RjSZFjXXblCFXa-2832-1578.png" alt="IMAGE"></p>
-<p>测试告警项 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1KvXPCHPpK1RjSZFFXXa5PpXa-996-504.png" alt="IMAGE"></p>
-<h3 id="邮件告警"><a href="#邮件告警" class="headerlink" title="邮件告警"></a>邮件告警</h3><p>修改defaults.ini配置文件，增加邮件告警</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">#################################### SMTP &#x2F; Emailing ##########################</span><br><span class="line">[smtp]</span><br><span class="line">enabled &#x3D; true</span><br><span class="line">host &#x3D; smtp.126.com:25</span><br><span class="line">user &#x3D; xxxxxx</span><br><span class="line">password &#x3D; xxxxx</span><br><span class="line">;cert_file &#x3D;</span><br><span class="line">;key_file &#x3D;</span><br><span class="line">skip_verify &#x3D; true</span><br><span class="line">from_address &#x3D; xxxxxx@126.com</span><br><span class="line"></span><br><span class="line">[emails]</span><br><span class="line">;welcome_email_on_sign_up &#x3D; false</span><br></pre></td></tr></table></figure>
-
-<p>配置通知邮箱 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB12qyhCNnaK1RjSZFtXXbC2VXa-2832-1576.png" alt="IMAGE"></p>
-<h2 id="Nacos-metrics含义"><a href="#Nacos-metrics含义" class="headerlink" title="Nacos metrics含义"></a>Nacos metrics含义</h2><h3 id="jvm-metrics"><a href="#jvm-metrics" class="headerlink" title="jvm metrics"></a>jvm metrics</h3><table>
-<thead>
-<tr>
-<th>指标</th>
-<th>含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>system_cpu_usage</td>
-<td>CPU使用率</td>
-</tr>
-<tr>
-<td>system_load_average_1m</td>
-<td>load</td>
-</tr>
-<tr>
-<td>jvm_memory_used_bytes</td>
-<td>内存使用字节，包含各种内存区</td>
-</tr>
-<tr>
-<td>jvm_memory_max_bytes</td>
-<td>内存最大字节，包含各种内存区</td>
-</tr>
-<tr>
-<td>jvm_gc_pause_seconds_count</td>
-<td>gc次数，包含各种gc</td>
-</tr>
-<tr>
-<td>jvm_gc_pause_seconds_sum</td>
-<td>gc耗时，包含各种gc</td>
-</tr>
-<tr>
-<td>jvm_threads_daemon</td>
-<td>线程数</td>
-</tr>
-</tbody></table>
-<h3 id="Nacos-监控指标"><a href="#Nacos-监控指标" class="headerlink" title="Nacos 监控指标"></a>Nacos 监控指标</h3><table>
-<thead>
-<tr>
-<th>指标</th>
-<th>含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>http_server_requests_seconds_count</td>
-<td>http请求次数，包括多种(url,方法,code)</td>
-</tr>
-<tr>
-<td>http_server_requests_seconds_sum</td>
-<td>http请求总耗时，包括多种(url,方法,code)</td>
-</tr>
-<tr>
-<td>nacos_timer_seconds_sum</td>
-<td>Nacos config水平通知耗时</td>
-</tr>
-<tr>
-<td>nacos_timer_seconds_count</td>
-<td>Nacos config水平通知次数</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’longPolling’}</td>
-<td>Nacos config长连接数</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’configCount’}</td>
-<td>Nacos config配置个数</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’dumpTask’}</td>
-<td>Nacos config配置落盘任务堆积数</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’notifyTask’}</td>
-<td>Nacos config配置水平通知任务堆积数</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’getConfig’}</td>
-<td>Nacos config读配置统计数</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’publish’}</td>
-<td>Nacos config写配置统计数</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’ipCount’}</td>
-<td>Nacos naming ip个数</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’domCount’}</td>
-<td>Nacos naming域名个数</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’failedPush’}</td>
-<td>Nacos naming推送失败数</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’avgPushCost’}</td>
-<td>Nacos naming平均推送耗时</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’leaderStatus’}</td>
-<td>Nacos naming角色状态</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’maxPushCost’}</td>
-<td>Nacos naming最大推送耗时</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’mysqlhealthCheck’}</td>
-<td>Nacos naming mysql健康检查次数</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’httpHealthCheck’}</td>
-<td>Nacos naming http健康检查次数</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’tcpHealthCheck’}</td>
-<td>Nacos naming tcp健康检查次数</td>
-</tr>
-</tbody></table>
-<h3 id="nacos-异常指标"><a href="#nacos-异常指标" class="headerlink" title="nacos 异常指标"></a>nacos 异常指标</h3><table>
-<thead>
-<tr>
-<th>指标</th>
-<th>含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>nacos_exception_total{name=’db’}</td>
-<td>数据库异常</td>
-</tr>
-<tr>
-<td>nacos_exception_total{name=’configNotify’}</td>
-<td>Nacos config水平通知失败</td>
-</tr>
-<tr>
-<td>nacos_exception_total{name=’unhealth’}</td>
-<td>Nacos config server之间健康检查异常</td>
-</tr>
-<tr>
-<td>nacos_exception_total{name=’disk’}</td>
-<td>Nacos naming写磁盘异常</td>
-</tr>
-<tr>
-<td>nacos_exception_total{name=’leaderSendBeatFailed’}</td>
-<td>Nacos naming leader发送心跳异常</td>
-</tr>
-<tr>
-<td>nacos_exception_total{name=’illegalArgument’}</td>
-<td>请求参数不合法</td>
-</tr>
-<tr>
-<td>nacos_exception_total{name=’nacos’}</td>
-<td>Nacos请求响应内部错误异常（读写失败，没权限，参数错误）</td>
-</tr>
-</tbody></table>
-<h3 id="client-metrics"><a href="#client-metrics" class="headerlink" title="client metrics"></a>client metrics</h3><table>
-<thead>
-<tr>
-<th>指标</th>
-<th>含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>nacos_monitor{name=’subServiceCount’}</td>
-<td>订阅的服务数</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’pubServiceCount’}</td>
-<td>发布的服务数</td>
-</tr>
-<tr>
-<td>nacos_monitor{name=’configListenSize’}</td>
-<td>监听的配置数</td>
-</tr>
-<tr>
-<td>nacos_client_request_seconds_count</td>
-<td>请求的次数，包括多种(url,方法,code)</td>
-</tr>
-<tr>
-<td>nacos_client_request_seconds_sum</td>
-<td>请求的总耗时，包括多种(url,方法,code)</td>
-</tr>
-</tbody></table>
-<h2 id="Nacos-Sync监控"><a href="#Nacos-Sync监控" class="headerlink" title="Nacos-Sync监控"></a>Nacos-Sync监控</h2><p>随着Nacos 0.9版本发布，Nacos-Sync 0.3版本支持了metrics监控，能通过metrics数据观察Nacos-Sync服务的运行状态，提升了Nacos-Sync的在生产环境的监控能力。 整体的监控体系的搭建参考<a target="_blank" rel="noopener" href="https://nacos.io/zh-cn/docs/monitor-guide.html">Nacos监控手册</a></p>
-<h2 id="grafana监控Nacos-Sync"><a href="#grafana监控Nacos-Sync" class="headerlink" title="grafana监控Nacos-Sync"></a>grafana监控Nacos-Sync</h2><p>和Nacos监控一样，Nacos-Sync也提供了监控模版，导入监控<a target="_blank" rel="noopener" href="https://github.com/nacos-group/nacos-template/blob/master/nacos-sync-grafana">模版</a></p>
-<p>Nacos-Sync监控同样也分为三个模块:</p>
-<ul>
-<li>nacos-sync monitor展示核心监控项 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1GeNWKmzqK1RjSZFHXXb3CpXa-2834-1588.png" alt="monitor"></li>
-<li>nacos-sync detail和alert展示监控曲线和告警 <img src="/2021/01/15/nacos%E7%9B%91%E6%8E%A7/TB1kP8UKbvpK1RjSZPiXXbmwXXa-2834-1570.png" alt="detail"></li>
-</ul>
-<h2 id="Nacos-Sync-metrics含义"><a href="#Nacos-Sync-metrics含义" class="headerlink" title="Nacos-Sync metrics含义"></a>Nacos-Sync metrics含义</h2><p>Nacos-Sync的metrics分为jvm层和应用层</p>
-<h3 id="jvm-metrics-1"><a href="#jvm-metrics-1" class="headerlink" title="jvm metrics"></a>jvm metrics</h3><table>
-<thead>
-<tr>
-<th>指标</th>
-<th>含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>system_cpu_usage</td>
-<td>CPU使用率</td>
-</tr>
-<tr>
-<td>system_load_average_1m</td>
-<td>load</td>
-</tr>
-<tr>
-<td>jvm_memory_used_bytes</td>
-<td>内存使用字节，包含各种内存区</td>
-</tr>
-<tr>
-<td>jvm_memory_max_bytes</td>
-<td>内存最大字节，包含各种内存区</td>
-</tr>
-<tr>
-<td>jvm_gc_pause_seconds_count</td>
-<td>gc次数，包含各种gc</td>
-</tr>
-<tr>
-<td>jvm_gc_pause_seconds_sum</td>
-<td>gc耗时，包含各种gc</td>
-</tr>
-<tr>
-<td>jvm_threads_daemon</td>
-<td>线程数</td>
-</tr>
-</tbody></table>
-<h2 id="应用层-metrics"><a href="#应用层-metrics" class="headerlink" title="应用层 metrics"></a>应用层 metrics</h2><table>
-<thead>
-<tr>
-<th>指标</th>
-<th>含义</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>nacosSync_task_size</td>
-<td>同步任务数</td>
-</tr>
-<tr>
-<td>nacosSync_cluster_size</td>
-<td>集群数</td>
-</tr>
-<tr>
-<td>nacosSync_add_task_rt</td>
-<td>同步任务执行耗时</td>
-</tr>
-<tr>
-<td>nacosSync_delete_task_rt</td>
-<td>删除任务耗时</td>
-</tr>
-<tr>
-<td>nacosSync_dispatcher_task</td>
-<td>从数据库中分发任务</td>
-</tr>
-<tr>
-<td>nacosSync_sync_task_error</td>
-<td>所有同步执行时的异常</td>
-</tr>
-</tbody></table>
 
       
     </div>
