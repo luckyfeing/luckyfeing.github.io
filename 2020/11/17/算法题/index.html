@@ -32,7 +32,7 @@
 <meta property="og:description" content="作者：Atecher 出处：http:&#x2F;&#x2F;atecher.com&#x2F;2018&#x2F;04&#x2F;11&#x2F;Java-Algorithms-Problem&#x2F; 斐波那契数列有一对兔子，从出生后第3个月起每个月都生一对兔子，小兔子长到第三个月后每个月又生一对兔子，假如兔子都不死，问每个月的兔子总数为多少？ 1.程序分析：这个是典型的斐波那契数列，兔子的规律为数列1,1,2,3,5,8,13,21…. 具体分析如下：  f">
 <meta property="og:locale" content="en_US">
 <meta property="article:published_time" content="2020-11-17T05:09:19.000Z">
-<meta property="article:modified_time" content="2020-12-04T02:16:13.484Z">
+<meta property="article:modified_time" content="2021-06-18T06:43:41.260Z">
 <meta property="article:author" content="灰(｢･ω･)｢嘿灰">
 <meta property="article:tag" content="算法">
 <meta name="twitter:card" content="summary">
@@ -213,20 +213,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">107</span>
+          <span class="site-state-item-count">152</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-count">30</span>
         <span class="site-state-item-name">categories</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">65</span>
+        <span class="site-state-item-count">90</span>
         <span class="site-state-item-name">tags</span></a>
       </div>
   </nav>
@@ -298,7 +298,7 @@
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">Edited on</span>
-        <time title="Modified: 2020-12-04 10:16:13" itemprop="dateModified" datetime="2020-12-04T10:16:13+08:00">2020-12-04</time>
+        <time title="Modified: 2021-06-18 14:43:41" itemprop="dateModified" datetime="2021-06-18T14:43:41+08:00">2021-06-18</time>
       </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -366,9 +366,7 @@
 <h2 id="一球从100米高度自由落下，每次落地后反跳回原高度的一半；再落下，求它在第10次落地时，共经过多少米？第10次反弹多高？"><a href="#一球从100米高度自由落下，每次落地后反跳回原高度的一半；再落下，求它在第10次落地时，共经过多少米？第10次反弹多高？" class="headerlink" title="一球从100米高度自由落下，每次落地后反跳回原高度的一半；再落下，求它在第10次落地时，共经过多少米？第10次反弹多高？"></a>一球从100米高度自由落下，每次落地后反跳回原高度的一半；再落下，求它在第10次落地时，共经过多少米？第10次反弹多高？</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">public class Demo10 &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        double s &#x3D; 0;</span><br><span class="line">        double h &#x3D; 100;</span><br><span class="line">        for (int i &#x3D; 1; i &lt;&#x3D; 10; i++) &#123;</span><br><span class="line">            s +&#x3D; h;</span><br><span class="line">            h &#x3D; h&#x2F;2;</span><br><span class="line">            s +&#x3D; h;</span><br><span class="line">        &#125;</span><br><span class="line">        System.out.println(&quot;经过路程：&quot;+s);</span><br><span class="line">        System.out.println(&quot;反弹高度：&quot;+h);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <h2 id="有1、2、3、4个数字，能组成多少个互不相同且无重复数字的三位数？都是多少？"><a href="#有1、2、3、4个数字，能组成多少个互不相同且无重复数字的三位数？都是多少？" class="headerlink" title="有1、2、3、4个数字，能组成多少个互不相同且无重复数字的三位数？都是多少？"></a>有1、2、3、4个数字，能组成多少个互不相同且无重复数字的三位数？都是多少？</h2><p>1.程序分析：可填在百位、十位、个位的数字都是1、2、3、4。组成所有的排列后再去掉不满足条件的排列。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">public class Demo11 &#123;</span><br><span class="line">    public static void main(String[] args) &#123;</span><br><span class="line">        int count &#x3D; 0;</span><br><span class="line">        for (int i &#x3D; 1; i &lt;&#x3D; 4; i++)</span><br><span class="line">          for (int j &#x3D; 1; j &lt;&#x3D; 4; j++)</span><br><span class="line">            for (int k &#x3D; 1; k &lt;&#x3D; 4; k++)</span><br><span class="line">              if (i !&#x3D; j &amp;&amp; j !&#x3D; k &amp;&amp; i !&#x3D; k) &#123;</span><br><span class="line">            count +&#x3D; 1;</span><br><span class="line">            System.out.println(i*100 + j*10 + k);</span><br><span class="line">              &#125;</span><br><span class="line">        System.out.println(&quot;共&quot; + count + &quot;个三位数&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Demo11</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> count = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">1</span>; i &lt;= <span class="number">4</span>; i++)</span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">1</span>; j &lt;= <span class="number">4</span>; j++)</span><br><span class="line">                <span class="keyword">for</span> (<span class="keyword">int</span> k = <span class="number">1</span>; k &lt;= <span class="number">4</span>; k++)</span><br><span class="line">                    <span class="keyword">if</span> (i != j &amp;&amp; j != k &amp;&amp; i != k) &#123;</span><br><span class="line">                        count += <span class="number">1</span>;</span><br><span class="line">                        System.out.println(i*<span class="number">100</span> + j*<span class="number">10</span> + k);</span><br><span class="line">                    &#125;</span><br><span class="line">        System.out.println(<span class="string">&quot;共&quot;</span> + count + <span class="string">&quot;个三位数&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <h2 id="企业发放的奖金根据利润提成。"><a href="#企业发放的奖金根据利润提成。" class="headerlink" title="企业发放的奖金根据利润提成。"></a>企业发放的奖金根据利润提成。</h2><p>利润(I)低于或等于10万元时，奖金可提10%；利润高于10万元，低于20万元时，低于10万元的部分按10%提成，高于10万元的部分，可提成7.5%；20万到40万之间时，高于20万元的部分，可提成5%；40万到60万之间时高于40万元的部分，可提成3%；60万到100万之间时，高于60万元的部分，可提成1.5%，高于100万元时，超过100万元的部分按1%提成，从键盘输入当月利润lirun，求应发放奖金总数sum？</p>
 <p>1.程序分析：请利用数轴来分界，定位。注意定义时需把奖金定义成长整型。</p>
@@ -612,12 +610,12 @@
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2020/11/16/Ribbon%E6%89%A9%E5%B1%95%E7%82%B9/" rel="prev" title="Ribbon扩展点">
+                <a href="/2020/11/16/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BRibbon%E6%89%A9%E5%B1%95%E7%82%B9/" rel="prev" title="Ribbon扩展点">
                   <i class="fa fa-chevron-left"></i> Ribbon扩展点
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2020/11/17/%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E5%AF%B9%E6%AF%94/" rel="next" title="配置中心对比">
+                <a href="/2020/11/17/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E5%AF%B9%E6%AF%94/" rel="next" title="配置中心对比">
                   配置中心对比 <i class="fa fa-chevron-right"></i>
                 </a>
             </div>

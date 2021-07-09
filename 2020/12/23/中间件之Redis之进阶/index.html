@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="redis客户端与服务器的交互模式 串行的请求&#x2F;响应模式  每一次请求的发送都依赖于上一次请求的相应结果完全接收，同一个连接的每秒吞吐量低 redis对单个请求的处理时间通常比局域网的延迟小一个数量级，所以串行模式下，单链接的大部分时间都处于网络等待   双工的请求&#x2F;相应模式(pipeline)  适用于批量的独立写入操作。即可将请求数据批量发送到服务器，再批量地从服务器连接的字节流中一次读取每个">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis之进阶">
+<meta property="og:url" content="http://example.com/2020/12/23/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRedis%E4%B9%8B%E8%BF%9B%E9%98%B6/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="redis客户端与服务器的交互模式 串行的请求&#x2F;响应模式  每一次请求的发送都依赖于上一次请求的相应结果完全接收，同一个连接的每秒吞吐量低 redis对单个请求的处理时间通常比局域网的延迟小一个数量级，所以串行模式下，单链接的大部分时间都处于网络等待   双工的请求&#x2F;相应模式(pipeline)  适用于批量的独立写入操作。即可将请求数据批量发送到服务器，再批量地从服务器连接的字节流中一次读取每个">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/12/23/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRedis%E4%B9%8B%E8%BF%9B%E9%98%B6/1.png">
+<meta property="article:published_time" content="2020-12-23T05:20:49.000Z">
+<meta property="article:modified_time" content="2021-07-09T07:25:50.240Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="Redis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/12/23/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRedis%E4%B9%8B%E8%BF%9B%E9%98%B6/1.png">
+
+
+<link rel="canonical" href="http://example.com/2020/12/23/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRedis%E4%B9%8B%E8%BF%9B%E9%98%B6/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Redis之进阶 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E5%AE%A2%E6%88%B7%E7%AB%AF%E4%B8%8E%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%9A%84%E4%BA%A4%E4%BA%92%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.</span> <span class="nav-text">redis客户端与服务器的交互模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E9%80%9A%E8%BF%87watch%E6%9C%BA%E5%88%B6%E5%AE%9E%E7%8E%B0%E4%B9%90%E8%A7%82%E9%94%81%E6%B5%81%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">redis通过watch机制实现乐观锁流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E7%9A%84%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE"><span class="nav-number">3.</span> <span class="nav-text">redis的网络协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E5%A4%84%E7%90%86%E5%91%BD%E4%BB%A4%E7%9A%84%E4%B8%BB%E8%A6%81%E9%80%BB%E8%BE%91"><span class="nav-number">4.</span> <span class="nav-text">redis处理命令的主要逻辑</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E7%9A%84%E6%8C%81%E4%B9%85%E5%8C%96%E6%9C%BA%E5%88%B6"><span class="nav-number">5.</span> <span class="nav-text">redis的持久化机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E5%86%85%E5%AD%98%E5%88%86%E6%9E%90%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%80%9D%E8%B7%AF"><span class="nav-number">6.</span> <span class="nav-text">redis内存分析的设计思路</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E5%86%85%E5%AD%98%E4%BC%B0%E7%AE%97"><span class="nav-number">7.</span> <span class="nav-text">redis内存估算</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis-%E4%B8%BB%E4%BB%8E%E6%A8%A1%E5%BC%8F"><span class="nav-number">8.</span> <span class="nav-text">redis 主从模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis-sentinel%EF%BC%88redis%E5%93%A8%E5%85%B5%EF%BC%89"><span class="nav-number">9.</span> <span class="nav-text">redis sentinel（redis哨兵）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E9%9B%86%E7%BE%A4%EF%BC%88redis-cluster%EF%BC%89"><span class="nav-number">10.</span> <span class="nav-text">redis集群（redis cluster）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%99%AE%E9%80%9A%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%E5%92%8C%E4%B8%80%E8%87%B4%E6%80%A7%E5%93%88%E5%B8%8C%E7%AE%97%E6%B3%95%E5%AF%B9%E6%AF%94"><span class="nav-number">11.</span> <span class="nav-text">普通哈希算法和一致性哈希算法对比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E9%9B%AA%E5%B4%A9%EF%BC%8C%E7%BC%93%E5%AD%98%E7%A9%BF%E9%80%8F%EF%BC%8C%E7%BC%93%E5%AD%98%E5%B9%B6%E5%8F%91%EF%BC%88%E7%BC%93%E5%AD%98%E5%87%BB%E7%A9%BF%EF%BC%89%EF%BC%8C%E7%BC%93%E5%AD%98%E9%A2%84%E7%83%AD%EF%BC%8C%E7%BC%93%E5%AD%98%E7%AE%97%E6%B3%95"><span class="nav-number">12.</span> <span class="nav-text">缓存雪崩，缓存穿透，缓存并发（缓存击穿），缓存预热，缓存算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%A8redis%E5%AE%9E%E7%8E%B0%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81"><span class="nav-number">13.</span> <span class="nav-text">用redis实现分布式锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis%E7%9A%84%E7%BC%93%E5%AD%98%E6%B7%98%E6%B1%B0%E7%AD%96%E7%95%A5LRU%E4%B8%8ELFU"><span class="nav-number">14.</span> <span class="nav-text">Redis的缓存淘汰策略LRU与LFU</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis%E5%86%85%E5%AD%98%E4%B8%8D%E8%B6%B3%E7%9A%84%E7%BC%93%E5%AD%98%E6%B7%98%E6%B1%B0%E7%AD%96%E7%95%A5"><span class="nav-number">15.</span> <span class="nav-text">Redis内存不足的缓存淘汰策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis%E7%BC%93%E5%AD%98%E6%B7%98%E6%B1%B0%E7%AD%96%E7%95%A5"><span class="nav-number">16.</span> <span class="nav-text">Redis缓存淘汰策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis%E9%94%AE%E7%9A%84%E8%BF%87%E6%9C%9F%E5%88%A0%E9%99%A4%E7%AD%96%E7%95%A5"><span class="nav-number">17.</span> <span class="nav-text">Redis键的过期删除策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis%E4%B8%ADLRU%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">18.</span> <span class="nav-text">Redis中LRU的实现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis%E4%B8%ADLFU%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">19.</span> <span class="nav-text">Redis中LFU的实现</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">152</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">90</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/23/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRedis%E4%B9%8B%E8%BF%9B%E9%98%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Redis之进阶
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-12-23 13:20:49" itemprop="dateCreated datePublished" datetime="2020-12-23T13:20:49+08:00">2020-12-23</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2021-07-09 15:25:50" itemprop="dateModified" datetime="2021-07-09T15:25:50+08:00">2021-07-09</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="redis客户端与服务器的交互模式"><a href="#redis客户端与服务器的交互模式" class="headerlink" title="redis客户端与服务器的交互模式"></a><strong>redis客户端与服务器的交互模式</strong></h2><ol>
+<li>串行的请求/响应模式 <ol>
+<li>每一次请求的发送都依赖于上一次请求的相应结果完全接收，同一个连接的每秒吞吐量低</li>
+<li>redis对单个请求的处理时间通常比局域网的延迟小一个数量级，所以串行模式下，单链接的大部分时间都处于网络等待</li>
+</ol>
+</li>
+<li>双工的请求/相应模式(pipeline) <ol>
+<li>适用于批量的独立写入操作。即可将请求数据批量发送到服务器，再批量地从服务器连接的字节流中一次读取每个响应数据，减少了网络延迟，所以单连接吞吐量较串行会提高一个数量级</li>
+</ol>
+</li>
+<li>原子化的批量请求/响应模式（事务） <ol>
+<li>客户端通过和redis服务器两阶段的交互做到批量命令原子执行的事务效果：入队操作（即服务器端先将客户端发送过来的连接对象暂存在请求队列中）和执行阶段（依次执行请求队列中的所有请求）</li>
+<li>一个连接的请求在执行批量请求的过程中，不会执行其他客户端的请求</li>
+<li>redis的事务不是一致的，没有回滚机制。如果中途失败，则返回错误信息，但已经成功执行的命令不会回滚</li>
+<li>事务里面有可能会带有读操作作为条件，由于批量请求只会先入队列，再批量一起执行，所以一般读操作不会跟批量写请求一起执行，这时候就有可能会导致批量写之前和之后读到的数据不一致，这种可以通过乐观锁的可串行化来解决，redis通过watch机制实现乐观锁。具体实现过程看下一题</li>
+</ol>
+</li>
+<li>发布/订阅模式 <ol>
+<li>发布端和订阅者通过channel关联</li>
+<li>channel的订阅关系，维护在reids实例级别，独立于redisDB的key-value体系。所有的channel都由一个map维护，键是channel的名字，value是它所有订阅者client的指针链表</li>
+</ol>
+</li>
+<li>脚本化的批量执行（脚本模式）</li>
+</ol>
+<h2 id="redis通过watch机制实现乐观锁流程"><a href="#redis通过watch机制实现乐观锁流程" class="headerlink" title="redis通过watch机制实现乐观锁流程"></a><strong>redis通过watch机制实现乐观锁流程</strong></h2><ol>
+<li>将本次事务涉及的所有key注册为观察模式</li>
+<li>执行只读操作</li>
+<li>根据只读操作的结果组装写操作命令并发送到服务器端入队</li>
+<li>发送原子化的批量执行命令EXEC试图执行连接的请求队列中的命令</li>
+<li>如果前面注册为观察模式的key中有一个货多个，在EXEC之前被修改过，则EXEC将直接失败，拒绝执行；否则顺序执行请求队列中的所有请求</li>
+<li>redis没有原生的悲观锁或者快照实现，但可通过乐观锁绕过。一旦两次读到的操作不一样，watch机制触发，拒绝了后续的EXEC执行</li>
+</ol>
+<h2 id="redis的网络协议"><a href="#redis的网络协议" class="headerlink" title="redis的网络协议"></a><strong>redis的网络协议</strong></h2><p>redis协议位于TCP层之上，即客户端和redis实例保持双工的连接，交互的都是序列化后的协议数据</p>
+<h2 id="redis处理命令的主要逻辑"><a href="#redis处理命令的主要逻辑" class="headerlink" title="redis处理命令的主要逻辑"></a><strong>redis处理命令的主要逻辑</strong></h2><ol>
+<li>redis服务器对命令的处理都是单线程的，但是I/O层面却面向多个客户端并发地提供服务，并发到内部单线程的转化通过多路复用框架来实现</li>
+<li>首先从多路复用框架（epoll、evport、kqueue）中select出已经ready的文件描述符（fileDescriptor）</li>
+<li>ready的标准是已有数据到达内核（kernel）、已准备好写入数据</li>
+<li>对于上一步已经ready的fd，redis会分别对每个fd上已ready的事件进行处理，处理完相同fd上的所有事件后，再处理下一个ready的fd。有3中事件类型 <ol>
+<li>acceptTcpHandler：连接请求事件</li>
+<li>readQueryFromClient：客户端的请求命令事件</li>
+<li>sendReplyToClient：将暂存的执行结果写回客户端</li>
+</ol>
+</li>
+<li>对来自客户端的命令执行结束后，接下来处理定时任务（TimeEvent）</li>
+<li>aeApiPoll的等待时间取决于定时任务处理（TimeEvent）逻辑</li>
+<li>本次主循环完毕，进入下一次主循环的beforeSleep逻辑，后者负责处理数据过期、增量持久化的文件写入等任务</li>
+</ol>
+<h2 id="redis的持久化机制"><a href="#redis的持久化机制" class="headerlink" title="redis的持久化机制"></a><strong><a target="_blank" rel="noopener" href="https://baijiahao.baidu.com/s?id=1654694618189745916&wfr=spider&for=pc">redis的持久化机制</a></strong></h2><ol>
+<li>redis主要提供了两种持久化机制：RDB和AOF；</li>
+<li>RDB <ol>
+<li>默认开启，会按照配置的指定时间将内存中的数据快照到磁盘中，创建一个dump.rdb文件，redis启动时再恢复到内存中。</li>
+<li>redis会单独创建fork()一个子进程，将当前父进程的数据的内存地址复制到子进程的内存中，然后由子进程写入到临时文件中，持久化的过程结束了，再用这个临时文件替换上次的快照文件，然后子进程退出，内存释放。</li>
+<li>需要注意的是，每次快照持久化都会将主进程的数据库数据内存地址复制一遍，导致内存开销加倍，若此时内存不足，则会阻塞服务器运行，直到复制结束释放内存；都会将内存数据完整写入磁盘一次，所以如果数据量大的话，而且写操作频繁，必然会引起大量的磁盘I/O操作，严重影响性能，并且最后一次持久化后的数据可能会丢失；</li>
+<li>save 900 1 表示900 秒内如果至少有 1 个 key 的值变化，则保存</li>
+<li>save 300 10表示300 秒内如果至少有 10 个 key 的值变化，则保存</li>
+<li>save 60 10000表示60 秒内如果至少有 10000 个 key 的值变化，则保存</li>
+<li><strong>rdbcompression ；</strong>默认值是yes。对于存储到磁盘中的快照，可以设置是否进行压缩存储。</li>
+<li><strong>rdbchecksum ：</strong>默认值是yes。在存储快照后，我们还可以让redis使用CRC64算法来进行数据校验，但是这样做会增加大约10%的性能消耗，如果希望获取到最大的性能提升，可以关闭此功能。</li>
+<li><strong>dbfilename ：</strong>设置快照的文件名，默认是 dump.rdb</li>
+<li><strong>dir：</strong>设置快照文件的存放路径，这个配置项一定是个目录，而不能是文件名</li>
+<li>命令行触发可以使用save或bgsave<img src="/2020/12/23/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRedis%E4%B9%8B%E8%BF%9B%E9%98%B6/1.png" alt="img" style="zoom:67%;"></li>
+</ol>
+</li>
+<li>AOF <ol>
+<li>以日志的形式记录每个写操作（读操作不记录），只需追加文件但不可以改写文件，redis启动时会根据日志从头到尾全部执行一遍以完成数据的恢复工作。包括flushDB也会执行。</li>
+<li>主要有两种方式触发：有写操作就写、每秒定时写（也会丢数据）。</li>
+<li>因为AOF采用追加的方式，所以文件会越来越大，针对这个问题，新增了重写机制，就是当日志文件大到一定程度的时候，会fork出子进程来遍历进程内存中的数据，每条记录对应一条set语句，写到临时文件中，然后再替换到旧的日志文件（类似rdb的操作方式）。默认触发是当aof文件大小是上次重写后大小的一倍且文件大于64M时触发；</li>
+</ol>
+</li>
+<li>当两种方式同时开启时，数据恢复redis会优先选择AOF恢复。一般情况下，只要使用默认开启的RDB即可，因为相对于AOF，RDB便于进行数据库备份，并且恢复数据集的速度也要快很多。</li>
+<li>开启持久化缓存机制，对性能会有一定的影响，特别是当设置的内存满了的时候，更是下降到几百reqs/s。所以如果只是用来做缓存的话，可以关掉持久化。</li>
+</ol>
+<h2 id="redis内存分析的设计思路"><a href="#redis内存分析的设计思路" class="headerlink" title="redis内存分析的设计思路"></a><strong>redis内存分析的设计思路</strong></h2><ol>
+<li>主要有3种方式可以实现 <ol>
+<li>keys命令：获取到所有的key，再根据key获取所有的内容。缺点是如果key数量特别多，则会导致redis卡住影响业务</li>
+<li>aof：通过aof文件获取到所有数据。缺点是有一些redis实例写入频繁，不适合开启aof，并且文件可能特别大，传输、解析效率差</li>
+<li>rdb：使用bgsave获取rdb文件，然后解析。缺点是bgsave在fork子进程时有可能会卡住主进程。当对于其他两种，在低峰期在从节点做bgsave获取rdb文件，相对安全可靠。</li>
+</ol>
+</li>
+<li>设计思路： <ol>
+<li>在访问低峰期时根据redis获取rdb文件</li>
+<li>解析rdb文件根据相对应的数据结构及内容，估算内容消耗等</li>
+<li>统计并生成报表</li>
+</ol>
+</li>
+<li>开源框架：<a target="_blank" rel="noopener" href="https://github.com/xueqiu/rdr">https://github.com/xueqiu/rdr</a></li>
+</ol>
+<h2 id="redis内存估算"><a href="#redis内存估算" class="headerlink" title="redis内存估算"></a><strong>redis内存估算</strong></h2><ol>
+<li>基础的数据类型：sds、dict、intset、zipmap、adlist、quicklist、skiplist</li>
+<li>举例：以key为hello，value为world，类型是string，它的内存使用： <ol>
+<li>一个dictEntry的消耗（有2个指针，一个int64的内存消耗），RedisDB就是一个大dict，每对kv都是其中的一个entry；</li>
+<li>一个robj的消耗（有1指针，一个int，以及几个使用位域的字段共消耗4字节），robj是为了在同一个dict内能够存储不同类型的value，而使用的一个通用的数据结构，全名是RedisObject；</li>
+<li>存储key的sds消耗（存储header以及字符串长度+1的空间，header长度根据字符串长度不同也会有所不同），sds是Redis中存储字符串使用的数据结构；</li>
+<li>存储过期时间消耗（也是存储为一个dictEntry，时间戳为int64）；</li>
+<li>存储value的sds消耗，根据数据结构不同而不同；</li>
+<li>前四项基本是存储任何一个key都需要消耗的，最后一项根据value的数据结构不同而不同；</li>
+</ol>
+</li>
+</ol>
+<h2 id="redis-主从模式"><a href="#redis-主从模式" class="headerlink" title="redis 主从模式"></a><strong>redis 主从模式</strong></h2><p>同步主节点的数据，可以做读写分离，缺点是主从模式下，主节点挂了之后，从节点没办法自动成功主节点，需要人工设置为主节点。</p>
+<h2 id="redis-sentinel（redis哨兵）"><a href="#redis-sentinel（redis哨兵）" class="headerlink" title="redis sentinel（redis哨兵）"></a><strong>redis sentinel（redis哨兵）</strong></h2><p>保证集群的高可用。使用</p>
+<h2 id="redis集群（redis-cluster）"><a href="#redis集群（redis-cluster）" class="headerlink" title="redis集群（redis cluster）"></a><strong>redis集群（redis cluster）</strong></h2><ol>
+<li>redis3以后，节点之间提供了完整的sharding（分片）、replication（主备感知能力）、failover（故障转移）的特性</li>
+<li>配置一致性：每个节点（Node）内部都保存了集群的配置信息，存储在clusterState中，通过引入自增的epoch变量来使得集群配置在各个节点间保持一致</li>
+<li>sharding数据分片 <ol>
+<li>将所有数据划分为16384个分片（slot），每个节点会对应一部分slot，每个key都会根据分布算法映射到16384个slot中的一个，分布算法为slotId=crc16(key)%16384</li>
+<li>当一个client访问的key不在对应节点的slots中，redis会返回给client一个moved命令，告知其正确的路由信息从而重新发起请求。client会根据每次请求来缓存本地的路由缓存信息，以便下次请求直接能够路由到正确的节点</li>
+<li>分片迁移：分片迁移的触发和过程控制由外部系统完成，redis只提供迁移过程中需要的原语支持。主要包含两种：一种是节点迁移状态设置，即迁移钱标记源、目标节点；另一种是key迁移的原子化命令</li>
+</ol>
+</li>
+<li>failover故障转移 <ol>
+<li>故障发现：节点间两两通过TCP保持连接，周期性进行PING、PONG交互，若对方的PONG相应超时未收到，则将其置为PFAIL状态，并传播给其他节点</li>
+<li>故障确认：当集群中有一半以上的节点对某一个PFAIL状态进行了确认，则将起改为FAIL状态，确认其故障</li>
+<li>slave选举：当有一个master挂掉了，则其slave重新竞选出一个新的master。主要根据各个slave最后一次同步master信息的时间，越新表示slave的数据越新，竞选的优先级越高，就更有可能选中。竞选成功之后将消息传播给其他节点。</li>
+</ol>
+</li>
+<li>集群不可用的情况： <ol>
+<li>集群中任意master挂掉，且当前master没有slave。</li>
+<li>集群中超过半数以上master挂掉。</li>
+</ol>
+</li>
+<li>使用16384个槽（slot）的原因</li>
+<li>一致性协议<ol>
+<li>gissip</li>
+</ol>
+</li>
+<li></li>
+</ol>
+<h2 id="普通哈希算法和一致性哈希算法对比"><a href="#普通哈希算法和一致性哈希算法对比" class="headerlink" title="普通哈希算法和一致性哈希算法对比"></a><strong>普通哈希算法和一致性哈希算法对比</strong></h2><ol>
+<li>普通哈希：也称硬哈希，采用简单取模的方式，将机器进行散列，这在cache环境不变的情况下能取得让人满意的结果，但是当cache环境动态变化时，这种静态取模的方式显然就不满足单调性的要求（当增加或减少一台机子时，几乎所有的存储内容都要被重新散列到别的缓冲区中）。</li>
+<li>一致性哈希：将机器节点和key值都按照一样的hash算法映射到一个0~2^32 的圆环上。当有一个写入缓存的请求到来时，计算Key值k对应的哈希值Hash(k)，如果该值正好对应之前某个机器节点的Hash值，则直接写入该机器节点，如果没有对应的机器节点，则顺时针查找下一个节点，进行写入，如果超过2^32还没找到对应节点，则从0开始查找（因为是环状结构）。为了更可能的满足平衡性，可以引入虚拟节点，即一个实体节点映射到多个虚拟节点。</li>
+<li>参考：<a target="_blank" rel="noopener" href="http://blog.huanghao.me/?p=14">http://blog.huanghao.me/?p=14</a></li>
+</ol>
+<h2 id="缓存雪崩，缓存穿透，缓存并发（缓存击穿），缓存预热，缓存算法"><a href="#缓存雪崩，缓存穿透，缓存并发（缓存击穿），缓存预热，缓存算法" class="headerlink" title="缓存雪崩，缓存穿透，缓存并发（缓存击穿），缓存预热，缓存算法"></a><strong>缓存雪崩，缓存穿透，缓存并发（缓存击穿），缓存预热，缓存算法</strong></h2><ol>
+<li>缓存雪崩：可能是因为数据未加载到缓存中，或者缓存同一时间大面积的失效，从而导致所有请求都去查数据库，导致数据库CPU和内存负载过高，甚至宕机。解决思路： <ol>
+<li>加锁计数（即限制并发的数量，可以用semphore）或者起一定数量的队列来避免缓存失效时大量请求并发到数据库。但这种方式会降低吞吐量。</li>
+<li>分析用户行为，然后失效时间均匀分布。或者在失效时间的基础上再加1~5分钟的随机数。</li>
+<li>如果是某台缓存服务器宕机，则考虑做主备。</li>
+</ol>
+</li>
+<li>缓存穿透：指用户查询数据，在数据库没有，自然在缓存中也不会有。这样就导致用户查询的时候，在缓存中找不到，每次都要去数据库中查询。解决思路： <ol>
+<li>如果查询数据库也为空，直接设置一个默认值存放到缓存，这样第二次到缓冲中获取就有值了，而不会继续访问数据库。设置一个过期时间或者当有值的时候将缓存中的值替换掉即可。</li>
+<li>可以给key设置一些格式规则，然后查询之前先过滤掉不符合规则的Key。</li>
+</ol>
+</li>
+<li>缓存并发：如果网站并发访问高，一个缓存如果失效，可能出现多个进程同时查询DB，同时设置缓存的情况，如果并发确实很大，这也可能造成DB压力过大，还有缓存频繁更新的问题。解决思路： <ol>
+<li>对缓存查询加锁，如果KEY不存在，就加锁，然后查DB入缓存，然后解锁；其他进程如果发现有锁就等待，然后等解锁后返回数据或者进入DB查询。</li>
+</ol>
+</li>
+<li>缓存预热：目的就是在系统上线前，将数据加载到缓存中。解决思路： <ol>
+<li>数据量不大的话，在系统启动的时候直接加载。</li>
+<li>自己写个简单的缓存预热程序。</li>
+</ol>
+</li>
+<li>缓存算法： <ol>
+<li>FIFO算法：First in First out，先进先出。原则：一个数据最先进入缓存中，则应该最早淘汰掉。也就是说，当缓存满的时候，应当把最先进入缓存的数据给淘汰掉。</li>
+<li>LFU算法：Least Frequently Used，最不经常使用算法。</li>
+<li>LRU算法：Least Recently Used，近期最少使用算法。</li>
+<li>LRU和LFU的区别。LFU算法是根据在一段时间里数据项被使用的次数选择出最少使用的数据项，即根据使用次数的差异来决定。而LRU是根据使用时间的差异来决定的。</li>
+</ol>
+</li>
+</ol>
+<h2 id="用redis实现分布式锁"><a href="#用redis实现分布式锁" class="headerlink" title="用redis实现分布式锁"></a><strong>用redis实现分布式锁</strong></h2><ol>
+<li><p>主要使用的命令： </p>
+<ol>
+<li>setnx key val。当且仅当key不存在时，set一个key为val的字符串，返回1；若key存在，则什么都不做，返回0。</li>
+<li>expire key timeout。为key设置一个超时时间，单位为second，超过这个时间锁会自  动释放，避免死锁。</li>
+<li>delete key。删除锁</li>
+</ol>
+</li>
+<li><p>实现思想： </p>
+<ol>
+<li>使用setnx加锁，如果返回1，则说明加锁成功，并设置超时时间，避免系统挂了，锁没法释放。在finally中delete删除锁释放。</li>
+<li>如果需要设置超时等待时间，则可以加个while循环，在获取不到锁的情况下，进行循环获取锁，超时了则退出。</li>
+</ol>
+</li>
+<li><p>redis3.0以上版本支持set命令，原子性操作，可以跟过期时间，不用使用脚本的方式进行</p>
+</li>
+<li><p>问题点是：</p>
+<ol>
+<li>单点问题：当主挂了之后，设置的数据还未同步到从节点，导致其它线程加锁成功</li>
+<li>续期问题：过期时间到之后但是业务还没有处理完成，此时需要续期，续租。可以使用守护线程进行续期</li>
+<li>使用Redisson的红锁，使用Hash结构，实现了可重入锁，解决单节点问题，并使用watch dog（）解决续期</li>
+</ol>
+</li>
+</ol>
+<h2 id="Redis的缓存淘汰策略LRU与LFU"><a href="#Redis的缓存淘汰策略LRU与LFU" class="headerlink" title="Redis的缓存淘汰策略LRU与LFU"></a><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/c8aeb3eee6bc">Redis的缓存淘汰策略LRU与LFU</a></h2><h2 id="Redis内存不足的缓存淘汰策略"><a href="#Redis内存不足的缓存淘汰策略" class="headerlink" title="Redis内存不足的缓存淘汰策略"></a>Redis内存不足的缓存淘汰策略</h2><ul>
+<li>noeviction：当内存使用超过配置的时候会返回错误，不会驱逐任何键</li>
+<li>volatile-ttl：从配置了过期时间的键中驱逐马上就要过期的键</li>
+<li>allkeys-lru：加入键的时候，如果过限，首先通过LRU算法驱逐最久没有使用的键</li>
+<li>volatile-lru：加入键的时候如果过限，首先从设置了过期时间的键集合中驱逐最久没有使用的键</li>
+<li>allkeys-random：加入键的时候如果过限，从所有key随机删除</li>
+<li>volatile-random：加入键的时候如果过限，从过期键的集合中随机驱逐</li>
+<li>volatile-lfu：从所有配置了过期时间的键中驱逐使用频率最少的键</li>
+<li>allkeys-lfu：从所有键中驱逐使用频率最少的键</li>
+</ul>
+<h2 id="Redis缓存淘汰策略"><a href="#Redis缓存淘汰策略" class="headerlink" title="Redis缓存淘汰策略"></a>Redis缓存淘汰策略</h2><p>在Redis内存使用超过一定值的时候（一般这个值可以配置）使用的淘汰策略；</p>
+<h2 id="Redis键的过期删除策略"><a href="#Redis键的过期删除策略" class="headerlink" title="Redis键的过期删除策略"></a>Redis键的过期删除策略</h2><p>通过定期删除+惰性删除两者结合的方式进行内存淘汰的。</p>
+<ul>
+<li>惰性删除：当某个key被设置了过期时间之后，客户端每次对该key的访问（读写）都会事先检测该key是否过期，如果过期就直接删除；</li>
+<li>但有一些键只访问一次，因此需要主动删除，默认情况下redis每秒检测10次，检测的对象是所有设置了过期时间的键集合，每次从这个集合中随机检测20个键查看他们是否过期，如果过期就直接删除，如果删除后还有超过25%的集合中的键已经过期，那么继续检测过期集合中的20个随机键进行删除。这样可以保证过期键最大只占所有设置了过期时间键的25%。</li>
+</ul>
+<h2 id="Redis中LRU的实现"><a href="#Redis中LRU的实现" class="headerlink" title="Redis中LRU的实现"></a>Redis中LRU的实现</h2><p>Redis维护了一个24位全局时钟，可以简单理解为当前系统的时间戳，每隔一定时间会更新这个时钟。每个key内部也维护了一个24位的时钟，当新增key对象的时候会把系统的时钟赋值到这个内部对象时钟。比如我现在要进行LRU，那么首先拿到当前的全局时钟，然后再找到内部时钟与全局时钟距离时间最久的（差最大）进行淘汰，这里值得注意的是全局时钟只有24位，按秒为单位来表示才能存储194天，所以可能会出现key的时钟大于全局时钟的情况，如果这种情况出现那么就两个相加而不是相减来求最久的key。</p>
+<p>Redis中的LRU与常规的LRU实现并不相同，常规LRU会准确的淘汰掉队头的元素，但是Redis的LRU并不维护队列，只是根据配置的策略要么从所有的key中随机选择N个（N可以配置）要么从所有的设置了过期时间的key中选出N个键，然后再从这N个键中选出最久没有使用的一个key进行淘汰。</p>
+<h2 id="Redis中LFU的实现"><a href="#Redis中LFU的实现" class="headerlink" title="Redis中LFU的实现"></a>Redis中LFU的实现</h2><p>LFU是在Redis4.0后出现的，LRU的最近最少使用实际上并不精确，考虑下面的情况，如果在|处删除，那么A距离的时间最久，但实际上A的使用频率要比B频繁，所以合理的淘汰策略应该是淘汰B。LFU就是为应对这种情况而生的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">A~~A~~A~~A~~A~~A~~A~~A~~A~~A~~~|</span><br><span class="line">B~~~~~B~~~~~B~~~~~B~~~~~~~~~~~B|</span><br></pre></td></tr></table></figure>
+
+<p>LFU把原来的key对象的内部时钟的24位分成两部分，前16位还代表时钟，后8位代表一个计数器。16位的情况下如果还按照秒为单位就会导致不够用，所以一般这里以时钟为单位。而后8位表示当前key对象的访问频率，8位只能代表255，但是redis并没有采用线性上升的方式，而是通过一个复杂的公式，通过配置两个参数来调整数据的递增速度。如果一个key经过几分钟没有被命中，那么后8位的值是需要递减几分钟。最后，redis会对内部时钟最小的key进行淘汰（最小表示最不频繁使用），注意这个过程也是根据策略随机选择键。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">lfu-<span class="built_in">log</span>-factor <span class="number">10</span></span><br><span class="line">lfu-decay-time <span class="number">1</span></span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Redis/" rel="tag"># Redis</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/12/22/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BMQTT%E4%B9%8B%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/" rel="prev" title="MQTT之简单使用">
+                  <i class="fa fa-chevron-left"></i> MQTT之简单使用
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/12/23/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRedis%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="next" title="Redis之数据结构">
+                  Redis之数据结构 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
