@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="rpc只是一种概念，可以有很多种的实现方式，可以直接http来做，接触到很多公司后端服务之间的调用就是直接通过http来做的，这种实现的方式好处就太多了，简单，现成可用的库很多，缺点也很多，性能，系统伸缩性等都有比较明显的限制。   更加成熟的分布式后端解决方案应该还是类似于阿里的那一套基于服务化的系统设计，一般情况下都有一个config中心，用于注册进程和服务的信息，进程之间直接建立连接发起rp">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RPC调用理解">
+<meta property="og:url" content="http://example.com/2021/02/08/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BRPC%E8%B0%83%E7%94%A8%E7%90%86%E8%A7%A3/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="rpc只是一种概念，可以有很多种的实现方式，可以直接http来做，接触到很多公司后端服务之间的调用就是直接通过http来做的，这种实现的方式好处就太多了，简单，现成可用的库很多，缺点也很多，性能，系统伸缩性等都有比较明显的限制。   更加成熟的分布式后端解决方案应该还是类似于阿里的那一套基于服务化的系统设计，一般情况下都有一个config中心，用于注册进程和服务的信息，进程之间直接建立连接发起rp">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-02-08T02:29:39.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.251Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/02/08/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BRPC%E8%B0%83%E7%94%A8%E7%90%86%E8%A7%A3/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>RPC调用理解 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/02/08/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BRPC%E8%B0%83%E7%94%A8%E7%90%86%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          RPC调用理解
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-02-08 10:29:39" itemprop="dateCreated datePublished" datetime="2021-02-08T10:29:39+08:00">2021-02-08</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>rpc只是一种概念，可以有很多种的实现方式，可以直接http来做，接触到很多公司后端服务之间的调用就是直接通过http来做的，这种实现的方式好处就太多了，简单，现成可用的库很多，缺点也很多，性能，系统伸缩性等都有比较明显的限制。</p>
+<p>  更加成熟的分布式后端解决方案应该还是类似于阿里的那一套基于服务化的系统设计，一般情况下都有一个config中心，用于注册进程和服务的信息，进程之间直接建立连接发起rpc请求，对于业务层面，一般情况下都是提供比较简洁的同步接口，类似于如下：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">service = config.get_service(<span class="string">&quot;fjs&quot;</span>)</span><br><span class="line">res = service.hello(<span class="string">&quot;你好&quot;</span>)<span class="number">12</span></span><br></pre></td></tr></table></figure>
+
+<p>  通过这种同步的rpc方式，构建出可伸缩的后端系统。（个人觉得这里提供如上的一种简洁的同步的api接口是非常重要的，因为也接触过node.js的一些rpc方案，通过注册回调的方式来实现rpc来回，感觉这对上层写业务来说是一种灾难，这方面node.js确实感觉没有太好的方案，好像fib.js不错，java这方面做的应该是最好的，所以能够找到很多java的服务框架，python其实也可以有很好的实现，毕竟有greenlet这种协程方案。）</p>
+<p>上面好像说了很多无关内容，主要是为了引入接下来的内容，要实现跨进程的通信，那么首先肯定要建立连接，这个时候就会有一些差异了：</p>
+<blockquote>
+<p>（1）对于每一次rpc请求，都单独建立一个tcp连接，请求完成之后关闭连接，每一个请求都需要独占一个tcp连接<br>（2）类似于（1）中实现，只不过对tcp连接做了缓存，类似于连接池的方案，每一次rpc请求都需要独占连接<br>（3）只建立一个连接，请求都共享这个连接，通过一些请求id来标示返回的数据应该属于哪一个请求。</p>
+</blockquote>
+<hr>
+<p>对于上述三种实现，第一种最简单，但是也是可能问题最大的，例如如果进程大量的发起请求，那么将会有大量的tcp连接建立，关闭，开销会比较的大，而且还有可能会出端口耗尽的风险，毕竟tcp有TIME_WAIT这种状态。</p>
+<p>对于第二种就稍微好了一些，但是要维护一个连接池，实现难度就稍大了点。</p>
+<p>对于第三种，这种系统开销最小，但是需要实现请求id的分配和映射，同时还需要有对长连接的状态监测，实现起来难度也稍大。</p>
+<hr>
+<p>对于现在实际工业界的用法，第一种应该很少，相对来说第二种和第三种用的都还算比较的普遍，接下来是一些自己总结的比较实用的一些代码实现方案：</p>
+<ul>
+<li>专门抽出来一个连接管理器，每一次在发起rpc请求的时候，都需要在连接器中申请一个连接，连接管理器负责连接状态监测</li>
+<li>每次在获取连接的时候，对于获取的连接，都应该做一次连接状态的监测，确保连接确实是正常的，常用的方法就是直接select.select来试一下</li>
+<li>最好要根据rpc请求的一些状态，来主动的处理连接，例如出现了一些意料之外的异常，那么为了安全，最好应该将当前主动关闭</li>
+<li>如果语言有上下文管理器，类似于python的with语句，那应该将其利用起来，通过上下文管理来捕获外部代码的一些异常，从而在一些特殊情况下主动关闭连接</li>
+<li>对于第三种类型的长连接实现，最好要实现一个应用层的心跳，因为同一条连接上关联的请求太多，为了减小伤害面积，能够尽早发现异常连接状态越好，那么其实tcp的keepalive就应该够了，那么为啥要实现应用层的心跳呢？这里其实还有另外的考虑，tcp的保活定时器是系统层面上的东西，对于自己的代码其实并不能感知到，就算是对面的进程因为永久性的阻塞而无法服务了，其实保活定时器是无法处理这种情况的</li>
+<li>客户端rpc的超时一定要有，另外服务端，如果是并发的，不管是线程还是协程，都一定要监控运行状态，防止永久性的阻塞造成内存泄露，设定一些阈值，在需要的时候直接终止正在执行的rpc请求</li>
+<li>能用开源的io层实现就尽量用优秀的开源软件来实现，不要自己去写，首先自己写的不管是性能还是系统的鲁棒性估计都有问题，其次，实现的肯定会有各种问题</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/02/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E6%97%A5%E5%BF%97ELK%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/" rel="prev" title="日志之ELK简单使用">
+                  <i class="fa fa-chevron-left"></i> 日志之ELK简单使用
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/02/08/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83%E5%AF%B9%E6%AF%94/" rel="next" title="注册中心对比">
+                  注册中心对比 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

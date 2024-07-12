@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="算法 在数学领域里，算法是用于解决某一类问题的公式和思想。 在计算机科学领域，算法的本质是一系列程序指令，用于解决特定的运算和逻辑问题。是对特定问题求解方法（步骤）的一种描述，是指令的有限序列，其中每一条指令表示一个或多个操作。  算法特性 算法的设计目标 算法标准在计算机领域，我们同样会遇到各种高效和拙劣的算法。衡量算法好坏的重要标准有两个。   时间复杂度 空间复杂度  算法的应用领域算法可以">
+<meta property="og:type" content="article">
+<meta property="og:title" content="算法（一）">
+<meta property="og:url" content="http://example.com/2020/11/23/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%80%EF%BC%89/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="算法 在数学领域里，算法是用于解决某一类问题的公式和思想。 在计算机科学领域，算法的本质是一系列程序指令，用于解决特定的运算和逻辑问题。是对特定问题求解方法（步骤）的一种描述，是指令的有限序列，其中每一条指令表示一个或多个操作。  算法特性 算法的设计目标 算法标准在计算机领域，我们同样会遇到各种高效和拙劣的算法。衡量算法好坏的重要标准有两个。   时间复杂度 空间复杂度  算法的应用领域算法可以">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/11/23/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%80%EF%BC%89/image-20201125100745940.png">
+<meta property="og:image" content="http://example.com/2020/11/23/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%80%EF%BC%89/image-20201125101019149.png">
+<meta property="og:image" content="http://example.com/2020/11/23/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%80%EF%BC%89/image-20201125101210140.png">
+<meta property="article:published_time" content="2020-11-23T05:36:25.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.293Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="数据结构">
+<meta property="article:tag" content="算法">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/11/23/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%80%EF%BC%89/image-20201125100745940.png">
+
+
+<link rel="canonical" href="http://example.com/2020/11/23/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%80%EF%BC%89/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>算法（一） | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%97%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%97%E6%B3%95%E7%89%B9%E6%80%A7"><span class="nav-number">2.</span> <span class="nav-text">算法特性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%97%E6%B3%95%E7%9A%84%E8%AE%BE%E8%AE%A1%E7%9B%AE%E6%A0%87"><span class="nav-number">3.</span> <span class="nav-text">算法的设计目标</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%97%E6%B3%95%E6%A0%87%E5%87%86"><span class="nav-number">4.</span> <span class="nav-text">算法标准</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%97%E6%B3%95%E7%9A%84%E5%BA%94%E7%94%A8%E9%A2%86%E5%9F%9F"><span class="nav-number">5.</span> <span class="nav-text">算法的应用领域</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">6.</span> <span class="nav-text">数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BB%84%E6%88%90%E6%96%B9%E5%BC%8F"><span class="nav-number">7.</span> <span class="nav-text">数据结构组成方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E5%92%8C%E7%AE%97%E6%B3%95"><span class="nav-number">8.</span> <span class="nav-text">数据结构和算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6"><span class="nav-number">9.</span> <span class="nav-text">时间复杂度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A8%E5%AF%BC%E5%87%BA%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6%E5%8E%9F%E5%88%99"><span class="nav-number">10.</span> <span class="nav-text">推导出时间复杂度原则</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8D%E5%90%8C%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6"><span class="nav-number">11.</span> <span class="nav-text">不同时间复杂度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%A9%BA%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6"><span class="nav-number">12.</span> <span class="nav-text">空间复杂度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8D%E5%90%8C%E7%A9%BA%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6"><span class="nav-number">13.</span> <span class="nav-text">不同空间复杂度</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%97%B6%E9%97%B4%E4%B8%8E%E7%A9%BA%E9%97%B4%E7%9A%84%E5%8F%96%E8%88%8D"><span class="nav-number">14.</span> <span class="nav-text">时间与空间的取舍</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/23/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%80%EF%BC%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          算法（一）
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-11-23 13:36:25" itemprop="dateCreated datePublished" datetime="2020-11-23T13:36:25+08:00">2020-11-23</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">算法</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="算法"><a href="#算法" class="headerlink" title="算法"></a>算法</h2><ul>
+<li>在数学领域里，算法是用于解决某一类问题的公式和思想。</li>
+<li>在计算机科学领域，算法的本质是一系列程序指令，用于解决特定的运算和逻辑问题。是对特定问题求解方法（步骤）的一种描述，是指令的有限序列，其中每一条指令表示一个或多个操作。</li>
+</ul>
+<h2 id="算法特性"><a href="#算法特性" class="headerlink" title="算法特性"></a>算法特性</h2><p><img src="/2020/11/23/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%80%EF%BC%89/image-20201125100745940.png" alt="image-20201125100745940"></p>
+<h2 id="算法的设计目标"><a href="#算法的设计目标" class="headerlink" title="算法的设计目标"></a>算法的设计目标</h2><p><img src="/2020/11/23/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%80%EF%BC%89/image-20201125101019149.png" alt="image-20201125101019149"></p>
+<h2 id="算法标准"><a href="#算法标准" class="headerlink" title="算法标准"></a>算法标准</h2><p>在计算机领域，我们同样会遇到各种高效和拙劣的算法。衡量算法好坏的重要标准有两个。 </p>
+<ul>
+<li>时间复杂度</li>
+<li>空间复杂度</li>
+</ul>
+<h2 id="算法的应用领域"><a href="#算法的应用领域" class="headerlink" title="算法的应用领域"></a>算法的应用领域</h2><p>算法可以应用在很多不同的领域中，其应用场景更是多种多样。</p>
+<ul>
+<li>运算（如最大公约数）</li>
+<li>查找（搜索引擎，Mysql查询）</li>
+<li>排序（电商商品排序，排名）。排序算法是实现诸多复杂程序的基石</li>
+<li>最优决策（如找出最佳路线，有限背包存价值最高物品使用动态规划算法）</li>
+<li>面试（主要时为了它，不然学它干嘛）</li>
+</ul>
+<h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><p>数据结构，对应的英文单词是data structure，是数据的组织、管理和存储格式， 其使用目的是为了高效地访问和修改数据。</p>
+<h2 id="数据结构组成方式"><a href="#数据结构组成方式" class="headerlink" title="数据结构组成方式"></a>数据结构组成方式</h2><ul>
+<li>线性结构（最简单的数据结构，包含数组，链表及由它们衍生的栈、队列、哈希表）</li>
+<li>树（树是相对复杂的数据结构，其中比较有代表性的是二叉树，由它又衍生出了二叉堆之类的数据结构）</li>
+<li>图（图是更为复杂的数据结构，因为在图中会呈现出多对多的关联关系）</li>
+<li>其他数据结构（除上述基本数据结构外，还有其它千奇百怪的数据结构。由基本数据结构变形而来，用于解决某些特定问题，如跳表、哈希链表、位图等）</li>
+</ul>
+<h2 id="数据结构和算法"><a href="#数据结构和算法" class="headerlink" title="数据结构和算法"></a>数据结构和算法</h2><p>有了数据结构这个舞台，算法才可以尽情舞蹈。在解决问题时，不同的算法会选用不同的数据结构。例如排序算法中的堆排序，利用的就是二叉堆这样一种数据结构；再如缓存淘汰算法LRU（Least Recently Used，最近最少使用），利用的就是特殊数据结构哈希链表。</p>
+<h2 id="时间复杂度"><a href="#时间复杂度" class="headerlink" title="时间复杂度"></a>时间复杂度</h2><p>基本操作执行次数的函数T(n),若存在函数f(n)，使得当n趋近于无穷大时，T(n)/f(n)的极限值为不等于零的常数，则称f(n)是T(n)的同数量级函数。记作T(n)=O(f(n))，称为O(f(n))，O为算法的渐进时间复杂度，简称为时间复杂度。 <font color="red">因为渐进时间复杂度用大写O来表示，所以也被称为大O表示法。</font> </p>
+<p>直白地讲，时间复杂度就是把程序的相对执行时间函数T(n)简化为一个数量级，这个数量级可以是n、n2、n3等。</p>
+<p>时间复杂度是对一个算法运行时间长短的量度，用大O表示，记作T(n)=O(f(n))。</p>
+<p><img src="/2020/11/23/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%80%EF%BC%89/image-20201125101210140.png" alt="image-20201125101210140"></p>
+<h2 id="推导出时间复杂度原则"><a href="#推导出时间复杂度原则" class="headerlink" title="推导出时间复杂度原则"></a>推导出时间复杂度原则</h2><ul>
+<li><p>如果运行时间是常数量级，则用常数1表示 </p>
+</li>
+<li><p>只保留时间函数中的最高阶项 </p>
+</li>
+<li><p>如果最高阶项存在，则省去最高阶项前面的系数</p>
+</li>
+</ul>
+<h2 id="不同时间复杂度"><a href="#不同时间复杂度" class="headerlink" title="不同时间复杂度"></a>不同时间复杂度</h2><ul>
+<li><p>多项式时间算法的时间复杂度：O(1)&lt;O(log<del>2</del>n)&lt;O(n)&lt;O(nlog<del>2</del>n)&lt;O(n^2^) &lt;O(n^3^)</p>
+</li>
+<li><p>指数时间算法的时间复杂度：O(2^n^)&lt;O(n!)&lt;O(n^n^)</p>
+</li>
+</ul>
+<h2 id="空间复杂度"><a href="#空间复杂度" class="headerlink" title="空间复杂度"></a>空间复杂度</h2><p>空间复杂度是对一个算法在运行过程中<font color="red"><strong>临时占用存储空间大小的量度</strong></font>，它同样使用了大O表示法。程序占用空间大小的计算公式记作S(n)=O(f(n))，其中n为问题的规模，f(n)为算法所占存储空间的函数。 <font color="red">空间复杂度就离不开数据结构。</font></p>
+<h2 id="不同空间复杂度"><a href="#不同空间复杂度" class="headerlink" title="不同空间复杂度"></a>不同空间复杂度</h2><ul>
+<li><p>常量空间（当算法的存储空间大小固定，和输入规模没有直接的关系时，空间复杂度记作O(1)）</p>
+</li>
+<li><p>线性空间（当算法分配的空间是一个线性的集合（如数组），并且集合大小和输入规模n成正比时，空间复杂度记作O(n)）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">fun1</span><span class="params">(<span class="keyword">int</span> n)</span></span>&#123;<span class="keyword">int</span>[] array = <span class="keyword">new</span> <span class="keyword">int</span>[n];&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>二维空间（当算法分配的空间是一个二维数组集合，并且集合的长度和宽度都与输入规模n成正比时，空间复杂度记作O(n^2^)）</p>
+</li>
+<li><p>递归空间（递归是一个比较特殊的场景。虽然递归代码中并没有显式地声明变量或集合，但是计算机在执行程序时，会专门分配一块内存，用来存储“方法调用栈”。空间复杂度就是O(n)）</p>
+</li>
+</ul>
+<h2 id="时间与空间的取舍"><a href="#时间与空间的取舍" class="headerlink" title="时间与空间的取舍"></a>时间与空间的取舍</h2><p>在绝大多数时候，时间复杂度更为重要一些，我们宁可多分配一些内存空间，也要提升程序的执行速度。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag"># 数据结构</a>
+              <a href="/tags/%E7%AE%97%E6%B3%95/" rel="tag"># 算法</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/11/23/JDBC%E4%B9%8BDataSource%E4%BB%8B%E7%BB%8D%E5%8F%8A%E5%AF%B9%E6%AF%94/" rel="prev" title="DataSource介绍及对比">
+                  <i class="fa fa-chevron-left"></i> DataSource介绍及对比
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/11/24/%E7%AE%97%E6%B3%95%EF%BC%88%E4%BA%8C%EF%BC%89/" rel="next" title="算法（二）">
+                  算法（二） <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

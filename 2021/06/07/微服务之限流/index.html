@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="限流算法 固定窗口 滑动窗口 漏桶算法 令牌桶算法 信号量 线程池隔离  固定窗口为一定时间段的流量设置一个阈值，超过则触发限流策略（丢弃或者停留），然后直到下一个时间段重新置零开始计数。 弊端：如果我在单位时间1s内的前10ms，已经通过了100个请求，那后面的990ms，只能眼巴巴的把请求拒绝，我们把这种现象称为突刺现象 可以使用AtomicLong#incrementAndGet()，Red">
+<meta property="og:type" content="article">
+<meta property="og:title" content="限流-总结">
+<meta property="og:url" content="http://example.com/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E9%99%90%E6%B5%81/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="限流算法 固定窗口 滑动窗口 漏桶算法 令牌桶算法 信号量 线程池隔离  固定窗口为一定时间段的流量设置一个阈值，超过则触发限流策略（丢弃或者停留），然后直到下一个时间段重新置零开始计数。 弊端：如果我在单位时间1s内的前10ms，已经通过了100个请求，那后面的990ms，只能眼巴巴的把请求拒绝，我们把这种现象称为突刺现象 可以使用AtomicLong#incrementAndGet()，Red">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E9%99%90%E6%B5%81/漏桶.jpg">
+<meta property="og:image" content="http://example.com/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E9%99%90%E6%B5%81/image-20210607132324808.png">
+<meta property="og:image" content="http://example.com/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E9%99%90%E6%B5%81/令牌桶.png">
+<meta property="article:published_time" content="2021-06-07T03:39:18.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.266Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="限流">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E9%99%90%E6%B5%81/漏桶.jpg">
+
+
+<link rel="canonical" href="http://example.com/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E9%99%90%E6%B5%81/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>限流-总结 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%90%E6%B5%81%E7%AE%97%E6%B3%95"><span class="nav-number">1.</span> <span class="nav-text">限流算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%BA%E5%AE%9A%E7%AA%97%E5%8F%A3"><span class="nav-number">1.1.</span> <span class="nav-text">固定窗口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BB%91%E5%8A%A8%E7%AA%97%E5%8F%A3"><span class="nav-number">1.2.</span> <span class="nav-text">滑动窗口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BC%8F%E6%A1%B6%E7%AE%97%E6%B3%95"><span class="nav-number">1.3.</span> <span class="nav-text">漏桶算法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A4%E7%89%8C%E6%A1%B6%E7%AE%97%E6%B3%95"><span class="nav-number">1.4.</span> <span class="nav-text">令牌桶算法</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%90%E6%B5%81%E7%94%A8%E6%B3%95"><span class="nav-number">2.</span> <span class="nav-text">限流用法</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E9%99%90%E6%B5%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          限流-总结
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-06-07 11:39:18" itemprop="dateCreated datePublished" datetime="2021-06-07T11:39:18+08:00">2021-06-07</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="限流算法"><a href="#限流算法" class="headerlink" title="限流算法"></a>限流算法</h2><ul>
+<li>固定窗口</li>
+<li>滑动窗口</li>
+<li>漏桶算法</li>
+<li>令牌桶算法</li>
+<li>信号量</li>
+<li>线程池隔离</li>
+</ul>
+<h3 id="固定窗口"><a href="#固定窗口" class="headerlink" title="固定窗口"></a>固定窗口</h3><p>为一定时间段的流量设置一个阈值，超过则触发限流策略（丢弃或者停留），然后直到下一个时间段重新置零开始计数。</p>
+<p><strong>弊端</strong>：如果我在单位时间1s内的前10ms，已经通过了100个请求，那后面的990ms，只能眼巴巴的把请求拒绝，我们把这种现象称为<font color="red">突刺现象</font></p>
+<p>可以使用AtomicLong#incrementAndGet()，Redis中的String类型的原子操作并设置过期时间<br>可以使用Redis，key 为当前秒的时间戳，value 就是访问次数的累加，当次数超出了我们限制的范围内，直接拒绝即可</p>
+<h3 id="滑动窗口"><a href="#滑动窗口" class="headerlink" title="滑动窗口"></a>滑动窗口</h3><p>以当前时间为截止时间，往前取一定的时间，比如取60s的时间，在这60s时间内最大的访问数为100。此时算法的执行逻辑为，先清除这60s 之前的所有请求记录，再计算当前集合内请求数是否大于设定的最大请求数100，如果大于100则执行限流拒绝策略，否则插入本次请求记录并返回可以正常执行的标识给客户端。</p>
+<p><strong>实现方式</strong>：借助Redis的有序集合ZSet来实现时间窗口算法限流，实现的过程是：</p>
+<p>第一步：先使用ZSet的key存储限流的ID，score用来存储请求的时间。</p>
+<p>第二步：每次有请求访问来了之后，先清空之前时间窗口的访问量，统计目前时间窗口的个数与最大允许访问量对比。</p>
+<p>第三步：如果大于等于最大访问量则返回 false 执行限流操策略，负责允许执行业务逻辑，并且在 ZSet 中添加一条有效的访问记录。</p>
+<h3 id="漏桶算法"><a href="#漏桶算法" class="headerlink" title="漏桶算法"></a>漏桶算法</h3><p>可以准备一个队列，用来保存请求，另外通过一个线程池（ScheduledExecutorService）来定期从队列中获取请求并执行，可以一次性获取多个并发执行。弊端：无法应对短时间的突发流量<br><img src="/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E9%99%90%E6%B5%81/漏桶.jpg" alt="2021-01-2120-56-37.png" style="zoom: 50%;"></p>
+<p><img src="/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E9%99%90%E6%B5%81/image-20210607132324808.png" alt="image-20210607132324808"></p>
+<h3 id="令牌桶算法"><a href="#令牌桶算法" class="headerlink" title="令牌桶算法"></a>令牌桶算法</h3><p>可以准备一个队列，用来保存令牌，另外通过一个线程池定期生成令牌放到队列中，每来一个请求，就从队列中获取一个令牌，并继续执行<br><img src="/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E9%99%90%E6%B5%81/令牌桶.png" alt="2021-01-2120-59-20.png" style="zoom: 80%;"></p>
+<h2 id="限流用法"><a href="#限流用法" class="headerlink" title="限流用法"></a>限流用法</h2><ul>
+<li>单节点限流： 可以在网关层添加（网关服务限流）或者在对应的服务端添加拦截（应用服务限流），如Gateway中自定义限流规则。使用某种限流算法，使用Guava包中的限流算法，将数据统计保存在对应的节点</li>
+<li>集群限流：     可以在网关层添加（网关服务限流）或者在对应的服务端添加拦截（应用服务限流），如Gateway中自定义限流规则。指定访问的服务集群使用某种限流算法，使用Redis记录集群的限流统计情况</li>
+<li>具体服务限流：服务端提供的API中会指定serviceId，如FeignClient注解里的，服务隔离如Hystrix使用信号量或线程池；Sentinel使用线程量进行隔离，使用QPS和调用关系进行限流，支持集群流量控制，热点参数限流，系统自适应保护</li>
+<li>具体接口限流：服务端提供的Controller类的接口，可以在方法上增加自定义注解，使用AOP的方式和限流算法实现具体接口服务的限流，比如可以使用信号量</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E9%99%90%E6%B5%81/" rel="tag"># 限流</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BAPI%E7%BD%91%E5%85%B3%E4%B9%8BGateway%E8%AF%A6%E8%A7%A3/" rel="prev" title="网关-API-Gateway详解">
+                  <i class="fa fa-chevron-left"></i> 网关-API-Gateway详解
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/06/09/java%E5%B9%B6%E5%8F%91%E4%B9%8BLongAdder%E8%AF%A6%E8%A7%A3/" rel="next" title="java并发之LongAdder详解">
+                  java并发之LongAdder详解 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

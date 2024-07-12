@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="核心概念在 Spring Cloud Gateway 中有如下几个核心概念需要我们了解： 1）Route Route 是网关的基础元素，由 ID、目标 URI、断言、过滤器组成。当请求到达网关时，由 Gateway Handler Mapping 通过断言进行路由匹配（Mapping），当断言为真时，匹配到路由。 2）Predicate Predicate 是 Java 8 中提供的一个函数。输入">
+<meta property="og:type" content="article">
+<meta property="og:title" content="网关-API-Gateway详解">
+<meta property="og:url" content="http://example.com/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BAPI%E7%BD%91%E5%85%B3%E4%B9%8BGateway%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="核心概念在 Spring Cloud Gateway 中有如下几个核心概念需要我们了解： 1）Route Route 是网关的基础元素，由 ID、目标 URI、断言、过滤器组成。当请求到达网关时，由 Gateway Handler Mapping 通过断言进行路由匹配（Mapping），当断言为真时，匹配到路由。 2）Predicate Predicate 是 Java 8 中提供的一个函数。输入">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BAPI%E7%BD%91%E5%85%B3%E4%B9%8BGateway%E8%AF%A6%E8%A7%A3/5-1ZR6093952150.png">
+<meta property="og:image" content="http://example.com/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BAPI%E7%BD%91%E5%85%B3%E4%B9%8BGateway%E8%AF%A6%E8%A7%A3/5-1ZR61152494J.png">
+<meta property="og:image" content="http://example.com/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BAPI%E7%BD%91%E5%85%B3%E4%B9%8BGateway%E8%AF%A6%E8%A7%A3/image-20210715141646667.png">
+<meta property="article:published_time" content="2021-06-07T02:30:01.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.246Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="网关">
+<meta property="article:tag" content="Gateway">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BAPI%E7%BD%91%E5%85%B3%E4%B9%8BGateway%E8%AF%A6%E8%A7%A3/5-1ZR6093952150.png">
+
+
+<link rel="canonical" href="http://example.com/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BAPI%E7%BD%91%E5%85%B3%E4%B9%8BGateway%E8%AF%A6%E8%A7%A3/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>网关-API-Gateway详解 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="nav-number">1.</span> <span class="nav-text">核心概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">工作原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E5%8F%91%E7%8E%B0"><span class="nav-number">3.</span> <span class="nav-text">服务发现</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B7%AF%E7%94%B1%E6%96%AD%E8%A8%80%E5%B7%A5%E5%8E%82"><span class="nav-number">4.</span> <span class="nav-text">路由断言工厂</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%87%E6%BB%A4%E5%99%A8%E5%B7%A5%E5%8E%82"><span class="nav-number">5.</span> <span class="nav-text">过滤器工厂</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%A8%E5%B1%80%E8%BF%87%E6%BB%A4%E5%99%A8"><span class="nav-number">6.</span> <span class="nav-text">全局过滤器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%90%E6%B5%81"><span class="nav-number">7.</span> <span class="nav-text">限流</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E6%88%98"><span class="nav-number">7.1.</span> <span class="nav-text">实战</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">7.2.</span> <span class="nav-text">原理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%86%94%E6%96%AD%E9%99%8D%E7%BA%A7"><span class="nav-number">8.</span> <span class="nav-text">熔断降级</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B7%A8%E5%9F%9F%E5%AE%9E%E6%88%98"><span class="nav-number">9.</span> <span class="nav-text">跨域实战</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%9F%E4%B8%80%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86"><span class="nav-number">10.</span> <span class="nav-text">统一异常处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E8%AF%95%E6%9C%BA%E5%88%B6"><span class="nav-number">11.</span> <span class="nav-text">重试机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Spring-Cloud-Gateway-%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="nav-number">12.</span> <span class="nav-text">Spring Cloud Gateway 工作原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Gateway%E8%AF%A6%E8%A7%A3"><span class="nav-number">13.</span> <span class="nav-text">Gateway详解</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BAPI%E7%BD%91%E5%85%B3%E4%B9%8BGateway%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          网关-API-Gateway详解
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-06-07 10:30:01" itemprop="dateCreated datePublished" datetime="2021-06-07T10:30:01+08:00">2021-06-07</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="核心概念"><a href="#核心概念" class="headerlink" title="核心概念"></a>核心概念</h2><p>在 Spring Cloud Gateway 中有如下几个核心概念需要我们了解：</p>
+<p>1）Route</p>
+<p>Route 是网关的基础元素，由 ID、目标 URI、断言、过滤器组成。当请求到达网关时，由 Gateway Handler Mapping 通过断言进行路由匹配（Mapping），当断言为真时，匹配到路由。</p>
+<p>2）Predicate</p>
+<p>Predicate 是 <a target="_blank" rel="noopener" href="http://c.biancheng.net/java/">Java</a> 8 中提供的一个函数。输入类型是 Spring Framework ServerWebExchange。它允许开发人员匹配来自 HTTP 的请求，例如请求头或者请求参数。简单来说它就是匹配条件。</p>
+<p>3）Filter</p>
+<p>Filter 是 Gateway 中的过滤器，可以在请求发出前后进行一些业务上的处理。</p>
+<h2 id="工作原理"><a href="#工作原理" class="headerlink" title="工作原理"></a>工作原理</h2><p>客户端向 Spring Cloud Gateway 发出请求，如果请求与网关程序定义的路由匹配，则该请求就会被发送到网关 Web 处理程序，此时处理程序运行特定的请求过滤器链。</p>
+<p>过滤器之间用虚线分开的原因是过滤器可能会在发送代理请求的前后执行逻辑。所有 pre 过滤器逻辑先执行，然后执行代理请求；代理请求完成后，执行 post 过滤器逻辑。<br><img src="/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BAPI%E7%BD%91%E5%85%B3%E4%B9%8BGateway%E8%AF%A6%E8%A7%A3/5-1ZR6093952150.png" alt="Spring Cloud Gateway工作原理" style="zoom:80%;"></p>
+<h2 id="服务发现"><a href="#服务发现" class="headerlink" title="服务发现"></a>服务发现</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">cloud:</span></span><br><span class="line">    <span class="attr">gateway:</span></span><br><span class="line">      <span class="attr">discovery:</span></span><br><span class="line">        <span class="attr">locator:</span></span><br><span class="line">          <span class="attr">enabled:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>启动服务发现，从注册中心加载注册的服务，路由的uri: lb://user-service，网关会替换成对应的服务ip：port</p>
+<h2 id="路由断言工厂"><a href="#路由断言工厂" class="headerlink" title="路由断言工厂"></a>路由断言工厂</h2><ul>
+<li>Path 路由断言工厂 predicates:下添加，可添加多个  - Path=/blog/detail/{segment}  测试地址：<a target="_blank" rel="noopener" href="http://localhost:2001/blog/detail/36185">http://localhost:2001/blog/detail/36185</a></li>
+<li>Query 路由断言工厂  - Query=foo, ba.    测试链接：<a target="_blank" rel="noopener" href="http://localhost:2001/?foo=baz">http://localhost:2001/?foo=baz</a></li>
+<li>Method 路由断言工厂 - Method=GET</li>
+<li>Header 路由断言工厂  - Header=X-Request-Id, \d+ 请求中带有请求头名为 x-request-id，其值与 \d+ 正则表达式匹配（值为一个或多个数字）</li>
+<li>自定义路由断言工厂  继承 AbstractRoutePredicateFactory 类，重写 apply 方法的逻辑，命名需要以RoutePredicateFactory结尾</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span>  <span class="comment">//CheckAuth 就是这个路由断言工厂的名称</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CheckAuthRoutePredicateFactory</span></span></span><br><span class="line"><span class="class">        <span class="keyword">extends</span> <span class="title">AbstractRoutePredicateFactory</span>&lt;<span class="title">CheckAuthRoutePredicateFactory</span>.<span class="title">Config</span>&gt; </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">CheckAuthRoutePredicateFactory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(Config.class);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Predicate&lt;ServerWebExchange&gt; <span class="title">apply</span><span class="params">(Config config)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> exchange -&gt; &#123;</span><br><span class="line">            System.err.println(<span class="string">&quot;进入了CheckAuthRoutePredicateFactory\t&quot;</span> + config.getName());</span><br><span class="line">            <span class="keyword">if</span> (config.getName().equals(<span class="string">&quot;zhangsan&quot;</span>)) &#123;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Config</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> String name;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.name = name;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> name;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">cloud:</span></span><br><span class="line">    <span class="attr">gateway:</span></span><br><span class="line">      <span class="attr">routes:</span></span><br><span class="line">      	<span class="bullet">-</span> <span class="attr">id:</span> <span class="string">customer_route</span></span><br><span class="line">      	<span class="attr">uri:</span> <span class="string">http://c.biancheng.net</span></span><br><span class="line">      	<span class="attr">predicates:</span>   <span class="comment">#CheckAuth就是这个路由断言工厂的名称</span></span><br><span class="line">      	    <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">CheckAuth</span></span><br><span class="line">            <span class="attr">args:</span></span><br><span class="line">                <span class="attr">name:</span> <span class="string">zhangsan</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="过滤器工厂"><a href="#过滤器工厂" class="headerlink" title="过滤器工厂"></a>过滤器工厂</h2><ul>
+<li>AddRequestHeader 过滤器工厂  filters: - AddRequestHeader=X-Request-Foo, Bar</li>
+<li>RemoveRequestHeader 过滤器工厂 - RemoveRequestHeader=X-Request-Foo</li>
+<li> SetStatus 过滤器工厂   - SetStatus=401</li>
+<li> RedirectTo过滤器工厂   - RedirectTo=302, <a target="_blank" rel="noopener" href="http://baidu.com/">http://baidu.com</a></li>
+<li>自定义过滤器工厂，继承 AbstractGatewayFilterFactory 类，重写 apply 方法的逻辑，命名需要以 GatewayFilterFactory 结尾</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CheckAuth2GatewayFilterFactory</span></span></span><br><span class="line"><span class="class">        <span class="keyword">extends</span> <span class="title">AbstractGatewayFilterFactory</span>&lt;<span class="title">CheckAuth2GatewayFilterFactory</span>.<span class="title">Config</span>&gt; </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">CheckAuth2GatewayFilterFactory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(Config.class);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> GatewayFilter <span class="title">apply</span><span class="params">(Config config)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (exchange, chain) -&gt; &#123;</span><br><span class="line">      System.err.println(<span class="string">&quot;进入了CheckAuth2GatewayFilterFactory&quot;</span> + config.getName());</span><br><span class="line">      ServerHttpRequest request = exchange.getRequest().mutate()</span><br><span class="line">      .build();</span><br><span class="line">      <span class="keyword">return</span></span><br><span class="line">      chain.filter(exchange.mutate().request(request).build());</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Config</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> String name;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setName</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">this</span>.name = name;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> String <span class="title">getName</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> name;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">filters:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">CheckAuth2</span></span><br><span class="line">  <span class="attr">args:</span></span><br><span class="line">    <span class="attr">name:</span> <span class="string">张三</span></span><br></pre></td></tr></table></figure>
+
+<p>如果你的配置是 Key、Value 这种形式的，那么可以不用自己定义配置类，直接继承 AbstractNameValueGatewayFilterFactory 类即可。</p>
+<p>AbstractNameValueGatewayFilterFactory 类继承了 AbstractGatewayFilterFactory，定义了一个 NameValueConfig 配置类，NameValueConfig 中有 name 和 value 两个字段。</p>
+<h2 id="全局过滤器"><a href="#全局过滤器" class="headerlink" title="全局过滤器"></a>全局过滤器</h2><p>全局过滤器作用于所有的路由，不需要单独配置，可以用它来实现很多统一化处理的业务需求，比如权限认证、IP 访问限制等。接口定义类 org.springframework.cloud.gateway.filter.GlobalFilter，具体代码如下所示。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">GlobalFilter</span> </span>&#123;</span><br><span class="line">  <span class="function">Mono&lt;Void&gt; <span class="title">filter</span><span class="params">(ServerWebExchange exchange, GatewayFilterChain chain)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>有转发、路由、负载等相关的 GlobalFilter,通过 @Order 来指定执行的顺序，数字越小，优先级越高。<br><img src="/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BAPI%E7%BD%91%E5%85%B3%E4%B9%8BGateway%E8%AF%A6%E8%A7%A3/5-1ZR61152494J.png" alt="框架自带全局过滤器"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span> <span class="comment">// IP 的访问限制</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">IPCheckFilter</span> <span class="keyword">implements</span> <span class="title">GlobalFilter</span>, <span class="title">Ordered</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getOrder</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Mono&lt;Void&gt; <span class="title">filter</span><span class="params">(ServerWebExchange exchange, GatewayFilterChain chain)</span> </span>&#123;</span><br><span class="line">        HttpHeaders headers = exchange.getRequest().getHeaders();</span><br><span class="line">        <span class="comment">// 此处写得非常绝对, 只作演示用, 实际中需要采取配置的方式</span></span><br><span class="line">        <span class="keyword">if</span> (getIp(headers).equals(<span class="string">&quot;127.0.0.1&quot;</span>)) &#123;</span><br><span class="line">            ServerHttpResponse response = exchange.getResponse();</span><br><span class="line">            ResponseData data = <span class="keyword">new</span> ResponseData();</span><br><span class="line">            data.setCode(<span class="number">401</span>);</span><br><span class="line">            data.setMessage(<span class="string">&quot;非法请求&quot;</span>);</span><br><span class="line">            <span class="keyword">byte</span>[] datas = JsonUtils.toJson(data).getBytes(StandardCharsets.UTF_8);</span><br><span class="line">            DataBuffer buffer = response.bufferFactory().wrap(datas);</span><br><span class="line">            response.setStatusCode(HttpStatus.UNAUTHORIZED);</span><br><span class="line">            response.getHeaders().add(<span class="string">&quot;Content-Type&quot;</span>, <span class="string">&quot;application/json;charset=UTF-8&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> response.writeWith(Mono.just(buffer));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> chain.filter(exchange);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 这里从请求头中获取用户的实际IP,根据Nginx转发的请求头获取</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> String <span class="title">getIp</span><span class="params">(HttpHeaders headers)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;127.0.0.1&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Gateway 的 Filter 只有 pre 和 post 两种,使用<font color="red">GatewayFilterChain</font>过滤器链，先执行所有的pre方法，再执行过滤器链，之后执行post方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="meta">@Order(-1)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> GlobalFilter <span class="title">a</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (exchange, chain) -&gt; &#123;</span><br><span class="line">        log.info(<span class="string">&quot;first pre filter&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> chain.filter(exchange).then(Mono.fromRunnable(() -&gt; &#123;</span><br><span class="line">            log.info(<span class="string">&quot;third post filter&quot;</span>);</span><br><span class="line">        &#125;));</span><br><span class="line">    &#125;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="限流"><a href="#限流" class="headerlink" title="限流"></a>限流</h2><p>Spring Cloud Gateway内置的 <font color="red">RequestRateLimiterGatewayFilterFactory</font> 提供限流的能力，基于令牌桶算法实现。目前，它内置的 <code>RedisRateLimiter</code> ，依赖Redis存储限流配置，以及统计数据。当然你也可以实现自己的RateLimiter，只需实现 <code>org.springframework.cloud.gateway.filter.ratelimit.RateLimiter</code> 接口，或者继承 <code>org.springframework.cloud.gateway.filter.ratelimit.AbstractRateLimiter</code>。</p>
+<blockquote>
+<p><strong>漏桶算法</strong>：流量突发问题</p>
+<p>想象有一个水桶，水桶以一定的速度出水（以一定速率消费请求），当水流速度过大水会溢出（访问速率超过响应速率，就直接拒绝）。</p>
+<p>漏桶算法的两个变量：</p>
+<ul>
+<li>水桶漏洞的大小：rate</li>
+<li>最多可以存多少的水：burst</li>
+</ul>
+<p><strong>令牌桶算法</strong>：</p>
+<p>系统按照恒定间隔向水桶里加入令牌（Token），如果桶满了的话，就不加了。每个请求来的时候，会拿走1个令牌，如果没有令牌可拿，那么就拒绝服务。</p>
+<p><strong>TIPS</strong></p>
+<ul>
+<li>Redis Rate Limiter的实现基于这篇文章： <a target="_blank" rel="noopener" href="https://stripe.com/blog/rate-limiters">Stripe</a></li>
+<li>Spring官方引用的令牌桶算法文章： <a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Token_bucket">Token Bucket Algorithm</a> ，有兴趣可以看看。</li>
+</ul>
+</blockquote>
+<h3 id="实战"><a href="#实战" class="headerlink" title="实战"></a>实战</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-data-redis-reactive<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">cloud:</span></span><br><span class="line">    <span class="attr">gateway:</span></span><br><span class="line">      <span class="attr">routes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">id:</span> <span class="string">after_route</span></span><br><span class="line">          <span class="attr">uri:</span> <span class="string">lb://user-center</span></span><br><span class="line">          <span class="attr">predicates:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">TimeBetween=上午0:00,下午11:59</span></span><br><span class="line">          <span class="attr">filters:</span></span><br><span class="line">            <span class="bullet">-</span> <span class="string">AddRequestHeader=X-Request-Foo,</span> <span class="string">Bar</span></span><br><span class="line">            <span class="comment"># 必须是RequestRateLimiter,表示请求限流拦截器</span></span><br><span class="line">            <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">RequestRateLimiter</span> </span><br><span class="line">              <span class="attr">args:</span></span><br><span class="line">                <span class="comment"># 令牌桶每秒填充平均速率(允许用户每秒处理多少个请求)</span></span><br><span class="line">                <span class="attr">redis-rate-limiter.replenishRate:</span> <span class="number">1</span></span><br><span class="line">                <span class="comment"># 令牌桶的上限(最大请求量)</span></span><br><span class="line">                <span class="attr">redis-rate-limiter.burstCapacity:</span> <span class="number">2</span></span><br><span class="line">                <span class="comment"># 使用SpEL表达式从Spring容器中获取Bean对象</span></span><br><span class="line">                <span class="attr">key-resolver:</span> <span class="string">&quot;#&#123;@pathKeyResolver&#125;&quot;</span></span><br><span class="line">  <span class="attr">redis:</span></span><br><span class="line">    <span class="attr">host:</span> <span class="number">127.0</span><span class="number">.0</span><span class="number">.1</span></span><br><span class="line">    <span class="attr">port:</span> <span class="number">6379</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Raonfiguration</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 按照Path限流</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> key</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> KeyResolver <span class="title">pathKeyResolver</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> exchange -&gt; Mono.just(</span><br><span class="line">            exchange.getRequest().getPath().toString()</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//针对用户限流</span></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> KeyResolver <span class="title">userKeyResolver</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> exchange -&gt; Mono.just(exchange.getRequest().getQueryParams().getFirst(<span class="string">&quot;user&quot;</span>));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//针对ip限流</span></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> KeyResolver <span class="title">ipKeyResolver</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> exchange -&gt; Mono.just(</span><br><span class="line">            exchange.getRequest().getHeaders().getFirst(<span class="string">&quot;X-Forwarded-For&quot;</span>)</span><br><span class="line">        );</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">127.0.0.1:6379&gt; keys *</span><br><span class="line">1) <span class="string">&quot;request_rate_limiter.&#123;localhost&#125;.timestamp&quot;</span></span><br><span class="line">2) <span class="string">&quot;request_rate_limiter.&#123;localhost&#125;.tokens&quot;</span></span><br></pre></td></tr></table></figure>
+
+<p>大括号中就是我们的限流 Key，这里是 IP，本地的就是 localhost。</p>
+<ul>
+<li>timestamp：存储的是当前时间的秒数，也就是 System.currentTimeMillis()/1000 或者 Instant.now().getEpochSecond()。</li>
+<li>tokens：存储的是当前这秒钟对应的可用令牌数量。</li>
+</ul>
+<h2 id="熔断降级"><a href="#熔断降级" class="headerlink" title="熔断降级"></a>熔断降级</h2><p>内置了 <font color="red">HystrixGatewayFilterFactory </font>来实现路由级别的熔断，配置了一个 Hystrix 过滤器，该过滤器会使用 Hystrix 熔断与回退，原理是将请求包装成 RouteHystrixCommand 执行，RouteHystrixCommand 继承于 com.netflix.hystrix.HystrixObservableCommand。</p>
+<p>fallbackUri 是发生熔断时回退的 URI 地址，目前只支持 forward 模式的 URI。如果服务被降级，该请求会被转发到该 URI 中。在网关中创建一个回退的接口，用于熔断时处理返回给调用方的信息</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.cloud<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-cloud-starter-netflix-hystrix<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">id:</span> <span class="string">user-service</span></span><br><span class="line"><span class="attr">uri:</span> <span class="string">lb://user-service</span></span><br><span class="line"><span class="attr">predicates:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="string">Path=/user-service/**</span></span><br><span class="line"><span class="attr">filters:</span></span><br><span class="line">  <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Hystrix</span></span><br><span class="line"><span class="attr">args:</span></span><br><span class="line">  <span class="attr">name:</span> <span class="string">fallbackcmd</span></span><br><span class="line"><span class="attr">fallbackUri:</span> <span class="string">forward:/fallback</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">FallbackController</span> </span>&#123;</span><br><span class="line">    <span class="meta">@GetMapping(&quot;/fallback&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">fallback</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;fallback&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="跨域实战"><a href="#跨域实战" class="headerlink" title="跨域实战"></a>跨域实战</h2><p>在 Spring Cloud Gateway 中配置跨域有两种方式，分别是代码配置方式和配置文件方式。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CorsConfig</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> WebFilter <span class="title">corsFilter</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> (ServerWebExchange ctx, WebFilterChain chain) -&gt; &#123;</span><br><span class="line">            ServerHttpRequest request = ctx.getRequest();</span><br><span class="line">            <span class="keyword">if</span> (CorsUtils.isCorsRequest(request)) &#123;</span><br><span class="line">                HttpHeaders requestHeaders = request.getHeaders();</span><br><span class="line">                ServerHttpResponse response = ctx.getResponse();</span><br><span class="line">                HttpMethod requestMethod = requestHeaders.getAccessControlRequestMethod();</span><br><span class="line">                HttpHeaders headers = response.getHeaders();</span><br><span class="line">                headers.add(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN, requestHeaders.getOrigin());</span><br><span class="line">                headers.addAll(HttpHeaders.ACCESS_CONTROL_ALLOW_HEADERS,</span><br><span class="line">                        requestHeaders.getAccessControlRequestHeaders());</span><br><span class="line">                <span class="keyword">if</span> (requestMethod != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    headers.add(HttpHeaders.ACCESS_CONTROL_ALLOW_METHODS, requestMethod.name());</span><br><span class="line">                &#125;</span><br><span class="line">                headers.add(HttpHeaders.ACCESS_CONTROL_ALLOW_CREDENTIALS, <span class="string">&quot;true&quot;</span>);</span><br><span class="line">                headers.add(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, <span class="string">&quot;*&quot;</span>);</span><br><span class="line">                <span class="keyword">if</span> (request.getMethod() == HttpMethod.OPTIONS) &#123;</span><br><span class="line">                    response.setStatusCode(HttpStatus.OK);</span><br><span class="line">                    <span class="keyword">return</span> Mono.empty();</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> chain.filter(ctx);</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Bean</span>  <span class="comment">//应该使用这种</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> CorsWebFilter <span class="title">corsWebFilter</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        CorsConfiguration config = <span class="keyword">new</span> CorsConfiguration();</span><br><span class="line">        config.addAllowedMethod(CorsConfiguration.ALL);</span><br><span class="line">        config.addAllowedOrigin(CorsConfiguration.ALL);</span><br><span class="line">        config.addAllowedHeader(CorsConfiguration.ALL);</span><br><span class="line">        config.setAllowCredentials(<span class="keyword">true</span>);</span><br><span class="line">        config.addAllowedMethod(<span class="string">&quot;OPTIONS&quot;</span>);</span><br><span class="line">        config.addAllowedMethod(<span class="string">&quot;HEAD&quot;</span>);</span><br><span class="line">        config.addAllowedMethod(<span class="string">&quot;GET&quot;</span>);</span><br><span class="line">        config.addAllowedMethod(<span class="string">&quot;PUT&quot;</span>);</span><br><span class="line">        config.addAllowedMethod(<span class="string">&quot;POST&quot;</span>);</span><br><span class="line">        config.addAllowedMethod(<span class="string">&quot;DELETE&quot;</span>);</span><br><span class="line">        config.addAllowedMethod(<span class="string">&quot;PATCH&quot;</span>);</span><br><span class="line"></span><br><span class="line">        UrlBasedCorsConfigurationSource source =</span><br><span class="line">            <span class="keyword">new</span> UrlBasedCorsConfigurationSource(<span class="keyword">new</span> PathPatternParser());</span><br><span class="line">        source.registerCorsConfiguration(<span class="string">&quot;/**&quot;</span>, config);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> CorsWebFilter(source);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">cloud:</span></span><br><span class="line">    <span class="attr">gateway:</span></span><br><span class="line">      <span class="attr">globalcors:</span></span><br><span class="line">        <span class="attr">corsConfigurations:</span></span><br><span class="line">          <span class="string">&#x27;[/**]&#x27;</span><span class="string">:</span></span><br><span class="line">            <span class="attr">allowedOrigins:</span> <span class="string">&quot;*&quot;</span></span><br><span class="line">            <span class="attr">exposedHeaders:</span></span><br><span class="line">              <span class="bullet">-</span> <span class="string">content-type</span></span><br><span class="line">            <span class="attr">allowedHeaders:</span></span><br><span class="line">              <span class="bullet">-</span> <span class="string">content-type</span></span><br><span class="line">            <span class="attr">allowCredentials:</span> <span class="literal">true</span></span><br><span class="line">              <span class="attr">allowedMethods:</span></span><br><span class="line">              <span class="bullet">-</span> <span class="string">GET</span></span><br><span class="line">              <span class="bullet">-</span> <span class="string">OPTIONS</span></span><br><span class="line">              <span class="bullet">-</span> <span class="string">PUT</span></span><br><span class="line">              <span class="bullet">-</span> <span class="string">DELETE</span></span><br><span class="line">              <span class="bullet">-</span> <span class="string">POST</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="统一异常处理"><a href="#统一异常处理" class="headerlink" title="统一异常处理"></a>统一异常处理</h2><p>网关是给接口做代理转发的，后端对应的是 REST API，返回数据格式是 JSON。如果不做处理，当发生异常时，Gateway 默认给出的错误信息是页面，不方便前端进行异常处理。所以需要对异常信息进行处理，并返回 JSON 格式的数据给客户端。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">JsonExceptionHandler</span> <span class="keyword">extends</span> <span class="title">DefaultErrorWebExceptionHandler</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">JsonExceptionHandler</span><span class="params">(ErrorAttributes errorAttributes, ResourceProperties resourceProperties,</span></span></span><br><span class="line"><span class="function"><span class="params">            ErrorProperties errorProperties, ApplicationContext applicationContext)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(errorAttributes, resourceProperties, errorProperties, applicationContext);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 获取异常属性</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> Map&lt;String, Object&gt; <span class="title">getErrorAttributes</span><span class="params">(ServerRequest request, <span class="keyword">boolean</span> includeStackTrace)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> code = <span class="number">500</span>;</span><br><span class="line">        Throwable error = <span class="keyword">super</span>.getError(request);</span><br><span class="line">        <span class="keyword">if</span> (error <span class="keyword">instanceof</span> org.springframework.cloud.gateway.support.NotFoundException) &#123;</span><br><span class="line">            code = <span class="number">404</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> response(code, <span class="keyword">this</span>.buildMessage(request, error));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 指定响应处理方法为JSON处理的方法， 默认返回html页面</span></span><br><span class="line"><span class="comment">     * protected RouterFunction&lt;ServerResponse&gt; getRoutingFunction(ErrorAttributes errorAttributes) &#123;</span></span><br><span class="line"><span class="comment">     *  return RouterFunctions.route(acceptsTextHtml(), this::renderErrorView).andRoute(RequestPredicates.all(),      	*  this::renderErrorResponse);</span></span><br><span class="line"><span class="comment">	 * &#125;</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> RouterFunction&lt;ServerResponse&gt; <span class="title">getRoutingFunction</span><span class="params">(ErrorAttributes errorAttributes)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> RouterFunctions.route(RequestPredicates.all(), <span class="keyword">this</span>::renderErrorResponse);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 根据code获取对应的HttpStatus，原始int statusCode = (int) errorAttributes.get(&quot;status&quot;);</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> errorAttributes</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> HttpStatus <span class="title">getHttpStatus</span><span class="params">(Map&lt;String, Object&gt; errorAttributes)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">int</span> statusCode = (<span class="keyword">int</span>) errorAttributes.get(<span class="string">&quot;code&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> HttpStatus.valueOf(statusCode);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 构建异常信息</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> request</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> ex</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">private</span> String <span class="title">buildMessage</span><span class="params">(ServerRequest request, Throwable ex)</span> </span>&#123;</span><br><span class="line">        StringBuilder message = <span class="keyword">new</span> StringBuilder(<span class="string">&quot;Failed to handle request [&quot;</span>);</span><br><span class="line">        message.append(request.methodName());</span><br><span class="line">        message.append(<span class="string">&quot; &quot;</span>);</span><br><span class="line">        message.append(request.uri());</span><br><span class="line">        message.append(<span class="string">&quot;]&quot;</span>);</span><br><span class="line">        <span class="keyword">if</span> (ex != <span class="keyword">null</span>) &#123;</span><br><span class="line">            message.append(<span class="string">&quot;: &quot;</span>);</span><br><span class="line">            message.append(ex.getMessage());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> message.toString();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 构建返回的JSON数据格式</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> status       状态码</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> errorMessage 异常信息</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Map&lt;String, Object&gt; <span class="title">response</span><span class="params">(<span class="keyword">int</span> status, String errorMessage)</span> </span>&#123;</span><br><span class="line">        Map&lt;String, Object&gt; map = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">        map.put(<span class="string">&quot;code&quot;</span>, status);</span><br><span class="line">        map.put(<span class="string">&quot;message&quot;</span>, errorMessage);</span><br><span class="line">        map.put(<span class="string">&quot;data&quot;</span>, <span class="keyword">null</span>);</span><br><span class="line">        <span class="keyword">return</span> map;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@EnableConfigurationProperties(&#123; ServerProperties.class, ResourceProperties.class &#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ErrorHandlerConfiguration</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ServerProperties serverProperties;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ApplicationContext applicationContext;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ResourceProperties resourceProperties;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> List&lt;ViewResolver&gt; viewResolvers;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> ServerCodecConfigurer serverCodecConfigurer;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ErrorHandlerConfiguration</span><span class="params">(ServerProperties serverProperties, ResourceProperties resourceProperties,</span></span></span><br><span class="line"><span class="function"><span class="params">            ObjectProvider&lt;List&lt;ViewResolver&gt;&gt; viewResolversProvider, ServerCodecConfigurer serverCodecConfigurer,</span></span></span><br><span class="line"><span class="function"><span class="params">            ApplicationContext applicationContext)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.serverProperties = serverProperties;</span><br><span class="line">        <span class="keyword">this</span>.applicationContext = applicationContext;</span><br><span class="line">        <span class="keyword">this</span>.resourceProperties = resourceProperties;</span><br><span class="line">        <span class="keyword">this</span>.viewResolvers = viewResolversProvider.getIfAvailable(Collections::emptyList);</span><br><span class="line">        <span class="keyword">this</span>.serverCodecConfigurer = serverCodecConfigurer;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="meta">@Order(Ordered.HIGHEST_PRECEDENCE)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ErrorWebExceptionHandler <span class="title">errorWebExceptionHandler</span><span class="params">(ErrorAttributes errorAttributes)</span> </span>&#123;</span><br><span class="line">        JsonExceptionHandler exceptionHandler = <span class="keyword">new</span> JsonExceptionHandler(errorAttributes, </span><br><span class="line">            <span class="keyword">this</span>.resourceProperties,<span class="keyword">this</span>.serverProperties.getError(), <span class="keyword">this</span>.applicationContext);</span><br><span class="line">        exceptionHandler.setViewResolvers(<span class="keyword">this</span>.viewResolvers);</span><br><span class="line">        exceptionHandler.setMessageWriters(<span class="keyword">this</span>.serverCodecConfigurer.getWriters());</span><br><span class="line">        exceptionHandler.setMessageReaders(<span class="keyword">this</span>.serverCodecConfigurer.getReaders());</span><br><span class="line">        <span class="keyword">return</span> exceptionHandler;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="重试机制"><a href="#重试机制" class="headerlink" title="重试机制"></a>重试机制</h2><p>RetryGatewayFilter 是 Spring Cloud Gateway 对请求重试提供的一个 GatewayFilter Factory。</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">cloud:</span></span><br><span class="line">    <span class="attr">gateway:</span></span><br><span class="line">      <span class="attr">routes:</span></span><br><span class="line">        <span class="bullet">-</span> <span class="attr">id:</span> <span class="string">zuul-encrypt-service</span></span><br><span class="line">      	 <span class="attr">uri:</span> <span class="string">lb://zuul-encrypt-service</span></span><br><span class="line">         <span class="attr">predicates:</span></span><br><span class="line">         <span class="bullet">-</span> <span class="string">Path=/data/**</span></span><br><span class="line">         <span class="attr">filters:</span></span><br><span class="line">         <span class="bullet">-</span> <span class="attr">name:</span> <span class="string">Retry</span></span><br><span class="line">         <span class="attr">args:</span></span><br><span class="line">         <span class="attr">retries:</span> <span class="number">3</span>  <span class="comment">#重试次数，默认值是 3 次。</span></span><br><span class="line">         <span class="attr">series:</span> <span class="string">SERVER_ERROR</span> <span class="comment">#状态码配置（分段），符合某段状态码才会进行重试逻辑，默认值是 SERVER_ERROR，值是 5，也就是 5XX（5 开头的状态码）。INFORMATIONAL(1), SUCCESSFUL(2), REDIRECTION(3), CLIENT_ERROR(4), SERVER_ERROR(5);</span></span><br><span class="line">         <span class="attr">statuses:</span> <span class="comment">#状态码配置，和series不同的是这里是具体状态码的配置，取值请参考org.springframework.http.HttpStatus</span></span><br><span class="line">         	 <span class="bullet">-</span> <span class="string">NOT_FOUND</span></span><br><span class="line">             <span class="bullet">-</span> <span class="string">REQUEST_TIMEOUT</span>              </span><br><span class="line">             <span class="bullet">-</span> <span class="string">BAD_GATEWAY</span></span><br><span class="line">         <span class="attr">methods:</span> <span class="comment">#指定哪些方法的请求需要进行重试逻辑，默认值是 GET 方法</span></span><br><span class="line">         	 <span class="bullet">-</span> <span class="string">GET</span></span><br><span class="line">		<span class="attr">exceptions:</span> <span class="comment">#指定哪些异常需要进行重试逻辑。默认值是java.io.IOException和 								  org.springframework.cloud.gateway.support.TimeoutException。</span></span><br><span class="line">              <span class="bullet">-</span> <span class="string">org.springframework.cloud.gateway.support.TimeoutException</span></span><br><span class="line">              <span class="bullet">-</span> <span class="string">java.io.IOException</span></span><br><span class="line">              <span class="bullet">-</span> <span class="string">java.util.concurrent.TimeoutException</span></span><br><span class="line">              <span class="bullet">-</span> <span class="string">com.netflix.hystrix.exception.HystrixRuntimeException</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="Spring-Cloud-Gateway-工作原理"><a href="#Spring-Cloud-Gateway-工作原理" class="headerlink" title="Spring Cloud Gateway 工作原理"></a>Spring Cloud Gateway 工作原理</h2><p><img src="/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BAPI%E7%BD%91%E5%85%B3%E4%B9%8BGateway%E8%AF%A6%E8%A7%A3/image-20210715141646667.png" alt="image-20210715141646667"><br>当客户端向 Spring Cloud Gateway 发起请求，该请求会被 HttpWebHandlerAdapter 获取，并且对请求进行提取，从而组装成网关上下文。</p>
+<p>将组成的上下文信息传递到 DispatcherHandler 组件。DispatcherHandler 作为请求分发处理器，主要负责将请求分发到对应的处理器进行处理。这里请求的处理器包括 RoutePredicate HandlerMapping (路由断言处理映射器) 。</p>
+<p>路由断言处理映射器用于路由的查找，以及找到 路由后返回对应的 FilteringWebHandler。 </p>
+<p>其负责组装 Filter 链表并执行过滤处理，之后再将请求转交给应用服务，应用服务处理完后，最后返回 Response 给客户端 。</p>
+<p>其中 FilteringWebHandler 处理请求的时候会交给 Filter 进行过滤的处理。这里需要注意的是由于 Filter 是双向的所以，当客户端请求服务的时候，会通过 Pre Filter 中的 Filter 处理请求。当服务处理完请求以后返回客户端的时候，会通过 Post Filter 再进行一次处理。 </p>
+<h2 id="Gateway详解"><a href="#Gateway详解" class="headerlink" title="Gateway详解"></a><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/xs8Ls_Lgd7uigGSYG0gGBQ">Gateway详解</a></h2>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E7%BD%91%E5%85%B3/" rel="tag"># 网关</a>
+              <a href="/tags/Gateway/" rel="tag"># Gateway</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/06/03/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFeign%E4%B9%8B%E5%8A%A0%E8%BD%BD%E5%8E%9F%E7%90%86/" rel="prev" title="Feign之加载原理">
+                  <i class="fa fa-chevron-left"></i> Feign之加载原理
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/06/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E9%99%90%E6%B5%81/" rel="next" title="限流-总结">
+                  限流-总结 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

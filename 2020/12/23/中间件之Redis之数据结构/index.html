@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="redis单点吞吐量单点TPS达到8万&#x2F;秒，QPS达到10万&#x2F;秒。 redis的5中存储类型string、list、set、map（hash）、stored-set redis的string类型 能表达3中类型：字符串、整数和浮点数。根据场景相互间自动转型，并且根据需要选取底层的承载方式 value内部以int、sds作为结构存储。int存放整型数据，sds存放字节&#x2F;字符串和浮点型数据 sds内部">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Redis之数据结构">
+<meta property="og:url" content="http://example.com/2020/12/23/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRedis%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="redis单点吞吐量单点TPS达到8万&#x2F;秒，QPS达到10万&#x2F;秒。 redis的5中存储类型string、list、set、map（hash）、stored-set redis的string类型 能表达3中类型：字符串、整数和浮点数。根据场景相互间自动转型，并且根据需要选取底层的承载方式 value内部以int、sds作为结构存储。int存放整型数据，sds存放字节&#x2F;字符串和浮点型数据 sds内部">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/12/23/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRedis%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/1637947-20200108102944037-1942746276.png">
+<meta property="og:image" content="http://example.com/2020/12/23/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRedis%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/1236645-20190629233343522-1807329534.png">
+<meta property="article:published_time" content="2020-12-23T05:21:05.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.212Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="Redis">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/12/23/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRedis%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/1637947-20200108102944037-1942746276.png">
+
+
+<link rel="canonical" href="http://example.com/2020/12/23/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRedis%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Redis之数据结构 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E5%8D%95%E7%82%B9%E5%90%9E%E5%90%90%E9%87%8F"><span class="nav-number">1.</span> <span class="nav-text">redis单点吞吐量</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E7%9A%845%E4%B8%AD%E5%AD%98%E5%82%A8%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.</span> <span class="nav-text">redis的5中存储类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E7%9A%84string%E7%B1%BB%E5%9E%8B"><span class="nav-number">3.</span> <span class="nav-text">redis的string类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E7%9A%84list%E7%B1%BB%E5%9E%8B"><span class="nav-number">4.</span> <span class="nav-text">redis的list类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E7%9A%84map%E7%B1%BB%E5%9E%8B"><span class="nav-number">5.</span> <span class="nav-text">redis的map类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E7%9A%84set%E7%B1%BB%E5%9E%8B"><span class="nav-number">6.</span> <span class="nav-text">redis的set类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E7%9A%84sorted-set%E7%B1%BB%E5%9E%8B"><span class="nav-number">7.</span> <span class="nav-text">redis的sorted-set类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BD%8D%E5%9B%BEBitSet"><span class="nav-number">8.</span> <span class="nav-text">位图BitSet</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#redis%E4%B8%ADkey%E5%92%8Cvalue%E7%9A%84%E5%AD%98%E5%82%A8%E5%A4%A7%E5%B0%8F%E9%99%90%E5%88%B6"><span class="nav-number">9.</span> <span class="nav-text">redis中key和value的存储大小限制</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/23/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRedis%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Redis之数据结构
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-12-23 13:21:05" itemprop="dateCreated datePublished" datetime="2020-12-23T13:21:05+08:00">2020-12-23</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Redis/" itemprop="url" rel="index"><span itemprop="name">Redis</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="redis单点吞吐量"><a href="#redis单点吞吐量" class="headerlink" title="redis单点吞吐量"></a><strong>redis单点吞吐量</strong></h2><p>单点TPS达到8万/秒，QPS达到10万/秒。</p>
+<h2 id="redis的5中存储类型"><a href="#redis的5中存储类型" class="headerlink" title="redis的5中存储类型"></a><strong>redis的5中存储类型</strong></h2><p>string、list、set、map（hash）、stored-set</p>
+<h2 id="redis的string类型"><a href="#redis的string类型" class="headerlink" title="redis的string类型"></a><strong>redis的string类型</strong></h2><ol>
+<li>能表达3中类型：字符串、整数和浮点数。根据场景相互间自动转型，并且根据需要选取底层的承载方式</li>
+<li><font color="red">value内部以int、sds作为结构存储</font>。int存放整型数据，sds存放字节/字符串和浮点型数据</li>
+<li>sds内部结构： <ol>
+<li>用buf数组存储字符串的内容，但数组的长度会大于所存储内容的长度。会有一格专门存放”\0”（C标准库）作为结尾，还有预留多几个空的（即free区域），当append字符串的长度小于free区域，则sds不会重新申请内存，直接使用free区域</li>
+<li>扩容：当对字符串的操作完成后预期的串长度小于1M时，扩容后的buf数组大小=预期长度*2+1；若大于1M，则buf总是会预留出1M的free空间</li>
+<li>value对象通常具有两个内存部分：redisObject部分和redisObject的ptr指向的sds部分。创建value对象时，通常需要为redisObject和sds申请两次内存。单对于短小的字符串，可以把两者连续存放，所以可以一次性把两者的内存一起申请了</li>
+</ol>
+</li>
+<li>使用场景<ol>
+<li>分布式锁｛setnx +lua脚本 | set key value  [EX seconds] [PX milliseconds] [NX|XX] ｝</li>
+<li>计数器|自增id｛incr key increment | DECRBY key decrement｝</li>
+<li>Token {set key value}</li>
+<li>幂等</li>
+</ol>
+</li>
+</ol>
+<h2 id="redis的list类型"><a href="#redis的list类型" class="headerlink" title="redis的list类型"></a><strong>redis的list类型</strong></h2><ol>
+<li><font color="red">list类型的value对象内部以linkedlist或ziplist承载</font>。当list的元素个数和单个元素的长度较小时，redis会采用ziplist实现以减少内存占用，否则采用linkedlist结构</li>
+<li>linkedlist内部实现是双向链表。在list中定义了头尾元素指针和列表的长度，是的pop/push操作、llen操作的复杂度为O(1)。由于是链表，lindex类的操作复杂度仍然是O(N)</li>
+<li>ziplist的内部结构 <ol>
+<li>所有内容被放置在连续的内存中。其中zlbytes表示ziplist的总长度，zltail指向最末元素，zllen表示元素个数，entry表示元素自身内容，zlend作为ziplist定界符</li>
+<li>rpush、rpop、llen，复杂度为O(1);lpush/pop操作由于涉及全列表元素的移动，复杂度为O(N)</li>
+</ol>
+</li>
+<li>使用场景<ol>
+<li>消息流｛LPUSH | RPUSH key value | LRANGE key start stop｝</li>
+<li>堵塞队列｛ BLPOP |  BRPOP key1 [key2 ] timeout ｝</li>
+</ol>
+</li>
+</ol>
+<h2 id="redis的map类型"><a href="#redis的map类型" class="headerlink" title="redis的map类型"></a><strong>redis的map类型</strong></h2><ol>
+<li>map又叫hash。map内部的key和value不能再嵌套map了，只能是string类型：整形、浮点型和字符串</li>
+<li><font color="red">map主要由hashtable和ziplist两种承载方式实现</font>，对于数据量较小的map，采用ziplist实现</li>
+<li>hashtable内部结构 <ol>
+<li>主要分为三层，自底向上分别是dictEntry、dictht、dict</li>
+<li>dictEntry：管理一个key-value对，同时保留同一个桶中相邻元素的指针，一次维护哈希桶的内部连</li>
+<li>dictht：维护哈希表的所有桶链</li>
+<li>dict：当dictht需要扩容/缩容时，用于管理dictht的迁移</li>
+<li>哈希表的核心结构是dictht，它的table字段维护着hash桶，它是一个数组，每个元素指向桶的第一个元素（dictEntry）</li>
+<li>set值的流程：先通过MurmurHash算法求出key的hash值，再对桶的个数取模，得到key对应的桶，再进入桶中，遍历全部entry，判定是否已有相同的key，如果没有，则将新key对应的键值对插入到桶头，并且更新dictht的used数量，used表示hash表中已经存了多少元素。由于每次插入都要遍历hash桶中的全部entry，所以当桶中entry很多时，性能会线性下降</li>
+<li>扩容：通过负载因子判定是否需要增加桶数。负载因子=哈希表中已有元素/哈希桶数的比值。有两个阈值，小于1一定不扩容；大于5一定扩容。扩容时新的桶数目是现有桶的2n倍</li>
+<li>缩容：负载因子的阈值是0.1</li>
+<li>扩/缩容通过新建哈希表的方式实现。即扩容时，会并存两个哈希表，一个是源表，一个是目标表。通过将源表的桶逐步迁移到目标表，以数据迁移的方式实现扩容，迁移完成后目标表覆盖源表。迁移过程中，首先访问源表，如果发现key对应的源表桶已完成迁移，则重新访问目标表，否则在源表中操作</li>
+<li>redis是单线程处理请求，迁移和访问的请求在相同线程内进行，所以不会存在并发性问题</li>
+</ol>
+</li>
+<li>ziplist内部结构 <ol>
+<li>和list的ziplist实现类似。不同的是，map对应的ziplist的entry个数总是2的整数倍，奇数存放key，偶数存放value</li>
+<li>ziplist实现下，由哈希遍历变成了链表的顺序遍历，复杂度变成O(N)</li>
+</ol>
+</li>
+<li>使用场景<ol>
+<li>对象存储，对象字段修改</li>
+<li>可重入锁</li>
+<li>购物车{HINCRBY key field increment}</li>
+<li>幂等</li>
+</ol>
+</li>
+</ol>
+<h2 id="redis的set类型"><a href="#redis的set类型" class="headerlink" title="redis的set类型"></a><strong>redis的set类型</strong></h2><ol>
+<li><font color="red">set以intset或hashtable来存储</font>。hashtable中的value永远为null，当set中只包含整数型的元素时，则采用intset</li>
+<li>intset的内部结构 <ol>
+<li>核心元素是一个字节数组，从小到大有序存放着set的元素</li>
+<li>由于元素有序排列，所以set的获取操作采用二分查找方式实现，复杂度O(log(N))。进行插入时，首先通过二分查找得到本次插入的位置，再对元素进行扩容，再将预计插入位置之后的所有元素向右移动一个位置，最后插入元素，插入复杂度为O(N)。删除类似</li>
+</ol>
+</li>
+<li>使用场景<ol>
+<li>关注和粉丝 点赞收藏 {SREM key member1 [member2] | SADD}</li>
+<li>好友推荐（集合操作）{SINTERSTORE destination key1 [key2] | SDIFFSTORE destination key1 [key2] }</li>
+<li>抽奖（可以随机选择集合里的多个元素{SRANDMEMBER key [count] }，选择并删除一个元素spop key）</li>
+</ol>
+</li>
+</ol>
+<h2 id="redis的sorted-set类型"><a href="#redis的sorted-set类型" class="headerlink" title="redis的sorted-set类型"></a><strong>redis的sorted-set类型</strong></h2><ol>
+<li><p>类似map是一个key-value对，但是有序的。value是一个浮点数，称为score，内部是按照score从小到大排序</p>
+</li>
+<li><p><font color="red">内部结构以ziplist或skiplist来实现</font></p>
+<ol>
+<li>ziplist 编码的 Zset 使用紧挨在一起的压缩列表节点来保存，第一个节点保存 member，第二个保存 score。ziplist 内的集合元素按 score 从小到大排序，其实质是一个双向链表。<img src="/2020/12/23/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRedis%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/1637947-20200108102944037-1942746276.png" alt="img"></li>
+<li><a target="_blank" rel="noopener" href="https://www.cnblogs.com/wuyizuokan/p/11108417.html">skiplist原理</a><img src="/2020/12/23/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRedis%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/1236645-20190629233343522-1807329534.png"></li>
+</ol>
+</li>
+<li><p>使用场景</p>
+<ol>
+<li>排行榜、活跃文章（对score进行累加）</li>
+<li>信息流（社交类如微博）</li>
+<li>限流里的滑动窗口</li>
+<li>延时队列（没有 ack 机制，当消费失败的情况下队列如何处理，topic 模式，广播模式如何搞）</li>
+<li>排行榜 {ZINCRBY key increment member }  月排行榜{ZINTERSTORE destination numkeys key [key …] }</li>
+</ol>
+</li>
+</ol>
+<h2 id="位图BitSet"><a href="#位图BitSet" class="headerlink" title="位图BitSet"></a>位图BitSet</h2><p>使用场景</p>
+<ol>
+<li>布隆过滤器 {Setbit key offset  1|0    |   Getbit key offset}</li>
+<li>签到（用户id自增）{BITOP AND destkey key [key …] }</li>
+<li>活跃用户统计（用户id自增）{BITOP OR destkey key [key …] }</li>
+</ol>
+<h2 id="redis中key和value的存储大小限制"><a href="#redis中key和value的存储大小限制" class="headerlink" title="redis中key和value的存储大小限制"></a>redis中key和value的存储大小限制</h2><p>String类型：一个String类型的value最大可以存储512M</p>
+<p>List类型：list的元素个数最多为2^32-1个，也就是4294967295个。</p>
+<p>Set类型：元素个数最多为2^32-1个，也就是4294967295个。</p>
+<p>Hash类型：键值对个数最多为2^32-1个，也就是4294967295个。</p>
+<p>Sorted set类型：跟Set类型相似。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Redis/" rel="tag"># Redis</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/12/23/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRedis%E4%B9%8B%E8%BF%9B%E9%98%B6/" rel="prev" title="Redis之进阶">
+                  <i class="fa fa-chevron-left"></i> Redis之进阶
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/12/23/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E4%B9%8BRedis%E7%BC%93%E5%AD%98%E6%9B%B4%E6%96%B0/" rel="next" title="Redis之缓存更新">
+                  Redis之缓存更新 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

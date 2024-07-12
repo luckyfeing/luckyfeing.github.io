@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="ES版本V5.x Lucene 6.x, 性能提升，默认打分机制从 TF-IDF 改为 BM 25 支持 Ingest 节点、 Completion suggested 、Java REST 客户端 Type 标记成 deprecated,支持了 Keyword 的类型 性能优化 减少了内部争竞争，防止对同一文档进行并发更新的竞争以及在同步事务日志时减少了锁定要求，索引吞吐量已得到了极大的提高 I">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Elasticsearch入门">
+<meta property="og:url" content="http://example.com/2021/04/20/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BElasticsearch%E5%85%A5%E9%97%A8/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="ES版本V5.x Lucene 6.x, 性能提升，默认打分机制从 TF-IDF 改为 BM 25 支持 Ingest 节点、 Completion suggested 、Java REST 客户端 Type 标记成 deprecated,支持了 Keyword 的类型 性能优化 减少了内部争竞争，防止对同一文档进行并发更新的竞争以及在同步事务日志时减少了锁定要求，索引吞吐量已得到了极大的提高 I">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2021/04/20/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BElasticsearch%E5%85%A5%E9%97%A8/8045c22ea2684a60aefb7871c2b37b4e~tplv-k3u1fbpfcp-watermark.image">
+<meta property="og:image" content="http://example.com/2021/04/20/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BElasticsearch%E5%85%A5%E9%97%A8/a03a9ef91555428fb1287d83cbf169f9~tplv-k3u1fbpfcp-watermark.image">
+<meta property="og:image" content="http://example.com/2021/04/20/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BElasticsearch%E5%85%A5%E9%97%A8/0b9302f5543e4f1dab3ed0ab5c88fb7d~tplv-k3u1fbpfcp-watermark.image">
+<meta property="article:published_time" content="2021-04-20T09:39:07.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.202Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="ES">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2021/04/20/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BElasticsearch%E5%85%A5%E9%97%A8/8045c22ea2684a60aefb7871c2b37b4e~tplv-k3u1fbpfcp-watermark.image">
+
+
+<link rel="canonical" href="http://example.com/2021/04/20/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BElasticsearch%E5%85%A5%E9%97%A8/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Elasticsearch入门 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#ES%E7%89%88%E6%9C%AC"><span class="nav-number">1.</span> <span class="nav-text">ES版本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#V5-x"><span class="nav-number">2.</span> <span class="nav-text">V5.x</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#V6-x"><span class="nav-number">3.</span> <span class="nav-text">V6.x</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#V7-x"><span class="nav-number">4.</span> <span class="nav-text">V7.x</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ES%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="nav-number">5.</span> <span class="nav-text">ES客户端</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ES%E7%B4%A2%E5%BC%95%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%AE%A1%E7%90%86"><span class="nav-number">6.</span> <span class="nav-text">ES索引生命周期管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%98%A0%E5%B0%84%E5%85%B3%E7%B3%BB"><span class="nav-number">7.</span> <span class="nav-text">映射关系</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9B%86%E7%BE%A4%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5"><span class="nav-number">7.1.</span> <span class="nav-text">集群相关概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%80%92%E6%8E%92%E7%B4%A2%E5%BC%95%E6%A6%82%E5%BF%B5"><span class="nav-number">7.2.</span> <span class="nav-text">倒排索引概念</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Elasticsearch-7-10-%E4%B9%8B-Search-shard-routing"><span class="nav-number">8.</span> <span class="nav-text">Elasticsearch 7.10 之 Search shard routing</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#lucene"><span class="nav-number">9.</span> <span class="nav-text">lucene</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E6%B3%A8%E7%82%B9"><span class="nav-number">10.</span> <span class="nav-text">关注点</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/20/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BElasticsearch%E5%85%A5%E9%97%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Elasticsearch入门
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-04-20 17:39:07" itemprop="dateCreated datePublished" datetime="2021-04-20T17:39:07+08:00">2021-04-20</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Elasticsearch/" itemprop="url" rel="index"><span itemprop="name">Elasticsearch</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="ES版本"><a href="#ES版本" class="headerlink" title="ES版本"></a>ES版本</h2><h2 id="V5-x"><a href="#V5-x" class="headerlink" title="V5.x"></a><strong>V5.x</strong></h2><ul>
+<li>Lucene 6.x,</li>
+<li>性能提升，默认打分机制从 TF-IDF 改为 BM 25</li>
+<li>支持 Ingest 节点、 Completion suggested 、Java REST 客户端</li>
+<li>Type 标记成 deprecated,支持了 Keyword 的类型</li>
+<li>性能优化<ul>
+<li>减少了内部争竞争，防止对同一文档进行并发更新的竞争以及在同步事务日志时减少了锁定要求，索引吞吐量已得到了极大的提高</li>
+<li>Instant Aggregations，在 Shard 层面提供了 Aggregation 缓存</li>
+<li>新增了 Profile API</li>
+</ul>
+</li>
+</ul>
+<h2 id="V6-x"><a href="#V6-x" class="headerlink" title="V6.x"></a><strong>V6.x</strong></h2><ul>
+<li>Lucene 7.x</li>
+<li><strong>Removal of types，在 6.0 里面，开始不支持一个 index 里面存在多个 type</strong></li>
+<li>跨多个Elasticsearch集群搜索，保留原来的索引在 5.x 群集，跨群集搜索来同时搜索 6.x 和 5.x 群集</li>
+<li>跨群集复制（CCR）</li>
+<li>更友好的的升级及数据迁移，在主要版本之间的迁移更为简化，体验升级</li>
+<li>性能优化<ul>
+<li>稀疏区域改进，降低了存储成本</li>
+<li>通过索引排序，可加快排序的查询性能</li>
+</ul>
+</li>
+</ul>
+<h2 id="V7-x"><a href="#V7-x" class="headerlink" title="V7.x"></a><strong>V7.x</strong></h2><ul>
+<li>Lucene 8.0</li>
+<li><strong>重大改进-正式废除单个索引下多 Type 的支持（只有_doc这一个默认type）</strong></li>
+<li>7.1开始，Security 功能免费使用</li>
+<li>ECK，允许用户在 Kubernetes 上配置，管理和操作 Elasticsearch 集群</li>
+<li>TransportClient 被废弃以至于，ES7 的 Java 代码，只能使用 restclient</li>
+<li>新功能<ul>
+<li>新的集群协调</li>
+<li>功能更完善的 REST Client</li>
+<li>Script Score Query，下一代的评分方式</li>
+</ul>
+</li>
+<li>性能优化<ul>
+<li>默认的 Primary Shard 数从 5 改为 1，避免 Over Sharding</li>
+<li>性能优化，更快的 Top K 检索</li>
+</ul>
+</li>
+</ul>
+<h2 id="ES客户端"><a href="#ES客户端" class="headerlink" title="ES客户端"></a>ES客户端</h2><p>Elasticsearch(ES)有两种连接方式：TransportClient、RestClient。TransportClient通过TCP方式访问ES(只支持java),RestClient方式通过http<br>API 访问ES(没有语言限制)。</p>
+<p>Elasticsearch计划在Elasticsearch<br>7.0中弃用TransportClient，在8.0中完全删除它。故在实际使用过程中建议您使用Java高级REST client。不管是transport client还是rest client都是线程安全的，都应该使用单例。</p>
+<p>TransportClient: TransportClient<br>是ElasticSearch（java）客户端封装对象，使用transport远程连接到Elasticsearch集群，默认用的TCP端口是9300，该transport<br>node并不会加入集群，而是简单的向ElasticSearch集群上的节点发送请求。</p>
+<p>Rest Client: Java Low Level REST Client：elasticsearch client<br>低级别客户端。它允许通过http请求与Elasticsearch集群进行通信。API本身不负责数据的编码解码，由用户去编码解码。它与所有的ElasticSearch版本兼容。</p>
+<p>Java High Level REST Client：Elasticsearch<br>client官方高级客户端。基于低级客户端，它定义的API,已经对请求与响应数据包进行编码解码。</p>
+<h2 id="ES索引生命周期管理"><a href="#ES索引生命周期管理" class="headerlink" title="ES索引生命周期管理"></a>ES索引生命周期管理</h2><p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6911843658006265863">索引生命周期管理方案</a><br><code>Elastic Stack 6.6</code> 版本后推出Index Lifecycle Management(索引生命周期管理)，支持针对索引的全生命周期托管管理，并且<code>Kibana</code> 上也提供了一套 UI 界面来配置策略。</p>
+<h2 id="映射关系"><a href="#映射关系" class="headerlink" title="映射关系"></a>映射关系</h2><p> ES                       -&gt;                  数据库<br> 索引 index           -&gt;                  表<br> 文档 document    -&gt;                  行（记录）<br> 字段 fields           -&gt;                   列<br> 映射 mapping      -&gt;                  表结构<br> 近实时 NRT         -&gt;                  Near real time 近实时的搜索,从写入数据到数据可以被搜索到有一个小延迟（大概1秒）；基于es执行搜索和分析可以达到秒级<br> 节点 node            -&gt;                  每一个服务器 </p>
+<h3 id="集群相关概念"><a href="#集群相关概念" class="headerlink" title="集群相关概念"></a>集群相关概念</h3><p>分片（shard）：把索引库拆分为多份，分别放在不同的节点上，比如有3个节点，3个节点的所有数据内容加在一起是一个完整的索引库。分别保存到三个节点上水平扩展，提高吞吐量。每个shard都是一个lucene index。<br>备份（replica）：每个shard的备份。</p>
+<p>shard = primary shard（主分片）<br>replica = replica shard（备份节点）</p>
+<h3 id="倒排索引概念"><a href="#倒排索引概念" class="headerlink" title="倒排索引概念"></a>倒排索引概念</h3><p>也常被称为反向索引、置入档案或反向档案，是一种索引方法，被用来存储在全文搜索下某个单词在一个文档或者一组文档中的存储位置的映射。 它是文档检索系统中最常用的数据结构。<br> <strong>根据单词去搜索包含单词的文档，并且显示在文档中的词频（TF)和位置(POS)</strong></p>
+<p><img src="/2021/04/20/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BElasticsearch%E5%85%A5%E9%97%A8/8045c22ea2684a60aefb7871c2b37b4e~tplv-k3u1fbpfcp-watermark.image" alt="img"></p>
+<p><img src="/2021/04/20/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BElasticsearch%E5%85%A5%E9%97%A8/a03a9ef91555428fb1287d83cbf169f9~tplv-k3u1fbpfcp-watermark.image" alt="img"></p>
+<h2 id="Elasticsearch-7-10-之-Search-shard-routing"><a href="#Elasticsearch-7-10-之-Search-shard-routing" class="headerlink" title="Elasticsearch 7.10 之 Search shard routing"></a>Elasticsearch 7.10 之 Search shard routing</h2><p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6908999948605112333">Search shard routing</a></p>
+<h2 id="lucene"><a href="#lucene" class="headerlink" title="lucene"></a>lucene</h2><p>就是一个jar包，里面包含了封装好的各种建立倒排索引，以及进行搜索的代码，包括各种算法。我们就用java开发的时候，引入lucene jar，然后基于lucene的api进行去进行开发就可以了。用lucene，我们就可以去将已有的数据建立索引，lucene会在本地磁盘上面，给我们组织索引的数据结构。</p>
+<p><img src="/2021/04/20/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BElasticsearch%E5%85%A5%E9%97%A8/0b9302f5543e4f1dab3ed0ab5c88fb7d~tplv-k3u1fbpfcp-watermark.image" alt="img"></p>
+<h2 id="关注点"><a href="#关注点" class="headerlink" title="关注点"></a>关注点</h2><p>分片机制：（我们之前随随便便就将一些document插入到es集群中去了，我们有没有care过数据怎么进行分片的，数据到哪个shard中去） </p>
+<p>cluster discovery：（集群发现机制，我们再次启动一个es进程，这个进程作为一个node自动就发现了集群，并且加入了进去，还接受了部分数据，replica shard） </p>
+<p>shard负载均衡：（举例，假设现在有3个节点，总共有25个shard要分配到3个节点上去，es会自动进行均匀分配，以保持每个节点的均衡的读写负载请求） </p>
+<p>shard副本： 请求路由，集群扩容，shard重分配</p>
+<p>增减或减少节点时的数据rebalance:保持负载均衡</p>
+<p>master节点:创建或删除索引,增加或删除节点</p>
+<p>节点平等的分布式架构:节点对等，每个节点都能接收所有的请求,自动请求路由,响应收集</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/ES/" rel="tag"># ES</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/04/20/%E8%AE%A2%E9%98%85%E5%8F%91%E5%B8%83%E8%80%85%E6%A8%A1%E5%BC%8F%E5%92%8C%E7%94%9F%E4%BA%A7%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F%E5%8C%BA%E5%88%AB/" rel="prev" title="订阅发布者模式和生产消费者模式区别">
+                  <i class="fa fa-chevron-left"></i> 订阅发布者模式和生产消费者模式区别
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/04/21/web%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/" rel="next" title="web基础知识">
+                  web基础知识 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="JVM运行时区域 程序计数器是jvm执行程序的流水线，存放一些跳转指令。 本地方法栈是jvm调用操作系统方法所使用的栈。 虚拟机栈是jvm执行java代码所使用的栈。 方法区存放了一些常量、静态变量、类信息等，可以理解成class文件在内存中的存放位置。 虚拟机堆是jvm执行java代码所使用的堆。GC Root 方法区中类静态属性引用的对象（static声明的引用类型字段） 方法区中常量引用的对">
+<meta property="og:type" content="article">
+<meta property="og:title" content="重点理解">
+<meta property="og:url" content="http://example.com/2021/05/19/%E9%87%8D%E7%82%B9%E7%90%86%E8%A7%A3/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="JVM运行时区域 程序计数器是jvm执行程序的流水线，存放一些跳转指令。 本地方法栈是jvm调用操作系统方法所使用的栈。 虚拟机栈是jvm执行java代码所使用的栈。 方法区存放了一些常量、静态变量、类信息等，可以理解成class文件在内存中的存放位置。 虚拟机堆是jvm执行java代码所使用的堆。GC Root 方法区中类静态属性引用的对象（static声明的引用类型字段） 方法区中常量引用的对">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-05-19T07:25:52.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.417Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/05/19/%E9%87%8D%E7%82%B9%E7%90%86%E8%A7%A3/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>重点理解 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#JVM"><span class="nav-number">1.</span> <span class="nav-text">JVM</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E6%97%B6%E5%8C%BA%E5%9F%9F"><span class="nav-number">1.1.</span> <span class="nav-text">运行时区域</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GC-Root"><span class="nav-number">1.2.</span> <span class="nav-text">GC Root</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%96%B9%E6%B3%95%E5%8C%BA%EF%BC%88%E6%B0%B8%E4%B9%85%E4%BB%A3%EF%BC%89%E5%8C%85%E5%90%AB%E5%93%AA%E4%BA%9B%E5%86%85%E5%AE%B9"><span class="nav-number">1.3.</span> <span class="nav-text">方法区（永久代）包含哪些内容</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%83%E7%A9%BA%E9%97%B4"><span class="nav-number">1.4.</span> <span class="nav-text">元空间</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E7%A7%BB%E9%99%A4%E6%B0%B8%E4%B9%85%E4%BB%A3"><span class="nav-number">1.5.</span> <span class="nav-text">为什么移除永久代</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E9%87%8F%E6%B1%A0"><span class="nav-number">1.6.</span> <span class="nav-text">常量池</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AD%97%E9%9D%A2%E9%87%8F-Literal"><span class="nav-number">1.7.</span> <span class="nav-text">字面量(Literal)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%A6%E5%8F%B7%E5%BC%95%E7%94%A8%E9%87%8F-Symbolic-References"><span class="nav-number">1.8.</span> <span class="nav-text">符号引用量(Symbolic References)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%90%E8%A1%8C%E6%97%B6%E5%B8%B8%E9%87%8F%E6%B1%A0"><span class="nav-number">1.9.</span> <span class="nav-text">运行时常量池</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B8%B8%E9%87%8F%E6%B1%A0%E7%9A%84%E5%A5%BD%E5%A4%84"><span class="nav-number">1.10.</span> <span class="nav-text">常量池的好处</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Synchronized"><span class="nav-number">2.</span> <span class="nav-text">Synchronized</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%94%81"><span class="nav-number">2.1.</span> <span class="nav-text">锁</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%94%81%E5%8E%9F%E7%90%86"><span class="nav-number">2.2.</span> <span class="nav-text">锁原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%94%81%E4%BC%98%E5%8C%96"><span class="nav-number">2.3.</span> <span class="nav-text">锁优化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RabbitMQ"><span class="nav-number">3.</span> <span class="nav-text">RabbitMQ</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EMQ"><span class="nav-number">4.</span> <span class="nav-text">EMQ</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E6%95%B0%E6%8D%AE%E6%96%B9%E5%BC%8F"><span class="nav-number">5.</span> <span class="nav-text">获取数据方式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Feign%E5%AE%9E%E6%88%98"><span class="nav-number">6.</span> <span class="nav-text">Feign实战</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E6%89%AB%E6%8F%8F"><span class="nav-number">6.1.</span> <span class="nav-text">启动扫描</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEFeign%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="nav-number">6.2.</span> <span class="nav-text">配置Feign客户端</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#fallback%E5%92%8CfallbackFactory%E5%8C%BA%E5%88%AB"><span class="nav-number">6.2.1.</span> <span class="nav-text">fallback和fallbackFactory区别</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8B%A6%E6%88%AA%E5%99%A8"><span class="nav-number">6.3.</span> <span class="nav-text">拦截器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BC%96%E7%A0%81%E5%99%A8"><span class="nav-number">6.4.</span> <span class="nav-text">编码器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E7%A0%81%E5%99%A8"><span class="nav-number">6.5.</span> <span class="nav-text">解码器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%9F%E4%B8%80%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E5%99%A8"><span class="nav-number">6.6.</span> <span class="nav-text">统一异常处理器</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Feign%E9%85%8D%E7%BD%AE"><span class="nav-number">6.7.</span> <span class="nav-text">Feign配置</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fegin%E9%9B%86%E6%88%90Hystrix%E5%92%8CRibbon%E5%8E%9F%E7%90%86"><span class="nav-number">7.</span> <span class="nav-text">Fegin集成Hystrix和Ribbon原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%A8%E9%93%BE%E8%B7%AF%E5%8E%8B%E6%B5%8B"><span class="nav-number">8.</span> <span class="nav-text">全链路压测</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MySQL"><span class="nav-number">9.</span> <span class="nav-text">MySQL</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E8%8C%83%E5%BC%8F"><span class="nav-number">9.1.</span> <span class="nav-text">三范式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ACID"><span class="nav-number">9.2.</span> <span class="nav-text">ACID</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB"><span class="nav-number">9.3.</span> <span class="nav-text">隔离级别</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%84%8F%E8%AF%BB%E3%80%81%E4%B8%8D%E5%8F%AF%E9%87%8D%E5%A4%8D%E8%AF%BB%EF%BC%88MVCC%EF%BC%89%E3%80%81%E5%B9%BB%E8%AF%BB%EF%BC%88Next-Key-lock%EF%BC%89"><span class="nav-number">9.4.</span> <span class="nav-text">脏读、不可重复读（MVCC）、幻读（Next-Key lock）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MVCC%E5%AE%9E%E7%8E%B0"><span class="nav-number">9.5.</span> <span class="nav-text">MVCC实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BF%AB%E7%85%A7%E8%AF%BB%E3%80%81%E5%BD%93%E5%89%8D%E8%AF%BB"><span class="nav-number">9.6.</span> <span class="nav-text">快照读、当前读</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%94%81%E6%9C%BA%E5%88%B6"><span class="nav-number">9.7.</span> <span class="nav-text">锁机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bin-log"><span class="nav-number">9.8.</span> <span class="nav-text">Bin log</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Redo-log%E5%92%8CUndo-log"><span class="nav-number">9.9.</span> <span class="nav-text">Redo log和Undo log</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6%E8%BF%87%E7%A8%8B"><span class="nav-number">9.10.</span> <span class="nav-text">主从复制过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%8A%E5%90%8C%E6%AD%A5%E5%A4%8D%E5%88%B6%E5%92%8C%E5%BC%82%E6%AD%A5%E5%A4%8D%E5%88%B6"><span class="nav-number">9.11.</span> <span class="nav-text">半同步复制和异步复制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MySQL%E7%9B%B8%E5%85%B3%E6%96%87%E7%AB%A0"><span class="nav-number">9.12.</span> <span class="nav-text">MySQL相关文章</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Binlog%E5%90%8C%E6%AD%A5%EF%BC%88Canal%EF%BC%89"><span class="nav-number">10.</span> <span class="nav-text">Binlog同步（Canal）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E7%A8%8B%E7%8A%B6%E6%80%81"><span class="nav-number">11.</span> <span class="nav-text">线程状态</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%BD%9C%E7%94%A8"><span class="nav-number">12.</span> <span class="nav-text">多线程作用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Jmeter"><span class="nav-number">13.</span> <span class="nav-text">Jmeter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Fluentd"><span class="nav-number">14.</span> <span class="nav-text">Fluentd</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/05/19/%E9%87%8D%E7%82%B9%E7%90%86%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          重点理解
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-05-19 15:25:52" itemprop="dateCreated datePublished" datetime="2021-05-19T15:25:52+08:00">2021-05-19</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="JVM"><a href="#JVM" class="headerlink" title="JVM"></a>JVM</h2><h3 id="运行时区域"><a href="#运行时区域" class="headerlink" title="运行时区域"></a>运行时区域</h3><ul>
+<li><strong>程序计数器</strong>是jvm执行程序的流水线，存放一些跳转指令。</li>
+<li><strong>本地方法栈</strong>是jvm调用操作系统方法所使用的栈。</li>
+<li><strong>虚拟机栈</strong>是jvm执行java代码所使用的栈。</li>
+<li><strong>方法区</strong>存放了一些常量、静态变量、类信息等，可以理解成class文件在内存中的存放位置。</li>
+<li><strong>虚拟机堆</strong>是jvm执行java代码所使用的堆。<h3 id="GC-Root"><a href="#GC-Root" class="headerlink" title="GC Root"></a>GC Root</h3></li>
+<li>方法区中类静态属性引用的对象（static声明的引用类型字段）</li>
+<li>方法区中常量引用的对象（final声明的引用类型字段）</li>
+<li>栈中引用的对象</li>
+<li>本地方法栈中引用的对象<h3 id="方法区（永久代）包含哪些内容"><a href="#方法区（永久代）包含哪些内容" class="headerlink" title="方法区（永久代）包含哪些内容"></a>方法区（永久代）包含哪些内容</h3></li>
+<li>运行时常量池</li>
+<li>字段和方法数据</li>
+<li>构造函数和普通方法的字节码内容</li>
+<li>一些特殊方法</li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/aaqian1/article/details/113771134">方法区中一个模块：静态区，用于存放静态变量和静态代码块，JDK1.7开始类的静态变量(class statics)转移到了java heap</a><h3 id="元空间"><a href="#元空间" class="headerlink" title="元空间"></a>元空间</h3>在JDK1.8中，使用元空间代替永久代来实现方法区，但是方法区并没有改变。变动的只是方法区中内容的物理存放位置。<font color="red">类型信息（元数据信息）等其他信息被移动到了元空间中；但是运行时常量池和字符串常量池被移动到了堆中。但是不论它们物理上如何存放，逻辑上还是属于方法区的。</font></li>
+</ul>
+<p>使用本地内存，不在虚拟机中。默认仅受本地内存限制。测试可以使用String类型的intern()方法，</p>
+<p>运行时常量池（字面量），JDK 1.7 和 1.8 将字符串常量由永久代转移到堆中。</p>
+<blockquote>
+<p>JDK1.7中永久代逻辑属于方法区，实际物理上还是放在堆区内，所以方法区内的运行时常量池、类信息都在堆内</p>
+<p>JDK1.8中方法区实现改成了元空间，直接放到了直接内存，但是运行时常量池物理上还是在堆区，虽然物理存放的地方变了，逻辑上看元空间、运行时常量池还是属于方法区</p>
+</blockquote>
+<h3 id="为什么移除永久代"><a href="#为什么移除永久代" class="headerlink" title="为什么移除永久代"></a>为什么移除永久代</h3><ul>
+<li>字符串存在永久代中，容易出现性能问题和内存溢出。</li>
+<li>类及方法的信息等比较难确定其大小，因此对于永久代的大小指定比较困难，太小容易出现永久代溢出，太大则容易导致老年代溢出。</li>
+<li>永久代会为 GC 带来不必要的复杂度，并且回收效率偏低。</li>
+<li>Oracle 可能会将HotSpot 与 JRockit 合二为一。</li>
+</ul>
+<h3 id="常量池"><a href="#常量池" class="headerlink" title="常量池"></a>常量池</h3><ul>
+<li>静态常量池（*.class文件中的常量池，class文件中的常量池不仅仅包含字符串(数字)字面量，还包含类、方法的信息，占用class文件绝大部分空间）<br>主要用于存放两大类常量：<strong>字面量</strong>(Literal)和<strong>符号引用量</strong>(Symbolic References)</li>
+<li>运行时常量池（jvm虚拟机在完成类装载操作后，将class文件中的常量池载入到内存中，并保存在<strong>方法区</strong>中，常说的常量池，就是指方法区中的运行时常量池。）</li>
+<li><a target="_blank" rel="noopener" href="https://blog.csdn.net/zm13007310400/article/details/77534349?utm_medium=distribute.pc_relevant_t0.none-task-blog-2~default~BlogCommendFromMachineLearnPai2~default-1.control&depth_1-utm_source=distribute.pc_relevant_t0.none-task-blog-2~default~BlogCommendFromMachineLearnPai2~default-1.control">常量池</a></li>
+</ul>
+<h3 id="字面量-Literal"><a href="#字面量-Literal" class="headerlink" title="字面量(Literal)"></a><strong>字面量</strong>(Literal)</h3><p>相当于Java语言层面常量的概念，如1.文本字符串 2.八种基本类型的值 3.被声明为final的常量等</p>
+<h3 id="符号引用量-Symbolic-References"><a href="#符号引用量-Symbolic-References" class="headerlink" title="符号引用量(Symbolic References)"></a><strong>符号引用量</strong>(Symbolic References)</h3><p>符号引用则属于编译原理方面的概念，包括了如下三种类型的常量</p>
+<ul>
+<li>类和接口的全限定名</li>
+<li>字段名称和描述符</li>
+<li>方法名称和描述符</li>
+</ul>
+<h3 id="运行时常量池"><a href="#运行时常量池" class="headerlink" title="运行时常量池"></a>运行时常量池</h3><p>运行时常量池相对于CLass文件常量池的另外一个重要特征是<strong>具备动态性</strong>，Java语言并不要求常量一定只有编译期才能产生，也就是并非预置入CLass文件中常量池的内容才能进入方法区运行时常量池，运行期间也可能将新的常量放入池中，这种特性被开发人员利用比较多的就是**String类的intern()**方法。</p>
+<p>String的intern()方法会查找在常量池中是否存在一份equal相等的字符串,如果有则返回该字符串的引用,如果没有则添加自己的字符串进入常量池。</p>
+<p>运行时常量池存在于内存中，也就是class常量池被加载到内存之后的版本，不同之处是：它的字面量可以动态的添加(String#intern()),符号引用可以被解析为直接引用</p>
+<p>JVM在执行某个类的时候，必须经过加载、连接、初始化，而连接又包括验证、准备、解析三个阶段。而当类加载到内存中后，jvm就会将class常量池中的内容存放到运行时常量池中，由此可知，运行时常量池也是每个类都有一个。在解析阶段，会把符号引用替换为直接引用，解析的过程会去查询字符串常量池，也就是我们上面所说的StringTable，以保证运行时常量池所引用的字符串与字符串常量池中是一致的。</p>
+<h3 id="常量池的好处"><a href="#常量池的好处" class="headerlink" title="常量池的好处"></a><strong>常量池的好处</strong></h3><p>常量池是为了避免频繁的创建和销毁对象而影响系统性能，其实现了对象的共享。<br>例如字符串常量池，在编译阶段就把所有的字符串文字放到一个常量池中。<br>（1）节省内存空间：常量池中所有相同的字符串常量被合并，只占用一个空间。<br>（2）节省运行时间：比较字符串时，==比equals()快。对于两个引用变量，只用==判断引用是否相等，也就可以判断实际值是否相等。</p>
+<h2 id="Synchronized"><a href="#Synchronized" class="headerlink" title="Synchronized"></a>Synchronized</h2><ul>
+<li><p>修饰方法时（字节码文件方法使用flags: ACC_SYNCHRONIZED）</p>
+</li>
+<li><p>修饰对象时（字节码文件中使用monitorenter，monitorexit）</p>
+</li>
+</ul>
+<h3 id="锁"><a href="#锁" class="headerlink" title="锁"></a>锁</h3><ul>
+<li>无锁</li>
+<li>偏向锁（当有一个线程使用时，使用cas由无锁升级为偏向锁）</li>
+<li>轻量级锁（当再有线程使用时，使用cas由偏向锁升级为轻量级锁）</li>
+<li>重量级锁（操作系统的互斥锁，此时先进行自旋，之后再升级为重量级锁）</li>
+</ul>
+<h3 id="锁原理"><a href="#锁原理" class="headerlink" title="锁原理"></a>锁原理</h3><p>对象由对象头、数据实例、对齐填充组成</p>
+<p>对象头由markword、类型指针、数组长度组成</p>
+<p>markword组成是核心：是否偏向锁标识位，锁类型标识位</p>
+<h3 id="锁优化"><a href="#锁优化" class="headerlink" title="锁优化"></a>锁优化</h3><ul>
+<li>锁粗化</li>
+<li>锁消除</li>
+<li>自适应自旋</li>
+</ul>
+<h2 id="RabbitMQ"><a href="#RabbitMQ" class="headerlink" title="RabbitMQ"></a>RabbitMQ</h2><p><code>RabbitMQ</code>延时队列问题：当过期时间不一致时，前面过期时间长的数据会堵塞后面过期时间短的数据-》可以使用延时插件，解决。<br>目前采用的是定时任务处理的方式，时效性要求不是那么高，可以通过减少任务执行间隔时间，减少延时。<br>当数据量大时 1）可以使用任务分片 2）多线程处理</p>
+<h2 id="EMQ"><a href="#EMQ" class="headerlink" title="EMQ"></a>EMQ</h2><p>企业级：千万级并发连接，百万级消息吞吐，毫秒级消息时延。大规模分布式，高可用集群架构，弹性伸缩部署，5G 时代大型物联网应用首选技术方案。企业版支持通过规则引擎，无需编写代码即可以将消息持久化到各类型数据库中，如 MySQL、PostgreSQL、InfluxDB、ClickHouse 等。也可以通过规则配置，将消息流转至其他消息服务器，如 Kafka、RabbitMQ、Pulsar 等。</p>
+<p>开源版本：支持分布式集群架构。EMQ X 3.0 单集群可支持千万级别的 MQTT 并发连接。</p>
+<ol>
+<li>稳定承载大规模的 MQTT 客户端连接，单服务器节点支持50万到100万连接。</li>
+<li>分布式节点集群，快速低延时的消息路由，单集群支持1000万规模的路由。</li>
+<li>消息服务器内扩展，支持定制多种认证方式、高效存储消息到后端数据库。</li>
+<li>完整物联网协议支持，MQTT、MQTT-SN、CoAP、LwM2M、WebSocket 或私有协议支持。</li>
+</ol>
+<h2 id="获取数据方式"><a href="#获取数据方式" class="headerlink" title="获取数据方式"></a>获取数据方式</h2><ul>
+<li>轮询（减少时间间隔，减少延时）</li>
+<li>长连接（减少连接，一直持有连接）</li>
+<li>长轮询（一次请求，比如连接时间为30s，前25s等待数据响应，最后5s）</li>
+</ul>
+<h2 id="Feign实战"><a href="#Feign实战" class="headerlink" title="Feign实战"></a>Feign实战</h2><h3 id="启动扫描"><a href="#启动扫描" class="headerlink" title="启动扫描"></a>启动扫描</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@EnableFeignClients(basePackages = &#123;&quot;com.hf&quot;&#125;)</span>   <span class="comment">//可以配置configuration</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="配置Feign客户端"><a href="#配置Feign客户端" class="headerlink" title="配置Feign客户端"></a>配置Feign客户端</h3><ul>
+<li>name:注册的服务名</li>
+<li>configuration：配置信息，可以@Bean，</li>
+<li><code>fallback</code>：降级返回,实现接口类，可以对每个方法进行返回，并需注入到Spring中，</li>
+<li><code>fallbackFactory</code>: 降级工厂。可以返回匿名内部类的对象，对方法进行个性化返回，也可以设置成默认返回对象，如JsonResult。</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@FeignClient(name=&quot;order-service&quot; configuration = SSOFeignConfig.class, fallbackFactory = OAuthTokenClientFallBackFactory.class,fallback=xxx.class)</span></span><br></pre></td></tr></table></figure>
+
+<h4 id="fallback和fallbackFactory区别"><a href="#fallback和fallbackFactory区别" class="headerlink" title="fallback和fallbackFactory区别"></a><code>fallback</code>和<code>fallbackFactory</code>区别</h4><p>1）<code>fallbackFactory</code>可捕获到<code>Throwable throwable</code>对象，此处异常是Feign包装后的异常，如要抛出未封装的异常，可以使用<code>ErrorDecoder</code>返回异常<br>2）<code>fallbackFactory</code>可返回共用降级返回值</p>
+<h3 id="拦截器"><a href="#拦截器" class="headerlink" title="拦截器"></a>拦截器</h3><p>可以给请求增加些共用的参数，如：传递<code>traceId</code>，传递Authorization=Basic xxxssasefwxxa，传递token，可以通过拦截器拦截请求，将GET请求且body不为空的情况，转换成body参数放在url后</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">RequestInterceptor#apply(RequestTemplate template)</span><br></pre></td></tr></table></figure>
+
+<h3 id="编码器"><a href="#编码器" class="headerlink" title="编码器"></a>编码器</h3><p>Encoder  -》new SpringFormEncoder(new SpringEncoder(messageConverters));</p>
+<h3 id="解码器"><a href="#解码器" class="headerlink" title="解码器"></a>解码器</h3><p>Decoder  -》SpringDecoder</p>
+<h3 id="统一异常处理器"><a href="#统一异常处理器" class="headerlink" title="统一异常处理器"></a>统一异常处理器</h3><p><strong>默认情况下,GET方式请求无论是连接异常还是读取异常,都会进行重试</strong>。<strong>非GET方式请求,只有连接异常时,才会进行重试</strong></p>
+<p>当请求之后，返回的status不为200的时候，通过response.body()获取返回的数据，之后可以返回一个统一的异常。方法的返回值是Exception对象</p>
+<p>当出现异常时不处理，使用<code>HystrixBadRequestException</code>异常，此时就不会走降级处理（不走fallback或fallbackFactory逻辑）。</p>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ErrorDecoder#decode(String s,Response response)</span><br></pre></td></tr></table></figure>
+
+<h3 id="Feign配置"><a href="#Feign配置" class="headerlink" title="Feign配置"></a>Feign配置</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">feign:</span></span><br><span class="line">  <span class="attr">client:</span></span><br><span class="line">    <span class="attr">config:</span></span><br><span class="line">      <span class="attr">default:</span></span><br><span class="line">        <span class="attr">logger-level:</span> <span class="string">basic</span></span><br><span class="line">  <span class="attr">httpclient:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">false</span></span><br><span class="line">  <span class="attr">okhttp:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">    <span class="attr">max-connections:</span> <span class="number">1000</span></span><br><span class="line">    <span class="attr">max-connections-per-route:</span> <span class="number">300</span></span><br><span class="line">  <span class="attr">compression:</span></span><br><span class="line">    <span class="attr">request:</span></span><br><span class="line">      <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">      <span class="attr">min-request-size:</span> <span class="number">2048</span> <span class="comment">#最小压缩文件，调大点，可以减少CPU压力</span></span><br><span class="line">      <span class="attr">mime-types:</span> <span class="string">text/xml,application/xml,application/json</span></span><br><span class="line">    <span class="attr">response:</span></span><br><span class="line">      <span class="attr">enable:</span> <span class="literal">true</span></span><br><span class="line">  <span class="attr">hystrix:</span></span><br><span class="line">    <span class="attr">enabled:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><font color="red">配置超时时间，但是它的配置会被Ribbon和Hystrix的超时时间所覆盖，配置Feign超时时间即是否开启重试和Hystrix </font></p>
+</blockquote>
+<h2 id="Fegin集成Hystrix和Ribbon原理"><a href="#Fegin集成Hystrix和Ribbon原理" class="headerlink" title="Fegin集成Hystrix和Ribbon原理"></a>Fegin集成Hystrix和Ribbon原理</h2><p>扫描FeignClient注解的包下的类，注册FeignClientFactoryBean，getObject获取代理对象，通过注入的Targeter，生成代理对象。http请求调用时，会走<font color="red">HystrixInvocationHandler</font>里的invoke方法，实现了InvocationHandler类，使用的是jdk的动态代理。<br>构建了HystrixCommand对象<br><a target="_blank" rel="noopener" href="https://blog.csdn.net/songhaifengshuaige/article/details/80489460">Feign集成Hystrix源码分析以及扩展</a></p>
+<p>Ribbon</p>
+<p>Hystrix</p>
+<p>Nacos</p>
+<p>Zookeeper  -&gt; </p>
+<p>Redis  -&gt;  Redisson</p>
+<p>ES   -&gt; high-level  low-level</p>
+<p>Kafka  -&gt;</p>
+<h2 id="全链路压测"><a href="#全链路压测" class="headerlink" title="全链路压测"></a>全链路压测</h2><p><a target="_blank" rel="noopener" href="https://github.com/youngperson/blog/issues/41">全链路压测相关知识点</a><br><a target="_blank" rel="noopener" href="https://tech.youzan.com/stress_testing/">有赞全链路压测</a><br><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/30511486?from=timeline&isappinstalled=0">饿了么全链路压测平台的实现与原理</a><br><a target="_blank" rel="noopener" href="https://my.oschina.net/cctester/blog/994727">阿里巴巴的全链路压测</a><br><a target="_blank" rel="noopener" href="https://github.com/yonyou-auto-dev/TITAN">开源压测系统</a></p>
+<h2 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h2><h3 id="三范式"><a href="#三范式" class="headerlink" title="三范式"></a>三范式</h3><p>第一范式：每一列原子不可再分<br>第二范式：满足第一范式，每一列与主键都相关，没有部分依赖<br>第三范式：满足第二范式，每一列与主键直接相关，不能间接相关，没有传递依赖</p>
+<p>范式的目的在于：</p>
+<ul>
+<li>减少冗余，冗余会带来存储空间增加</li>
+<li>减少异常（delete，update，insert），如果数据冗余之后，修改时需要也更新，否则会导致数据异常</li>
+<li>让数据组织的更加和谐（使结构更清晰，但是对于人操作更麻烦）</li>
+</ul>
+<p>反范式：核心是增加冗余而提高性能</p>
+<p>范式等级与复杂度是递进的。通过范式的不断升级，我们会发现应用的范式等级越高，则表越多。表多会带来很多问题：</p>
+<ul>
+<li>查询时要连接多个表，增加了查询的复杂度</li>
+<li>查询时需要连接多个表，降低了数据库查询性能</li>
+</ul>
+<p>而现在的情况，磁盘空间成本基本可以忽略不计，所以数据冗余所造成的问题也并不是应用数据库范式的理由。</p>
+<h3 id="ACID"><a href="#ACID" class="headerlink" title="ACID"></a>ACID</h3><ul>
+<li>原子性</li>
+<li>一致性</li>
+<li>隔离性</li>
+<li>持久性</li>
+</ul>
+<h3 id="隔离级别"><a href="#隔离级别" class="headerlink" title="隔离级别"></a>隔离级别</h3><ul>
+<li>读未提交</li>
+<li>读已提交</li>
+<li>可重复读</li>
+<li>串行化</li>
+</ul>
+<h3 id="脏读、不可重复读（MVCC）、幻读（Next-Key-lock）"><a href="#脏读、不可重复读（MVCC）、幻读（Next-Key-lock）" class="headerlink" title="脏读、不可重复读（MVCC）、幻读（Next-Key lock）"></a>脏读、不可重复读（MVCC）、幻读（Next-Key lock）</h3><h3 id="MVCC实现"><a href="#MVCC实现" class="headerlink" title="MVCC实现"></a><code>MVCC</code>实现</h3><p>借助Redo log实现MVCC多版本控制，表中数据含有三个隐藏字段：事务id，回滚指针，自增id</p>
+<h3 id="快照读、当前读"><a href="#快照读、当前读" class="headerlink" title="快照读、当前读"></a>快照读、当前读</h3><ul>
+<li>快照读：普通的查询</li>
+<li>当前读：insert、update、delete 、select *** for update 排它锁、select * form t lock in share mode 共享锁</li>
+</ul>
+<h3 id="锁机制"><a href="#锁机制" class="headerlink" title="锁机制"></a>锁机制</h3><ul>
+<li><p>表锁</p>
+</li>
+<li><p>行锁 （通过索引项加锁）</p>
+</li>
+<li><p>间隙锁（锁住间隙）</p>
+</li>
+<li><p>Next-Key lock （间隙锁+行锁）</p>
+</li>
+<li><p>意向锁：申请意向锁的动作是数据库完成的，就是说，事务A申请一行的行锁的时候，数据库会自动先开始申请表的意向锁，不需要我们程序员使用代码来申请。</p>
+</li>
+</ul>
+<p>①在mysql中有表锁，<br>  LOCK TABLE my_tabl_name READ; 用读锁锁表，会阻塞其他事务修改表数据。<br>  LOCK TABLE my_table_name WRITe; 用写锁锁表，会阻塞其他事务读和写。<br>②Innodb引擎又支持行锁，行锁分为<br>  共享锁，一个事务对一行的共享只读锁。<br>  排它锁，一个事务对一行的排他读写锁。<br>③意向锁的作用 <a target="_blank" rel="noopener" href="https://blog.csdn.net/sinat_36748650/article/details/88033383">mysql锁的作用</a></p>
+<h3 id="Bin-log"><a href="#Bin-log" class="headerlink" title="Bin log"></a>Bin log</h3><p><strong>三种数据格式</strong></p>
+<ul>
+<li><strong>statement</strong> 执行的SQL语句</li>
+<li><strong>row</strong>  存放的数据是改变之前和之后的数据，因此日志量较大。</li>
+<li><strong>mix</strong>  混合</li>
+</ul>
+<p><strong>日志刷盘参数</strong>：sync_binlog 值为0，1，N。0不fsync刷盘，1执行fsync刷盘，N表示N次事务提交，进行fsync刷盘</p>
+<p><strong>日志逻辑</strong>：log buffer  -》 os cache  -》 磁盘 </p>
+<p>Server层日志，跟Redo log结合使用，crashSafe能力，使用的二阶段提交的方式保证数据一致性</p>
+<h3 id="Redo-log和Undo-log"><a href="#Redo-log和Undo-log" class="headerlink" title="Redo log和Undo log"></a>Redo log和Undo log</h3><ul>
+<li>Redo log灾难恢复日志，</li>
+<li>Undo log回滚日志</li>
+</ul>
+<p>Redo log刷盘参数：</p>
+<h3 id="主从复制过程"><a href="#主从复制过程" class="headerlink" title="主从复制过程"></a>主从复制过程</h3><p>从库开启一个I/O线程，向主库请求<strong>Binlog</strong>日志。主节点开启一个binlog dump线程，检查自己的二进制日志，并发送给从节点；从库将接收到的数据保存到<strong>中继日志（Relay log）</strong>中，另外开启一个SQL线程，把Relay中的操作在自身机器上执行一遍</p>
+<h3 id="半同步复制和异步复制"><a href="#半同步复制和异步复制" class="headerlink" title="半同步复制和异步复制"></a>半同步复制和异步复制</h3><ul>
+<li>异步复制：<strong>主库执行完操作后，写入binlog日志后，就返回客户端，这一动作就结束了，并不会验证从库有没有收到，完不完整，所以这样可能会造成数据的不一致。</strong>主库提交一个事务并写入到Binlog，当日志还未传入从库时，主库宕机了或因磁盘损坏等故障导致该事务的Binlog丢失了，那从库就不会得到这个事务，也就造成了主从数据的不一致</li>
+<li>半同步复制: 当主库每提交一个事务后，不会立即返回，而是等待其中一个从库接收到Binlog并成功写入Relay-log中才返回客户端，所以这样就保证了一个事务至少有两份日志，一份保存在主库的Binlog，另一份保存在其中一个从库的Relay-log中，从而保证了数据的安全性和一致性。</li>
+</ul>
+<blockquote>
+<p>在半同步复制时，如果主库的一个事务提交成功了，在推送到从库的过程当中，从库宕机了或网络故障，导致从库并没有接收到这个事务的Binlog，此时主库会等待一段时间（这个时间由rpl_semi_sync_master_timeout的毫秒数决定），如果这个时间过后还无法推送到从库，那MySQL会自动从半同步复制切换为异步复制，当从库恢复正常连接到主库后，主库又会自动切换回半同步复制。</p>
+</blockquote>
+<p>复制架构</p>
+<ul>
+<li>一主多从模式：当从节点变多之后，每个从库在主库上都会有一个独立的Binlog Dump线程来推送binlog日志，所以随着从库数量的增加，主库的IO压力和网络压力也会随之增加。</li>
+<li>多级复制模式：主从直接，增加一个中间节点，由中间节点，进行数据同步，<strong>以此来减轻一级主库的推送压力。</strong>经过两次复制才能到达从库，增加了复制的延时。</li>
+<li>双主模式：主从切换场景，可以理解为高可用。当数据未同步时，主挂了之后，从作为主节点。当从节点恢复时，二个节点数据已不一致，此时数据复制，保证数据一致。</li>
+</ul>
+<h3 id="MySQL相关文章"><a href="#MySQL相关文章" class="headerlink" title="MySQL相关文章"></a>MySQL相关文章</h3><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/keil_wang/article/details/88669587">https://blog.csdn.net/keil_wang/article/details/88669587</a><br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/mao3714/p/8734838.html">https://www.cnblogs.com/mao3714/p/8734838.html</a></p>
+<p><a target="_blank" rel="noopener" href="http://blog.itpub.net/22664653/viewspace-1063134/">http://blog.itpub.net/22664653/viewspace-1063134/</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/u010833547/article/details/109293213">https://blog.csdn.net/u010833547/article/details/109293213</a><br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/klvchen/p/10861850.html">https://www.cnblogs.com/klvchen/p/10861850.html</a><br><a target="_blank" rel="noopener" href="https://www.xz577.com/j/22908.html">https://www.xz577.com/j/22908.html</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_45701550/article/details/111145914">https://blog.csdn.net/weixin_45701550/article/details/111145914</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_42512836/article/details/113388876">https://blog.csdn.net/weixin_42512836/article/details/113388876</a><br><a target="_blank" rel="noopener" href="https://cxyroad.blog.csdn.net/article/details/103790555">https://cxyroad.blog.csdn.net/article/details/103790555</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/z69183787/article/details/107188434">https://blog.csdn.net/z69183787/article/details/107188434</a><br><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/c53c8ab650b5">https://www.jianshu.com/p/c53c8ab650b5</a></p>
+<h2 id="Binlog同步（Canal）"><a href="#Binlog同步（Canal）" class="headerlink" title="Binlog同步（Canal）"></a>Binlog同步（Canal）</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/yehongzhi1994/article/details/107880162">Canal入门</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/yehongzhi1994/article/details/108034330">Canal集成Kafka到Redis</a><br>消息顺序问题：MySQL的Binlog保证了顺序性，因此只需要使到达MQ的数据能保证顺序性即可。Kafka可以指定Partition或者Key<br><a target="_blank" rel="noopener" href="https://blog.csdn.net/fomeiherz/article/details/103054693">Canal高可用集群搭建</a><br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/caoweixiong/p/13303862.html">Canal集群实战</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/fcly2013/article/details/79430484">Canal原理及问题点</a></p>
+<h2 id="线程状态"><a href="#线程状态" class="headerlink" title="线程状态"></a>线程状态</h2><h2 id="多线程作用"><a href="#多线程作用" class="headerlink" title="多线程作用"></a>多线程作用</h2><p>接口归并处理     -》（多个查询互相不影响）<br>大数据量分段处理 -》（大任务拆成小任务）</p>
+<p>并发：单核CPU并发交替处理<br>并行：多核CPU并行处理</p>
+<h2 id="Jmeter"><a href="#Jmeter" class="headerlink" title="Jmeter"></a>Jmeter</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/lijing742180/article/details/81158008">https://blog.csdn.net/lijing742180/article/details/81158008</a><br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/LZHOO97/p/12689089.html">https://www.cnblogs.com/LZHOO97/p/12689089.html</a><br><a target="_blank" rel="noopener" href="https://testerhome.com/topics/26890">https://testerhome.com/topics/26890</a><br><a target="_blank" rel="noopener" href="https://testerhome.com/articles/20770">https://testerhome.com/articles/20770</a><br><a target="_blank" rel="noopener" href="https://my.oschina.net/u/3519247/blog/4448724">https://my.oschina.net/u/3519247/blog/4448724</a><br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/imyalost/p/7733386.html">https://www.cnblogs.com/imyalost/p/7733386.html</a><br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/imyalost/p/7751981.html">https://www.cnblogs.com/imyalost/p/7751981.html</a><br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/paulwinflo/p/4872018.html">https://www.cnblogs.com/paulwinflo/p/4872018.html</a></p>
+<p>面试突击第一季 第二季<br>面试突击系列课程笔记存放在儒猿技术窝官方码云仓库<br>链接：<a target="_blank" rel="noopener" href="https://gitee.com/shishan100/Java-Interview-Advanced">https://gitee.com/shishan100/Java-Interview-Advanced</a><br>烦请随手给一个star</p>
+<p>面试突击 第三季笔记：<br>有的笔记就是跟那一讲的视频放在一起的，有的笔记是发在公众号石杉的架构笔记的，会在那一讲视频对应的笔记里说明、<br>（ 每一节课程详情点击进去，然后点击“详情” 这个tab 。往下拉，下面就是笔记了）</p>
+<p>面试突击三，java高级部分资料地址<br><a target="_blank" rel="noopener" href="https://www.jianguoyun.com/p/DfTsrhgQwe6LCRjondUD">https://www.jianguoyun.com/p/DfTsrhgQwe6LCRjondUD</a></p>
+<h2 id="Fluentd"><a href="#Fluentd" class="headerlink" title="Fluentd"></a>Fluentd</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">&lt;match **&gt;</span><br><span class="line">   @type elasticsearch</span><br><span class="line">   @log_level &quot;info&quot;</span><br><span class="line">   include_tag_key true</span><br><span class="line">   hosts &quot;http:&#x2F;&#x2F;10.16.32.197:9200,http:&#x2F;&#x2F;10.16.33.39:9200,http:&#x2F;&#x2F;10.16.33.215:9200&quot;</span><br><span class="line">   logstash_format true</span><br><span class="line">   logstash_prefix &quot;order-center-prod&quot;</span><br><span class="line">   logstash_dateformat &quot;%Y.%m.%d&quot;</span><br><span class="line">   type_name &quot;fluentd&quot;</span><br><span class="line">   &lt;buffer&gt;</span><br><span class="line">     @type &quot;file&quot;</span><br><span class="line">     path &quot;&#x2F;var&#x2F;log&#x2F;fluentd-buffers&#x2F;*.buffer&quot;</span><br><span class="line">     flush_mode interval</span><br><span class="line">     retry_type exponential_backoff</span><br><span class="line">     flush_thread_count 2</span><br><span class="line">     flush_interval 5s</span><br><span class="line">     retry_forever </span><br><span class="line">     retry_max_interval 30</span><br><span class="line">     chunk_limit_size 2M</span><br><span class="line">     queue_limit_length 8</span><br><span class="line">     overflow_action block</span><br><span class="line">   &lt;&#x2F;buffer&gt;</span><br><span class="line"> &lt;&#x2F;match&gt;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/05/19/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E7%86%94%E6%96%AD%E9%99%90%E6%B5%81%E9%9A%94%E7%A6%BB%E9%99%8D%E7%BA%A7%E4%B9%8BHystrix/" rel="prev" title="熔断限流隔离降级之Hystrix">
+                  <i class="fa fa-chevron-left"></i> 熔断限流隔离降级之Hystrix
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/06/02/%E6%80%A7%E8%83%BD%E7%9B%B8%E5%85%B3%E7%9F%A5%E8%AF%86/" rel="next" title="性能相关知识">
+                  性能相关知识 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="作者：Trust_FreeDom 出处：https:&#x2F;&#x2F;www.cnblogs.com&#x2F;trust-freedom&#x2F;p&#x2F;11216280.html#3560239013 事情的起因是这样的，公司内部要实现基于Zuul网关的灰度路由，在上线时进行灰度测试，故需要配置业务微服务向Eureka注册的metadata元数据，和自定义Ribbon的负载规则达到只访问灰度服务的目的。这样就需要自定义Ribbo">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ribbon源码解析">
+<meta property="og:url" content="http://example.com/2020/12/11/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BRibbon%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="作者：Trust_FreeDom 出处：https:&#x2F;&#x2F;www.cnblogs.com&#x2F;trust-freedom&#x2F;p&#x2F;11216280.html#3560239013 事情的起因是这样的，公司内部要实现基于Zuul网关的灰度路由，在上线时进行灰度测试，故需要配置业务微服务向Eureka注册的metadata元数据，和自定义Ribbon的负载规则达到只访问灰度服务的目的。这样就需要自定义Ribbo">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/12/11/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BRibbon%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/677054-20190719235138006-1969052898.jpg">
+<meta property="og:image" content="https://img2018.cnblogs.com/blog/677054/201907/677054-20190719235215286-1439271885.jpg">
+<meta property="og:image" content="http://example.com/2020/12/11/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BRibbon%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/677054-20190719235233605-1701546833.jpg">
+<meta property="article:published_time" content="2020-12-11T10:15:40.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.252Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="Ribbon">
+<meta property="article:tag" content="负载均衡">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/12/11/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BRibbon%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/677054-20190719235138006-1969052898.jpg">
+
+
+<link rel="canonical" href="http://example.com/2020/12/11/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BRibbon%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Ribbon源码解析 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Spring-Cloud-Ribbon%E8%87%AA%E5%8A%A8%E9%85%8D%E7%BD%AE"><span class="nav-number">1.</span> <span class="nav-text">Spring Cloud Ribbon自动配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RibbonAutoConfiguration"><span class="nav-number">2.</span> <span class="nav-text">RibbonAutoConfiguration</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Spring-Cloud-RibbonClient%E7%9A%84%E6%87%92%E5%8A%A0%E8%BD%BD"><span class="nav-number">3.</span> <span class="nav-text">Spring Cloud RibbonClient的懒加载</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Spring-Cloud-RibbonClient%E7%9A%84%E9%85%8D%E7%BD%AE%E5%8A%A0%E8%BD%BD%EF%BC%8C%E5%8C%85%E5%90%AB%E5%85%A8%E5%B1%80%E9%85%8D%E7%BD%AE%E5%8F%8AClient%E9%85%8D%E7%BD%AE"><span class="nav-number">4.</span> <span class="nav-text">Spring Cloud RibbonClient的配置加载，包含全局配置及Client配置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BARibbonClient%E5%AF%B9%E5%BA%94ApplicationContext%EF%BC%8C%E5%B9%B6%E6%B3%A8%E5%86%8C%E6%89%80%E6%9C%89%E5%8F%AF%E7%94%A8%E7%9A%84Configuration%E9%85%8D%E7%BD%AE%E7%B1%BB"><span class="nav-number">5.</span> <span class="nav-text">创建RibbonClient对应ApplicationContext，并注册所有可用的Configuration配置类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RibbonClientConfiguration%E9%85%8D%E7%BD%AE%E5%8A%A0%E8%BD%BD%E5%8F%8ARibbon%E6%A0%B8%E5%BF%83%E6%8E%A5%E5%8F%A3%E5%AE%9E%E7%8E%B0%E7%B1%BB%E5%88%9B%E5%BB%BA"><span class="nav-number">6.</span> <span class="nav-text">RibbonClientConfiguration配置加载及Ribbon核心接口实现类创建</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E8%87%AA%E5%AE%9A%E4%B9%89RibbonClient%E9%85%8D%E7%BD%AE%E3%80%81%E5%85%A8%E5%B1%80%E9%85%8D%E7%BD%AE"><span class="nav-number">7.</span> <span class="nav-text">如何自定义RibbonClient配置、全局配置</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/11/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BRibbon%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Ribbon源码解析
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-12-11 18:15:40" itemprop="dateCreated datePublished" datetime="2020-12-11T18:15:40+08:00">2020-12-11</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>作者：<a target="_blank" rel="noopener" href="https://www.cnblogs.com/trust-freedom/">Trust_FreeDom</a></p>
+<p>出处：<a target="_blank" rel="noopener" href="https://www.cnblogs.com/trust-freedom/p/11216280.html#3560239013">https://www.cnblogs.com/trust-freedom/p/11216280.html#3560239013</a></p>
+<p>事情的起因是这样的，公司内部要实现基于Zuul网关的灰度路由，在上线时进行灰度测试，故需要配置业务微服务向Eureka注册的metadata元数据，和自定义Ribbon的负载规则达到只访问灰度服务的目的。这样就需要自定义Ribbon的IRule，实现灰度请求只会负载到带有灰度标签元数据的业务微服务上，当自定义IRule规则开发好后，问题是如何将这个IRule规则配置给某个Ribbon Client或者全局生效。</p>
+<blockquote>
+<p>本次使用Spring Cloud Dalston.SR5版本</p>
+<p>在其 <a target="_blank" rel="noopener" href="https://cloud.spring.io/spring-cloud-static/Dalston.SR5/multi/multi_spring-cloud-ribbon.html">官方文档</a> 中其实已经给出了一些如何针对某个Client 或者 修改默认配置的方式，但没有说明为什么这样使用</p>
+</blockquote>
+<p>下面将按照这样的思路分析：</p>
+<ul>
+<li>简单分析Spring Cloud Ribbon启动时如何自动配置的，以了解其装配到Spring中的Bean</li>
+<li>Spring Cloud Ribbon Client的懒加载</li>
+<li>Spring Cloud Ribbon Client的配置加载，包含全局配置及Client配置</li>
+<li>如何自定义Client配置、全局配置</li>
+<li>解释官方文档中的一些注意事项<h2 id="Spring-Cloud-Ribbon自动配置"><a href="#Spring-Cloud-Ribbon自动配置" class="headerlink" title="Spring Cloud Ribbon自动配置"></a>Spring Cloud Ribbon自动配置</h2></li>
+</ul>
+<p>当前版本中的Netflix所有自动配置都在<code>spring-cloud-netflix-core-xxx.jar</code>中，根据其<code>META-INF/spring.factories</code>中的配置得知，Spring Cloud Ribbon的自动配置类为 <strong><code>RibbonAutoConfiguration</code></strong><br><img src="/2020/12/11/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BRibbon%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/677054-20190719235138006-1969052898.jpg" alt="img"></p>
+<h2 id="RibbonAutoConfiguration"><a href="#RibbonAutoConfiguration" class="headerlink" title="RibbonAutoConfiguration"></a>RibbonAutoConfiguration</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">Copy<span class="meta">@Configuration</span></span><br><span class="line"><span class="meta">@ConditionalOnClass(&#123; IClient.class, RestTemplate.class, AsyncRestTemplate.class, Ribbon.class&#125;)</span></span><br><span class="line"><span class="meta">@RibbonClients</span></span><br><span class="line"><span class="meta">@AutoConfigureAfter(name = &quot;org.springframework.cloud.netflix.eureka.EurekaClientAutoConfiguration&quot;)</span></span><br><span class="line"><span class="meta">@AutoConfigureBefore(&#123;LoadBalancerAutoConfiguration.class, AsyncLoadBalancerAutoConfiguration.class&#125;)</span></span><br><span class="line"><span class="meta">@EnableConfigurationProperties(RibbonEagerLoadProperties.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RibbonAutoConfiguration</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 所有针对某个RibbonClient指定的配置</span></span><br><span class="line">	<span class="meta">@Autowired(required = false)</span></span><br><span class="line">	<span class="keyword">private</span> List&lt;RibbonClientSpecification&gt; configurations = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">	</span><br><span class="line">    <span class="comment">// ribbon是否懒加载的配置文件</span></span><br><span class="line">	<span class="meta">@Autowired</span></span><br><span class="line">	<span class="keyword">private</span> RibbonEagerLoadProperties ribbonEagerLoadProperties;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Spring会给每个RibbonClient创建独立的ApplicationContext上下文</span></span><br><span class="line">    <span class="comment">// 并在其上下文中创建RibbonClient对应的Bean：如IClient、ILoadbalancer等</span></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> SpringClientFactory <span class="title">springClientFactory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		SpringClientFactory factory = <span class="keyword">new</span> SpringClientFactory();</span><br><span class="line">		factory.setConfigurations(<span class="keyword">this</span>.configurations);</span><br><span class="line">		<span class="keyword">return</span> factory;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Spring创建的带负载均衡功能的Client，会使用SpringClientFactory创建对应的Bean和配置</span></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="meta">@ConditionalOnMissingBean(LoadBalancerClient.class)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> LoadBalancerClient <span class="title">loadBalancerClient</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> RibbonLoadBalancerClient(springClientFactory());</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 到Spring environment中加载针对某个Client的Ribbon的核心接口实现类</span></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="meta">@ConditionalOnMissingBean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> PropertiesFactory <span class="title">propertiesFactory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> PropertiesFactory();</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">    <span class="comment">// 如果不是懒加载，启动时就使用RibbonApplicationContextInitializer加载并初始化客户端配置</span></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="meta">@ConditionalOnProperty(value = &quot;ribbon.eager-load.enabled&quot;, matchIfMissing = false)</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> RibbonApplicationContextInitializer <span class="title">ribbonApplicationContextInitializer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> RibbonApplicationContextInitializer(springClientFactory(),</span><br><span class="line">				ribbonEagerLoadProperties.getClients());</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面<code>RibbonAutoConfiguration</code>创建的Bean主要分以下几类：</p>
+<ul>
+<li>为Ribbon Client创建环境及获取配置<ul>
+<li><strong>SpringClientFactory</strong>： 会给每个Ribbon Client创建一个独立的Spring应用上下文ApplicationContext，并在其中加载对应的配置及Ribbon核心接口的实现类</li>
+<li><strong>PropertiesFactory</strong>： 用于从Spring enviroment环境中获取针对某个Ribbon Client配置的核心接口实现类，并实例化</li>
+</ul>
+</li>
+<li>创建<code>RibbonLoadBalancerClient</code>，并将springClientFactory注入，方便从中获取对应的配置及实现类，<code>RibbonLoadBalancerClient</code>是Spring对<code>LoadBalancerClient</code>接口的实现类，其<code>execute()</code>方法提供客户端负载均衡能力</li>
+<li>懒加载相关<ul>
+<li>RibbonEagerLoadProperties： 懒加载配置项Properties，可以指定是否懒加载，及哪些Client不懒加载</li>
+<li>RibbonApplicationContextInitializer： 启动时就加载RibbonClient配置（非懒加载）的初始化器</li>
+</ul>
+</li>
+</ul>
+<p>可以看到默认启动流程中并没有加载RibbonClient的上下文和配置信息，而是在使用时才加载，即懒加载</p>
+<h2 id="Spring-Cloud-RibbonClient的懒加载"><a href="#Spring-Cloud-RibbonClient的懒加载" class="headerlink" title="Spring Cloud RibbonClient的懒加载"></a>Spring Cloud RibbonClient的懒加载</h2><p>既然是在使用时才会加载，那么以Zuul网关为例，在其<code>RibbonRoutingFilter</code>中会创建RibbonCommand，其包含了Ribbon的负载均衡</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">Copy<span class="comment">//## RibbonRoutingFilter  Zuul负责路由的Filter</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RibbonRoutingFilter</span> <span class="keyword">extends</span> <span class="title">ZuulFilter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> Object <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		RequestContext context = RequestContext.getCurrentContext();</span><br><span class="line">		<span class="keyword">this</span>.helper.addIgnoredHeaders();</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			RibbonCommandContext commandContext = buildCommandContext(context);</span><br><span class="line">			ClientHttpResponse response = forward(commandContext);</span><br><span class="line">			setResponse(response);</span><br><span class="line">			<span class="keyword">return</span> response;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (ZuulException ex) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> ZuulRuntimeException(ex);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">			<span class="keyword">throw</span> <span class="keyword">new</span> ZuulRuntimeException(ex);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> ClientHttpResponse <span class="title">forward</span><span class="params">(RibbonCommandContext context)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">		Map&lt;String, Object&gt; info = <span class="keyword">this</span>.helper.debug(context.getMethod(),</span><br><span class="line">				context.getUri(), context.getHeaders(), context.getParams(),</span><br><span class="line">				context.getRequestEntity());</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 使用ribbonCommandFactory创建RibbonCommand</span></span><br><span class="line">		RibbonCommand command = <span class="keyword">this</span>.ribbonCommandFactory.create(context);</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">			ClientHttpResponse response = command.execute();</span><br><span class="line">			<span class="keyword">this</span>.helper.appendDebug(info, response.getStatusCode().value(),</span><br><span class="line">					response.getHeaders());</span><br><span class="line">			<span class="keyword">return</span> response;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">catch</span> (HystrixRuntimeException ex) &#123;</span><br><span class="line">			<span class="keyword">return</span> handleException(info, ex);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在执行<code>RibbonRoutingFilter#run()</code>进行路由时会执行<code>forward()</code>方法，由于此处是在<strong>HystrixCommand</strong>内部执行Ribbon负载均衡调用，故使用ribbonCommandFactory创建RibbonCommand，Ribbon客户端的懒加载就在这个方法内，这里我们看<code>HttpClientRibbonCommandFactory</code>实现类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Copy<span class="comment">//## org.springframework.cloud.netflix.zuul.filters.route.apache.HttpClientRibbonCommandFactory</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HttpClientRibbonCommandFactory</span> <span class="keyword">extends</span> <span class="title">AbstractRibbonCommandFactory</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> HttpClientRibbonCommand <span class="title">create</span><span class="params">(<span class="keyword">final</span> RibbonCommandContext context)</span> </span>&#123;</span><br><span class="line">		ZuulFallbackProvider zuulFallbackProvider = getFallbackProvider(context.getServiceId());</span><br><span class="line">		<span class="keyword">final</span> String serviceId = context.getServiceId();</span><br><span class="line">        <span class="comment">// 通过SpringClientFactory获取IClient接口实例</span></span><br><span class="line">		<span class="keyword">final</span> RibbonLoadBalancingHttpClient client = <span class="keyword">this</span>.clientFactory.getClient(</span><br><span class="line">				serviceId, RibbonLoadBalancingHttpClient.class);</span><br><span class="line">		client.setLoadBalancer(<span class="keyword">this</span>.clientFactory.getLoadBalancer(serviceId));</span><br><span class="line"></span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">new</span> HttpClientRibbonCommand(serviceId, client, context, zuulProperties, zuulFallbackProvider,</span><br><span class="line">				clientFactory.getClientConfig(serviceId));</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>创建<code>RibbonLoadBalancingHttpClient</code>的逻辑在 <code>SpringClientFactory#getClient(serviceId, RibbonLoadBalancingHttpClient.class)</code>，如下：</p>
+<ul>
+<li>SpringClientFactory#getInstance(name, clientClass)<ul>
+<li>NamedContextFactory#getInstance(name, type)：<ul>
+<li>获取Client对应的ApplicationContext，如没有则调用createContext()创建，其中包含注册统一默认配置类RibbonClientConfiguration，或@RibbonClient、@RibbonClients(defaultConfiguration=xxx) 设置的配置类的逻辑</li>
+<li>从ApplicationContext中根据类型获取实例，如没有使用反射创建，并通过IClientConfig配置</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>如上执行完毕RibbonClient就基本懒加载完成了，就可以到RibbonClient对应的ApplicationContext中继续获取其它核心接口的实现类了，这些实现类都是根据 <strong>默认/全局/Client自定义</strong> 配置创建的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br></pre></td><td class="code"><pre><span class="line">Copy<span class="comment">//## org.springframework.cloud.netflix.ribbon.SpringClientFactory</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SpringClientFactory</span> <span class="keyword">extends</span> <span class="title">NamedContextFactory</span>&lt;<span class="title">RibbonClientSpecification</span>&gt; </span>&#123;</span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">final</span> String NAMESPACE = <span class="string">&quot;ribbon&quot;</span>;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">SpringClientFactory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		<span class="keyword">super</span>(RibbonClientConfiguration.class, NAMESPACE, <span class="string">&quot;ribbon.client.name&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Get the rest client associated with the name.</span></span><br><span class="line"><span class="comment">	 * <span class="doctag">@throws</span> RuntimeException if any error occurs</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="keyword">public</span> &lt;C extends IClient&lt;?, ?&gt;&gt; <span class="function">C <span class="title">getClient</span><span class="params">(String name, Class&lt;C&gt; clientClass)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> getInstance(name, clientClass);</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// name代表当前Ribbon客户端，type代表要获取的实例类型，如IClient、IRule</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">	<span class="keyword">public</span> &lt;C&gt; <span class="function">C <span class="title">getInstance</span><span class="params">(String name, Class&lt;C&gt; type)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 先从父类NamedContextFactory中直接从客户端对应的ApplicationContext中获取实例</span></span><br><span class="line">        <span class="comment">// 如果没有就根据IClientConfig中的配置找到具体的实现类，并通过反射初始化后放到Client对应的ApplicationContext中</span></span><br><span class="line">		C instance = <span class="keyword">super</span>.getInstance(name, type);</span><br><span class="line">		<span class="keyword">if</span> (instance != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">return</span> instance;</span><br><span class="line">		&#125;</span><br><span class="line">		IClientConfig config = getInstance(name, IClientConfig.class);</span><br><span class="line">		<span class="keyword">return</span> instantiateWithConfig(getContext(name), type, config);</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 使用IClientConfig实例化</span></span><br><span class="line">    <span class="keyword">static</span> &lt;C&gt; <span class="function">C <span class="title">instantiateWithConfig</span><span class="params">(AnnotationConfigApplicationContext context,</span></span></span><br><span class="line"><span class="function"><span class="params">										Class&lt;C&gt; clazz, IClientConfig config)</span> </span>&#123;</span><br><span class="line">		C result = <span class="keyword">null</span>;</span><br><span class="line">		<span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 通过以IClientConfig为参数的构造创建clazz类实例</span></span><br><span class="line">			Constructor&lt;C&gt; constructor = clazz.getConstructor(IClientConfig.class);</span><br><span class="line">			result = constructor.newInstance(config);</span><br><span class="line">		&#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">			<span class="comment">// Ignored</span></span><br><span class="line">		&#125;</span><br><span class="line">		</span><br><span class="line">        <span class="comment">// 如果没创建成功，使用无惨构造</span></span><br><span class="line">		<span class="keyword">if</span> (result == <span class="keyword">null</span>) &#123;</span><br><span class="line">			result = BeanUtils.instantiate(clazz);</span><br><span class="line">			</span><br><span class="line">            <span class="comment">// 调用初始化配置方法</span></span><br><span class="line">			<span class="keyword">if</span> (result <span class="keyword">instanceof</span> IClientConfigAware) &#123;</span><br><span class="line">				((IClientConfigAware) result).initWithNiwsConfig(config);</span><br><span class="line">			&#125;</span><br><span class="line">			</span><br><span class="line">            <span class="comment">// 处理自动织入</span></span><br><span class="line">			<span class="keyword">if</span> (context != <span class="keyword">null</span>) &#123;</span><br><span class="line">				context.getAutowireCapableBeanFactory().autowireBean(result);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> result;</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//## 父类 org.springframework.cloud.context.named.NamedContextFactory</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">NamedContextFactory</span>&lt;<span class="title">C</span> <span class="keyword">extends</span> <span class="title">NamedContextFactory</span>.<span class="title">Specification</span>&gt;</span></span><br><span class="line"><span class="class">		<span class="keyword">implements</span> <span class="title">DisposableBean</span>, <span class="title">ApplicationContextAware</span> </span>&#123;</span><br><span class="line">	<span class="comment">// 维护Ribbon客户端对应的ApplicationContext上下文</span></span><br><span class="line">	<span class="keyword">private</span> Map&lt;String, AnnotationConfigApplicationContext&gt; contexts = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 维护Ribbon客户端的@Configuration配置类</span></span><br><span class="line">	<span class="keyword">private</span> Map&lt;String, C&gt; configurations = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> ApplicationContext parent;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> Class&lt;?&gt; defaultConfigType;  <span class="comment">// 默认配置类为 RibbonClientConfiguration</span></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> String propertySourceName;  <span class="comment">// 默认为 ribbon</span></span><br><span class="line">	<span class="keyword">private</span> <span class="keyword">final</span> String propertyName;  <span class="comment">// 默认读取RibbonClient名的属性为ribbon.client.name</span></span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">NamedContextFactory</span><span class="params">(Class&lt;?&gt; defaultConfigType, String propertySourceName,</span></span></span><br><span class="line"><span class="function"><span class="params">			String propertyName)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">this</span>.defaultConfigType = defaultConfigType;</span><br><span class="line">		<span class="keyword">this</span>.propertySourceName = propertySourceName;</span><br><span class="line">		<span class="keyword">this</span>.propertyName = propertyName;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 如果包含Client上下文直接返回</span></span><br><span class="line">	<span class="comment">// 如果不包含，调用createContext(name)，并放入contexts集合</span></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> AnnotationConfigApplicationContext <span class="title">getContext</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (!<span class="keyword">this</span>.contexts.containsKey(name)) &#123;</span><br><span class="line">			<span class="keyword">synchronized</span> (<span class="keyword">this</span>.contexts) &#123;</span><br><span class="line">				<span class="keyword">if</span> (!<span class="keyword">this</span>.contexts.containsKey(name)) &#123;</span><br><span class="line">					<span class="keyword">this</span>.contexts.put(name, createContext(name));</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">this</span>.contexts.get(name);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// 创建名为name的RibbonClient的ApplicationContext上下文</span></span><br><span class="line">	<span class="function"><span class="keyword">protected</span> AnnotationConfigApplicationContext <span class="title">createContext</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">		AnnotationConfigApplicationContext context = <span class="keyword">new</span> AnnotationConfigApplicationContext();</span><br><span class="line">		</span><br><span class="line">		<span class="comment">// configurations集合中是否包含当前Client相关配置类，包含即注入到ApplicationContext</span></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.configurations.containsKey(name)) &#123;</span><br><span class="line">			<span class="keyword">for</span> (Class&lt;?&gt; configuration : <span class="keyword">this</span>.configurations.get(name)</span><br><span class="line">					.getConfiguration()) &#123;</span><br><span class="line">				context.register(configuration);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		</span><br><span class="line">		<span class="comment">//configurations集合中是否包含default.开头的通过@RibbonClients(defaultConfiguration=xxx)配置的默认配置类</span></span><br><span class="line">		<span class="keyword">for</span> (Map.Entry&lt;String, C&gt; entry : <span class="keyword">this</span>.configurations.entrySet()) &#123;</span><br><span class="line">			<span class="keyword">if</span> (entry.getKey().startsWith(<span class="string">&quot;default.&quot;</span>)) &#123;</span><br><span class="line">				<span class="keyword">for</span> (Class&lt;?&gt; configuration : entry.getValue().getConfiguration()) &#123;</span><br><span class="line">					context.register(configuration);</span><br><span class="line">				&#125;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		</span><br><span class="line">		<span class="comment">// 注册PropertyPlaceholderAutoConfiguration、RibbonClientConfiguration</span></span><br><span class="line">		context.register(PropertyPlaceholderAutoConfiguration.class,</span><br><span class="line">				<span class="keyword">this</span>.defaultConfigType);</span><br><span class="line">		<span class="comment">// 添加 ribbon.client.name=具体RibbonClient name的enviroment配置	 	</span></span><br><span class="line">		context.getEnvironment().getPropertySources().addFirst(<span class="keyword">new</span> MapPropertySource(</span><br><span class="line">				<span class="keyword">this</span>.propertySourceName,</span><br><span class="line">				Collections.&lt;String, Object&gt; singletonMap(<span class="keyword">this</span>.propertyName, name)));</span><br><span class="line">		</span><br><span class="line">		<span class="comment">// 设置父ApplicationContext，这样可以使得当前创建的子ApplicationContext可以使用父上下文中的Bean</span></span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.parent != <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="comment">// Uses Environment from parent as well as beans</span></span><br><span class="line">			context.setParent(<span class="keyword">this</span>.parent);</span><br><span class="line">		&#125;</span><br><span class="line">		context.refresh();  <span class="comment">//刷新Context</span></span><br><span class="line">		<span class="keyword">return</span> context;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">getInstance</span><span class="params">(String name, Class&lt;T&gt; type)</span> </span>&#123;</span><br><span class="line">		AnnotationConfigApplicationContext context = getContext(name);</span><br><span class="line">		<span class="keyword">if</span> (BeanFactoryUtils.beanNamesForTypeIncludingAncestors(context,</span><br><span class="line">				type).length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">			<span class="keyword">return</span> context.getBean(type);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面比较重要的就是在创建每个RibbonClient的ApplicationContext的<code>createContext(name)</code>方法，其中包含了根据哪个@Configuration配置类创建Ribbon核心接口的实现类的逻辑，故需重点分析（Ribbon核心接口讲解 <a target="_blank" rel="noopener" href="https://blog.csdn.net/zhxdick/article/details/79710960">参考</a>）</p>
+<p>那么在<code>createContext(name)</code>方法创建当前Ribbon Client相关的上下文，并注入配置类时，除了默认配置类<code>RibbonClientConfiguration</code>是写死的，其它的配置类，如default全局配置类，针对某个Ribbon Client的配置类，又是怎么配置的呢？</p>
+<h2 id="Spring-Cloud-RibbonClient的配置加载，包含全局配置及Client配置"><a href="#Spring-Cloud-RibbonClient的配置加载，包含全局配置及Client配置" class="headerlink" title="Spring Cloud RibbonClient的配置加载，包含全局配置及Client配置"></a>Spring Cloud RibbonClient的配置加载，包含全局配置及Client配置</h2><h2 id="创建RibbonClient对应ApplicationContext，并注册所有可用的Configuration配置类"><a href="#创建RibbonClient对应ApplicationContext，并注册所有可用的Configuration配置类" class="headerlink" title="创建RibbonClient对应ApplicationContext，并注册所有可用的Configuration配置类"></a>创建RibbonClient对应ApplicationContext，并注册所有可用的Configuration配置类</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">Copy<span class="comment">//## org.springframework.cloud.context.named.NamedContextFactory#createContext()</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> AnnotationConfigApplicationContext <span class="title">createContext</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">	AnnotationConfigApplicationContext context = <span class="keyword">new</span> AnnotationConfigApplicationContext();</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 1、注册专门为RibbonClient指定的configuration配置类，@RibbonClient注解</span></span><br><span class="line">	<span class="keyword">if</span> (<span class="keyword">this</span>.configurations.containsKey(name)) &#123;</span><br><span class="line">		<span class="keyword">for</span> (Class&lt;?&gt; configuration : <span class="keyword">this</span>.configurations.get(name)</span><br><span class="line">				.getConfiguration()) &#123;</span><br><span class="line">			context.register(configuration);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 2、将为所有RibbonClient的configuration配置类注册到ApplicationContext</span></span><br><span class="line">	<span class="keyword">for</span> (Map.Entry&lt;String, C&gt; entry : <span class="keyword">this</span>.configurations.entrySet()) &#123;</span><br><span class="line">		<span class="keyword">if</span> (entry.getKey().startsWith(<span class="string">&quot;default.&quot;</span>)) &#123;</span><br><span class="line">			<span class="keyword">for</span> (Class&lt;?&gt; configuration : entry.getValue().getConfiguration()) &#123;</span><br><span class="line">				context.register(configuration);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 3、注册defaultConfigType，即Spring的默认配置类 RibbonClientConfiguration</span></span><br><span class="line">	context.register(PropertyPlaceholderAutoConfiguration.class,</span><br><span class="line">			<span class="keyword">this</span>.defaultConfigType);</span><br><span class="line">	context.getEnvironment().getPropertySources().addFirst(<span class="keyword">new</span> MapPropertySource(</span><br><span class="line">			<span class="keyword">this</span>.propertySourceName,</span><br><span class="line">			Collections.&lt;String, Object&gt; singletonMap(<span class="keyword">this</span>.propertyName, name)));</span><br><span class="line">	<span class="keyword">if</span> (<span class="keyword">this</span>.parent != <span class="keyword">null</span>) &#123;</span><br><span class="line">		<span class="comment">// Uses Environment from parent as well as beans</span></span><br><span class="line">		context.setParent(<span class="keyword">this</span>.parent);</span><br><span class="line">	&#125;</span><br><span class="line">	context.refresh();  <span class="comment">// 刷新上下文</span></span><br><span class="line">	<span class="keyword">return</span> context;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>根据如上逻辑可以看出会从3个地方将Ribbon相关的Configuration配置类注册到专门为其准备的ApplicationContext上下文，并根据配置类创建Ribbon核心接口的实现类，即达到配置RibbonClient的目的</p>
+<ol>
+<li>从configurations这个Map中根据RibbonClient name获取专门为其指定的configuration配置类，并注册到其对应的ApplicationContext上下文</li>
+<li>从configurations这个Map中找到 <strong>default. 开头</strong> 的配置类，即为所有RibbonClient的默认配置，并注册到其对应的ApplicationContext上下文</li>
+<li>如果不是开发者单独指定的话，前两项都是没有数据的，还会注册Spring Cloud的默认配置类<code>RibbonClientConfiguration</code></li>
+</ol>
+<p>那么configurations这个Map里的配置类数据是从哪儿来的呢？？下面逐步分析</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Copy<span class="comment">//## RibbonAutoConfiguration</span></span><br><span class="line"><span class="meta">@Autowired(required = false)</span></span><br><span class="line"><span class="keyword">private</span> List&lt;RibbonClientSpecification&gt; configurations = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"></span><br><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> SpringClientFactory <span class="title">springClientFactory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	SpringClientFactory factory = <span class="keyword">new</span> SpringClientFactory();</span><br><span class="line">	factory.setConfigurations(<span class="keyword">this</span>.configurations);</span><br><span class="line">	<span class="keyword">return</span> factory;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先是在RibbonAutoConfiguration自动配置类创建<code>SpringClientFactory</code>是设置的，这个configurations集合是@Autowired的Spring容器内的<code>RibbonClientSpecification</code>集合，那么<code>RibbonClientSpecification</code>集合是何时被注册的？？</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line">Copy<span class="comment">//## org.springframework.cloud.netflix.ribbon.RibbonClientConfigurationRegistrar</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RibbonClientConfigurationRegistrar</span> <span class="keyword">implements</span> <span class="title">ImportBeanDefinitionRegistrar</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">registerBeanDefinitions</span><span class="params">(AnnotationMetadata metadata,</span></span></span><br><span class="line"><span class="function"><span class="params">			BeanDefinitionRegistry registry)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 1、@RibbonClients注解</span></span><br><span class="line">		Map&lt;String, Object&gt; attrs = metadata.getAnnotationAttributes(</span><br><span class="line">				RibbonClients.class.getName(), <span class="keyword">true</span>);</span><br><span class="line">        <span class="comment">// 1.1 value是RibbonClient[]，遍历针对具体的RibbonClient配置的configuration配置类，并注册</span></span><br><span class="line">		<span class="keyword">if</span> (attrs != <span class="keyword">null</span> &amp;&amp; attrs.containsKey(<span class="string">&quot;value&quot;</span>)) &#123;</span><br><span class="line">			AnnotationAttributes[] clients = (AnnotationAttributes[]) attrs.get(<span class="string">&quot;value&quot;</span>);</span><br><span class="line">			<span class="keyword">for</span> (AnnotationAttributes client : clients) &#123;</span><br><span class="line">				registerClientConfiguration(registry, getClientName(client),</span><br><span class="line">						client.get(<span class="string">&quot;configuration&quot;</span>));</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">        <span class="comment">// 1.2 找到@RibbonClients注解的defaultConfiguration，即默认配置</span></span><br><span class="line">        <span class="comment">//     注册成以default.Classname.RibbonClientSpecification为名的RibbonClientSpecification</span></span><br><span class="line">		<span class="keyword">if</span> (attrs != <span class="keyword">null</span> &amp;&amp; attrs.containsKey(<span class="string">&quot;defaultConfiguration&quot;</span>)) &#123;</span><br><span class="line">			String name;</span><br><span class="line">			<span class="keyword">if</span> (metadata.hasEnclosingClass()) &#123;</span><br><span class="line">				name = <span class="string">&quot;default.&quot;</span> + metadata.getEnclosingClassName();</span><br><span class="line">			&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">				name = <span class="string">&quot;default.&quot;</span> + metadata.getClassName();</span><br><span class="line">			&#125;</span><br><span class="line">			registerClientConfiguration(registry, name,</span><br><span class="line">					attrs.get(<span class="string">&quot;defaultConfiguration&quot;</span>));</span><br><span class="line">		&#125;</span><br><span class="line">        </span><br><span class="line">        <span class="comment">// 2、@RibbonClient注解</span></span><br><span class="line">        <span class="comment">// 注册某个具体Ribbon Client的configuration配置类</span></span><br><span class="line">		Map&lt;String, Object&gt; client = metadata.getAnnotationAttributes(</span><br><span class="line">				RibbonClient.class.getName(), <span class="keyword">true</span>);</span><br><span class="line">		String name = getClientName(client);</span><br><span class="line">		<span class="keyword">if</span> (name != <span class="keyword">null</span>) &#123;</span><br><span class="line">			registerClientConfiguration(registry, name, client.get(<span class="string">&quot;configuration&quot;</span>));</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">private</span> String <span class="title">getClientName</span><span class="params">(Map&lt;String, Object&gt; client)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (client == <span class="keyword">null</span>) &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		String value = (String) client.get(<span class="string">&quot;value&quot;</span>);</span><br><span class="line">		<span class="keyword">if</span> (!StringUtils.hasText(value)) &#123;</span><br><span class="line">			value = (String) client.get(<span class="string">&quot;name&quot;</span>);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (StringUtils.hasText(value)) &#123;</span><br><span class="line">			<span class="keyword">return</span> value;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> IllegalStateException(</span><br><span class="line">				<span class="string">&quot;Either &#x27;name&#x27; or &#x27;value&#x27; must be provided in @RibbonClient&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">registerClientConfiguration</span><span class="params">(BeanDefinitionRegistry registry,</span></span></span><br><span class="line"><span class="function"><span class="params">			Object name, Object configuration)</span> </span>&#123;</span><br><span class="line">		BeanDefinitionBuilder builder = BeanDefinitionBuilder</span><br><span class="line">				.genericBeanDefinition(RibbonClientSpecification.class);</span><br><span class="line">		builder.addConstructorArgValue(name);</span><br><span class="line">		builder.addConstructorArgValue(configuration);</span><br><span class="line">		registry.registerBeanDefinition(name + <span class="string">&quot;.RibbonClientSpecification&quot;</span>,</span><br><span class="line">				builder.getBeanDefinition());</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>如上可知，configurations配置类集合是根据<code>@RibbonClient</code> 和 <code>@RibbonClients</code> 注解配置的，分别有 <em>针对具体某个RibbonClient的配置</em> 和 <em>default默认配置</em></p>
+<p>总结一下，Ribbon相关的@Configuration配置类是如何加载的</p>
+<ol>
+<li>在创建完RibbonClient对应的AnnotationConfigApplicationContext后，先从根据<code>@RibbonClient</code> 和 <code>@RibbonClients</code> 注解加载的configurations集合中找当前RibbonClient name对应的配置类，如有，就注册到上下文</li>
+<li>再从configurations集合中找根据<code>@RibbonClients</code>注解加载的 <strong>default.开头</strong> 的默认配置类，如有，就注册到上下文</li>
+<li>最后注册Spring Cloud默认的 <code>RibbonClientConfiguration</code></li>
+</ol>
+<p>上面说是如何创建RibbonClient相关的ApplicationContext上下文及注册Ribbon Client相关的配置类的逻辑，在确定配置类后，其中会用到Ribbon的<code>IClientConfig</code>相关的客户端配置来加载Ribbon客户端相关的配置信息，如超时配置、具体创建哪个核心接口的实现类等，可以从Spring Cloud默认注册的 <code>RibbonClientConfiguration</code>来一探究竟</p>
+<h2 id="RibbonClientConfiguration配置加载及Ribbon核心接口实现类创建"><a href="#RibbonClientConfiguration配置加载及Ribbon核心接口实现类创建" class="headerlink" title="RibbonClientConfiguration配置加载及Ribbon核心接口实现类创建"></a>RibbonClientConfiguration配置加载及Ribbon核心接口实现类创建</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">Copy<span class="comment">//## org.springframework.cloud.netflix.ribbon.RibbonClientConfiguration</span></span><br><span class="line"><span class="meta">@Import(&#123;OkHttpRibbonConfiguration.class, RestClientRibbonConfiguration.class, HttpClientRibbonConfiguration.class&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RibbonClientConfiguration</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Value(&quot;$&#123;ribbon.client.name&#125;&quot;)</span></span><br><span class="line">	<span class="keyword">private</span> String name = <span class="string">&quot;client&quot;</span>;</span><br><span class="line"></span><br><span class="line">	<span class="comment">// <span class="doctag">TODO:</span> maybe re-instate autowired load balancers: identified by name they could be</span></span><br><span class="line">	<span class="comment">// associated with ribbon clients</span></span><br><span class="line"></span><br><span class="line">	<span class="meta">@Autowired</span></span><br><span class="line">	<span class="keyword">private</span> PropertiesFactory propertiesFactory;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="meta">@ConditionalOnMissingBean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> IClientConfig <span class="title">ribbonClientConfig</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		DefaultClientConfigImpl config = <span class="keyword">new</span> DefaultClientConfigImpl();</span><br><span class="line">		config.loadProperties(<span class="keyword">this</span>.name);</span><br><span class="line">		<span class="keyword">return</span> config;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="meta">@Bean</span></span><br><span class="line">	<span class="meta">@ConditionalOnMissingBean</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> IRule <span class="title">ribbonRule</span><span class="params">(IClientConfig config)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.propertiesFactory.isSet(IRule.class, name)) &#123;</span><br><span class="line">			<span class="keyword">return</span> <span class="keyword">this</span>.propertiesFactory.get(IRule.class, config, name);</span><br><span class="line">		&#125;</span><br><span class="line">		ZoneAvoidanceRule rule = <span class="keyword">new</span> ZoneAvoidanceRule();</span><br><span class="line">		rule.initWithNiwsConfig(config);</span><br><span class="line">		<span class="keyword">return</span> rule;</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面只截取了一段代码，给出了Ribbon相关的 <code>IClientConfig</code>客户端配置 和 某一个核心接口<code>IRule</code>实现类 是如何加载配置并创建的</p>
+<p><strong>IClientConfig</strong></p>
+<p><code>IClientConfig</code>就是Ribbon客户端配置的接口，可以看到先是创建了<code>DefaultClientConfigImpl</code>默认实现类，再<code>config.loadProperties(this.name)</code>加载当前Client相关的配置</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">Copy<span class="comment">//## com.netflix.client.config.DefaultClientConfigImpl#loadProperties()</span></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Load properties for a given client. It first loads the default values for all properties,</span></span><br><span class="line"><span class="comment"> * and any properties already defined with Archaius ConfigurationManager.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">loadProperties</span><span class="params">(String restClientName)</span></span>&#123;</span><br><span class="line">    enableDynamicProperties = <span class="keyword">true</span>;</span><br><span class="line">    setClientName(restClientName);</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 1、使用Netflix Archaius的ConfigurationManager从Spring env中加载“ribbon.配置项”这类默认配置</span></span><br><span class="line">    <span class="comment">//   如没加载到有默认静态配置</span></span><br><span class="line">    loadDefaultValues();</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 2、使用Netflix Archaius的ConfigurationManager从Spring env中加载“client名.ribbon.配置项”这类针对某个Client的配置信息</span></span><br><span class="line">    Configuration props = ConfigurationManager.getConfigInstance().subset(restClientName);</span><br><span class="line">    <span class="keyword">for</span> (Iterator&lt;String&gt; keys = props.getKeys(); keys.hasNext(); )&#123;</span><br><span class="line">        String key = keys.next();</span><br><span class="line">        String prop = key;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (prop.startsWith(getNameSpace()))&#123;</span><br><span class="line">                prop = prop.substring(getNameSpace().length() + <span class="number">1</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            setPropertyInternal(prop, getStringValue(props, key));</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(String.format(<span class="string">&quot;Property %s is invalid&quot;</span>, prop));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>根据如上注释，如果你没有在项目中指定ribbon相关配置，那么会使用<code>DefaultClientConfigImpl</code>中的默认静态配置，如果Spring enviroment中包含“ribbon.配置项”这类针对所有Client的配置会被加载进来，有“client名.ribbon.配置项”这类针对某个Client的配置信息也会被加载进来</p>
+<p><strong>静态配置如下：</strong></p>
+<p><a target="_blank" rel="noopener" href="https://img2018.cnblogs.com/blog/677054/201907/677054-20190719235215286-1439271885.jpg"><img src="https://img2018.cnblogs.com/blog/677054/201907/677054-20190719235215286-1439271885.jpg" alt="img"></a></p>
+<p><strong>RibbonClient核心接口实现类配置加载及创建</strong></p>
+<p>上面说完<code>IClientCOnfig</code>配置项是如何加载的，按道理说其中已经包含了当前RibbonClient使用哪个核心接口实现类的配置，但Spring Cloud在此处定义了自己的实现逻辑</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Copy<span class="meta">@Autowired</span></span><br><span class="line"><span class="keyword">private</span> PropertiesFactory propertiesFactory;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="meta">@ConditionalOnMissingBean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> IRule <span class="title">ribbonRule</span><span class="params">(IClientConfig config)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 查看propertiesFactory是否有关于当前接口的配置，如有就使用，并创建实例返回</span></span><br><span class="line">	<span class="keyword">if</span> (<span class="keyword">this</span>.propertiesFactory.isSet(IRule.class, name)) &#123;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">this</span>.propertiesFactory.get(IRule.class, config, name);</span><br><span class="line">	&#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// spring cloud 默认配置</span></span><br><span class="line">	ZoneAvoidanceRule rule = <span class="keyword">new</span> ZoneAvoidanceRule();</span><br><span class="line">	rule.initWithNiwsConfig(config);</span><br><span class="line">	<span class="keyword">return</span> rule;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>下面看看<code>PropertiesFactory</code>的逻辑</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line">Copypublic <span class="class"><span class="keyword">class</span> <span class="title">PropertiesFactory</span> </span>&#123;</span><br><span class="line">	<span class="meta">@Autowired</span></span><br><span class="line">	<span class="keyword">private</span> Environment environment;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">private</span> Map&lt;Class, String&gt; classToProperty = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="title">PropertiesFactory</span><span class="params">()</span> </span>&#123;</span><br><span class="line">		classToProperty.put(ILoadBalancer.class, <span class="string">&quot;NFLoadBalancerClassName&quot;</span>);</span><br><span class="line">		classToProperty.put(IPing.class, <span class="string">&quot;NFLoadBalancerPingClassName&quot;</span>);</span><br><span class="line">		classToProperty.put(IRule.class, <span class="string">&quot;NFLoadBalancerRuleClassName&quot;</span>);</span><br><span class="line">		classToProperty.put(ServerList.class, <span class="string">&quot;NIWSServerListClassName&quot;</span>);</span><br><span class="line">		classToProperty.put(ServerListFilter.class, <span class="string">&quot;NIWSServerListFilterClassName&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 查看当前clazz是否在classToProperty管理的几个核心接口之一</span></span><br><span class="line">    <span class="comment">// 如是，查看Spring environment中是否能找到 “clientName.ribbon.核心接口配置项”的配置信息</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">isSet</span><span class="params">(Class clazz, String name)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">return</span> StringUtils.hasText(getClassName(clazz, name));</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">public</span> String <span class="title">getClassName</span><span class="params">(Class clazz, String name)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.classToProperty.containsKey(clazz)) &#123;</span><br><span class="line">			String classNameProperty = <span class="keyword">this</span>.classToProperty.get(clazz);</span><br><span class="line">			String className = environment.getProperty(name + <span class="string">&quot;.&quot;</span> + NAMESPACE + <span class="string">&quot;.&quot;</span> + classNameProperty);</span><br><span class="line">			<span class="keyword">return</span> className;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 也是先调用getClassName()获取Spring enviroment中配置的核心接口实现类名</span></span><br><span class="line">    <span class="comment">// 再使用IClientConfig配置信息创建其实例</span></span><br><span class="line">	<span class="meta">@SuppressWarnings(&quot;unchecked&quot;)</span></span><br><span class="line">	<span class="keyword">public</span> &lt;C&gt; <span class="function">C <span class="title">get</span><span class="params">(Class&lt;C&gt; clazz, IClientConfig config, String name)</span> </span>&#123;</span><br><span class="line">		String className = getClassName(clazz, name);</span><br><span class="line">		<span class="keyword">if</span> (StringUtils.hasText(className)) &#123;</span><br><span class="line">			<span class="keyword">try</span> &#123;</span><br><span class="line">				Class&lt;?&gt; toInstantiate = Class.forName(className);</span><br><span class="line">				<span class="keyword">return</span> (C) instantiateWithConfig(toInstantiate, config);</span><br><span class="line">			&#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">				<span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">&quot;Unknown class to load &quot;</span>+className+<span class="string">&quot; for class &quot;</span> + clazz + <span class="string">&quot; named &quot;</span> + name);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>故以上面创建<code>IRule</code>接口实现类的逻辑</p>
+<ul>
+<li>先通过<strong>propertiesFactory</strong>查看Spring enviroment中是否配置了针对当前Ribbon Client的IRule核心接口实现类的配置信息，如有，就创建其实例返回（相关配置格式： clientName.ribbon.NFLoadBalancerRuleClassName=具体IRule实现类）</li>
+<li>如没有，那么没有直接使用Netflix在其<code>DefaultClientConfigImpl</code>中的静态配置，而是使用Spring Cloud自定义的默认实现类，拿<code>IRule</code>规则接口来说是<code>ZoneAvoidanceRule</code></li>
+</ul>
+<blockquote>
+<p><strong>总结：</strong></p>
+<p>首先会创建RibbonClient的ApplicationContext上下文，并确定使用哪个Configuration配置类</p>
+<p>1、@RibbonClients注册的全局默认配置类</p>
+<p>2、@RibbonClient注册的某个Client配置类</p>
+<p>3、Spring Cloud 默认的RibbonClientConfiguration配置类</p>
+<p>确定配置类后就是加载Client相关的IClientConfig配置信息，并创建核心接口实现类</p>
+<p>如果没有自定义全局/客户端配置类，那么就是使用<code>RibbonClientConfiguration</code>，而其规则是</p>
+<p>对于超时等配置（除核心接口实现类以外）：使用Netflix的配置逻辑，通过 <strong>ribbon.xxx</strong> 作为默认配置，以 <strong>clientName.ribbon.xxx</strong> 作为客户端定制配置</p>
+<p>对于核心接口实现类配置：客户端定制配置仍然使用 <strong>clientName.ribbon.xxx</strong>，但默认配置是Spring Cloud在<code>RibbonClientConfiguration</code>方法中写死的默认实现类</p>
+</blockquote>
+<p>已经知道大概的逻辑了，下面就看看具体如何自定义Client配置、全局配置</p>
+<h2 id="如何自定义RibbonClient配置、全局配置"><a href="#如何自定义RibbonClient配置、全局配置" class="headerlink" title="如何自定义RibbonClient配置、全局配置"></a>如何自定义RibbonClient配置、全局配置</h2><p>这部分在Spring Cloud官方reference中有说明 <a target="_blank" rel="noopener" href="https://cloud.spring.io/spring-cloud-static/Dalston.SR5/multi/multi_spring-cloud-ribbon.html#_customizing_the_ribbon_client">16.2 Customizing the Ribbon Client</a></p>
+<p><img src="/2020/12/11/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BRibbon%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/677054-20190719235233605-1701546833.jpg" alt="img"></p>
+<p>大致意思如下：</p>
+<ul>
+<li><p>一部分配置（非核心接口实现类的配置）可以使用Netflix原生API提供的方式，即使用如 *<em>.ribbon.**</em> 的方式配置，具体有哪些配置项，可以参考 <code>com.netflix.client.config.CommonClientConfigKey</code></p>
+</li>
+<li><p>如果想比较全面的控制RibbonClient并添加一些额外配置，可以使用 <code>@RibbonClient</code> 或 <code>@RibbonClients</code> 注解，并配置一个配置类，如上的 FooConfiguration</p>
+<ul>
+<li><p>@RibbonClient(name = “foo”, configuration = FooConfiguration.class) 是针对名为 foo 的RibbonClient的配置类，也可以使用@RibbonClients({@RibbonClient数组}) 的形式给某几个RibbonClient设置配置类</p>
+</li>
+<li><p>@RibbonClients( defaultConfiguration = { xxx.class } ) 是针对所有RIbbonClient的默认配置</p>
+<ul>
+<li><p>官方文档说 FooConfiguration配置类 必须是@Configuration的，这样就必须注意，SpringBoot主启动类不能扫描到FooConfiguration，否则针对某个RibbonClient的配置就会变成全局的，原因是在创建每个RibbonClient时会为其创建ApplicationContext上下文，其parent就是主启动类创建的ApplicationContext，子ApplicationContext中可以使用父ApplicationContext中的Bean，且创建Bean时都使用了<code>@ConditionalOnMissingBean</code>，所以FooConfiguration如果被主启动类的上下文加载，且创建了比如IRule的实现类，在某个RIbbonClient创建其子ApplicationContext并@Bean想创建其自定义IRule实现类时，会发现parent ApplicationContext已经存在，就不会创建了，配置就失效了</p>
+<blockquote>
+<p>但在我的实验中，即使FooConfiguration不加@Configuration注解也可以加载为RibbonClient的配置，且由于没有@Configuration了，也不会被主启动类扫描到</p>
+</blockquote>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p>所以主要分成2种配置：</p>
+<p>（1）超时时间等静态配置，使用 <strong>ribbon.*** 配置所有Client，使用 *<em>.ribbon.</em></strong> 配置某个Client</p>
+<p>（2）使用哪种核心接口实现类配置，使用**@RibbonClients注解<strong>做默认配置，使用</strong>@RibbonClient**做针对Client的配置（注意@Configuration不要被SpringBoot主启动类扫描到的问题）</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Ribbon/" rel="tag"># Ribbon</a>
+              <a href="/tags/%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/" rel="tag"># 负载均衡</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/12/11/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1loadbalancer%E5%85%A5%E9%97%A8/" rel="prev" title="Spring-cloud-loadbalancer入门">
+                  <i class="fa fa-chevron-left"></i> Spring-cloud-loadbalancer入门
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/12/14/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80%E4%B9%8B%E4%BA%8B%E4%BB%B6%E7%9B%91%E5%90%AC/" rel="next" title="RabbitMQ基础之事件监听">
+                  RabbitMQ基础之事件监听 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="作者：Mr_伍先生 出处：https:&#x2F;&#x2F;www.cnblogs.com&#x2F;mr-wuxiansheng&#x2F;p&#x2F;8688946.html 线性结构：一、概念  线性结构作为最常用的数据结构，其特点是数据元素之间存在一对一的线性关系。  线性结构拥有两种不同的存储结构，即顺序存储结构和链式存储结构。顺序存储的线性表称为顺序表，顺序表中的存储元素是连续的，链式存储的线性表称为链表，链表中的存储元素不一定是">
+<meta property="og:type" content="article">
+<meta property="og:title" content="算法之数据结构线性结构和非线性结构">
+<meta property="og:url" content="http://example.com/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="作者：Mr_伍先生 出处：https:&#x2F;&#x2F;www.cnblogs.com&#x2F;mr-wuxiansheng&#x2F;p&#x2F;8688946.html 线性结构：一、概念  线性结构作为最常用的数据结构，其特点是数据元素之间存在一对一的线性关系。  线性结构拥有两种不同的存储结构，即顺序存储结构和链式存储结构。顺序存储的线性表称为顺序表，顺序表中的存储元素是连续的，链式存储的线性表称为链表，链表中的存储元素不一定是">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160809140928262-492338500.png">
+<meta property="og:image" content="http://example.com/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160809143506652-1333091670.png">
+<meta property="og:image" content="http://example.com/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160809151153090-1514548602.png">
+<meta property="og:image" content="http://example.com/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160809152906777-1048463470.png">
+<meta property="og:image" content="http://example.com/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160812141855625-736751376.png">
+<meta property="og:image" content="http://example.com/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160812161601265-1301764954.png">
+<meta property="og:image" content="http://example.com/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160812155626000-1300189010.png">
+<meta property="og:image" content="http://example.com/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160812160125515-698914833.png">
+<meta property="article:published_time" content="2020-12-01T05:27:08.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.288Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="数据结构">
+<meta property="article:tag" content="算法">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160809140928262-492338500.png">
+
+
+<link rel="canonical" href="http://example.com/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>算法之数据结构线性结构和非线性结构 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%EF%BC%9A"><span class="nav-number">1.</span> <span class="nav-text">线性结构：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%EF%BC%9A"><span class="nav-number">2.</span> <span class="nav-text">非线性结构：</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E3%80%81%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5"><span class="nav-number">2.1.</span> <span class="nav-text">一、相关概念</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8C%E3%80%81%E4%BA%8C%E5%8F%89%E6%A0%91%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84"><span class="nav-number">2.2.</span> <span class="nav-text">二、二叉树存储结构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%89%E3%80%81%E6%A0%91%E4%B8%8E%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E8%BD%AC%E6%8D%A2"><span class="nav-number">2.3.</span> <span class="nav-text">三、树与二叉树的转换</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9B%9B%E3%80%81%E6%A0%91%E9%81%8D%E5%8E%86%E5%AE%9E%E7%8E%B0"><span class="nav-number">2.4.</span> <span class="nav-text">四、树遍历实现</span></a></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          算法之数据结构线性结构和非线性结构
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-12-01 13:27:08" itemprop="dateCreated datePublished" datetime="2020-12-01T13:27:08+08:00">2020-12-01</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">算法</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>作者：<a target="_blank" rel="noopener" href="https://www.cnblogs.com/mr-wuxiansheng/">Mr_伍先生</a></p>
+<p>出处：<a target="_blank" rel="noopener" href="https://www.cnblogs.com/mr-wuxiansheng/p/8688946.html">https://www.cnblogs.com/mr-wuxiansheng/p/8688946.html</a></p>
+<h2 id="线性结构："><a href="#线性结构：" class="headerlink" title="线性结构："></a>线性结构：</h2><p>一、概念</p>
+<ol>
+<li><p>线性结构作为最常用的数据结构，其特点是数据元素之间存在一对一的线性关系。</p>
+</li>
+<li><p>线性结构拥有两种不同的存储结构，即顺序存储结构和链式存储结构。顺序存储的线性表称为顺序表，顺序表中的存储元素是连续的，链式存储的线性表称为链表，链表中的存储元素不一定是连续的，元素节点中存放数据元素以及相邻元素的地址信息。</p>
+</li>
+<li><p>线性结构中存在两种操作受限的使用场景，即队列和栈。栈的操作只能在线性表的一端进行，就是我们常说的先进后出（FILO），队列的插入操作在线性表的一端进行而其他操作在线性表的另一端进行，先进先出（FIFO），由于线性结构存在两种存储结构，因 此队列和栈各存在两个实现方式。</p>
+</li>
+</ol>
+<p>二、部分实现</p>
+<ol>
+<li><p>顺序表（顺序存储）</p>
+<p>　　按照我们的习惯，存放东西时，一般是找一块空间，然后将需要存放的东西依次摆放，这就是顺序存储。计算机中的顺序存储是指在内存中用一块地址连续的空间依次存放数据元素，用这种方式存储的线性表叫顺序表其特点是表中相邻的数据元素在内存中存储位置也相邻，如下图：</p>
+<p><img src="/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160809140928262-492338500.png" alt="img"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"> <span class="number">1</span> <span class="comment">// 倒置线性表</span></span><br><span class="line"> <span class="number">2</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Reverse</span><span class="params">()</span></span></span><br><span class="line"><span class="function"> 3 </span>&#123;</span><br><span class="line"> <span class="number">4</span>     T tmp = <span class="keyword">default</span>(T);</span><br><span class="line"> <span class="number">5</span> </span><br><span class="line"> <span class="number">6</span>     <span class="keyword">int</span> len = GetLength() - <span class="number">1</span>;</span><br><span class="line"> <span class="number">7</span>     <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt;= len / <span class="number">2</span>; i++)</span><br><span class="line"> <span class="number">8</span>     &#123;</span><br><span class="line"> <span class="number">9</span>         <span class="keyword">if</span> (i.Equals(len - i))</span><br><span class="line"><span class="number">10</span>         &#123;</span><br><span class="line"><span class="number">11</span>             <span class="keyword">break</span>;</span><br><span class="line"><span class="number">12</span>         &#125;</span><br><span class="line"><span class="number">13</span> </span><br><span class="line"><span class="number">14</span>         tmp = data[i];</span><br><span class="line"><span class="number">15</span>         data[i] = data[len - i];</span><br><span class="line"><span class="number">16</span>         data[len - i] = tmp;</span><br><span class="line"><span class="number">17</span>     &#125;</span><br><span class="line"><span class="number">18</span> &#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>链表（链式存储）</p>
+<p>　　假如我们现在要存放一些物品，但是没有足够大的空间将所有的物品一次性放下（电脑中使用链式存储不是因为内存不够先事先说明一下…，具体原因后续会说到），同时设定我们因为脑容量很小，为了节省空间，只能记住一件物品位置。此时我们很机智的找到了解决方案：存放物品时每放置一件物品就在物品上贴一个小纸条，标明下一件物品放在那里，只记住第一件物品的位置，寻找的时候从第一件物品开始寻找，通过小纸条我们可以找到所有的物品，这就是链式存储。链表实现的时候不再像线性表一样只存储数据即可，还有下一个数据元素的地址，因此先定义一个节点类(Node)，记录物品信息和下一件物品的位置，我们把物品本身叫做数据域，存储下一件物品地址信息的小纸条称为引用域。链表结构示意图如下：</p>
+<p><img src="/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160809143506652-1333091670.png" alt="img"></p>
+<p>　　寻找物品的时候发现了一个问题，我们从一件物品找下一件物品的时候很容易，但是如果要找上一件物品就得从头开始找，真的很麻烦。为了解决这个问题我们又机智了一把，模仿之前的做法，在存放物品的时候多放置一个小纸条记录上一件物品的位置，这样就可以很快的找到上一件物品了。我们把这种方式我们称为双向链表，前面只放置一张小纸条的方式称为单向链表。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"> <span class="number">1</span> <span class="comment">// 倒置单链表</span></span><br><span class="line"> <span class="number">2</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Reverse</span><span class="params">()</span></span></span><br><span class="line"><span class="function"> 3 </span>&#123;</span><br><span class="line"> <span class="number">4</span>     Node&lt;T&gt; oldHead = Head;</span><br><span class="line"> <span class="number">5</span>     Node&lt;T&gt; tmp ;</span><br><span class="line"> <span class="number">6</span>     Head = <span class="keyword">null</span>;    <span class="comment">//清空链表，解除Head跟oldHead之间的相同引用</span></span><br><span class="line"> <span class="number">7</span> </span><br><span class="line"> <span class="number">8</span>     <span class="keyword">while</span> (oldHead != <span class="keyword">null</span>)</span><br><span class="line"> <span class="number">9</span>     &#123;</span><br><span class="line"><span class="number">10</span>         tmp = Head;</span><br><span class="line"><span class="number">11</span>         Head = oldHead;</span><br><span class="line"><span class="number">12</span>         <span class="comment">//解除Head跟oldHead之间的相同引用</span></span><br><span class="line"><span class="number">13</span>         oldHead = oldHead.Next;</span><br><span class="line"><span class="number">14</span>         Head.Next = tmp;</span><br><span class="line"><span class="number">15</span>     &#125;</span><br><span class="line"><span class="number">16</span> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>　　由于数据存储结构不同导致使用场景上的巨大差异，顺序表由于元素连续具有随机存储的特点，所以查找数据很方便效率很高，但是插入、删除操作为了确保数据元素连续，需要移动大量的数据导致效率很低。而链表由于存储空间不要求连续，插入、删除只需修改相邻元素的引用域地址即可，所以效率很高，但查询需要从头引用开始遍历链表，效率很低。因此，如果只是进行查找操作而不经常插入、删除线性表中的数据元素，则使用顺序存储结构，反之，使用链式存储结构。</p>
+</li>
+<li><p>栈</p>
+<p>　　其实成功完成顺序表和链表之后，栈已经没太多可说的了，主要是逻辑上的不同，毕竟栈也是一种特殊的线性结构。栈是一种操作限定在表尾部进行的线性表，表尾称为栈顶（Top），另一端固定不动，称为栈底（Bottom）。进栈、出栈示意图如下：</p>
+<p><img src="/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160809151153090-1514548602.png" alt="img"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"> <span class="number">1</span> <span class="comment">//链栈入驻</span></span><br><span class="line"> <span class="number">2</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Push</span><span class="params">(T item)</span></span></span><br><span class="line"><span class="function"> 3 </span>&#123;</span><br><span class="line"> <span class="number">4</span>     Node&lt;T&gt; tmp = <span class="keyword">new</span> Node&lt;T&gt;(item);</span><br><span class="line"> <span class="number">5</span>     <span class="keyword">if</span> (Top == <span class="keyword">null</span>)</span><br><span class="line"> <span class="number">6</span>     &#123;</span><br><span class="line"> <span class="number">7</span>         Top = tmp;</span><br><span class="line"> <span class="number">8</span>     &#125;</span><br><span class="line"> <span class="number">9</span>     <span class="keyword">else</span></span><br><span class="line"><span class="number">10</span>     &#123;</span><br><span class="line"><span class="number">11</span>         tmp.Next = Top;</span><br><span class="line"><span class="number">12</span>         Top = tmp;</span><br><span class="line"><span class="number">13</span>     &#125;</span><br><span class="line"><span class="number">14</span>     Num++;</span><br><span class="line"><span class="number">15</span> &#125;</span><br><span class="line"><span class="number">16</span> </span><br><span class="line"><span class="number">17</span> <span class="comment">//顺序栈入栈</span></span><br><span class="line"><span class="number">18</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">Push</span><span class="params">(T item)</span></span></span><br><span class="line"><span class="function">19 </span>&#123;</span><br><span class="line"><span class="number">20</span>     <span class="keyword">if</span> (IsFull())</span><br><span class="line"><span class="number">21</span>     &#123;</span><br><span class="line"><span class="number">22</span>         <span class="keyword">throw</span> <span class="keyword">new</span> Exception(<span class="string">&quot;Stack is full&quot;</span>);</span><br><span class="line"><span class="number">23</span>     &#125;</span><br><span class="line"><span class="number">24</span> </span><br><span class="line"><span class="number">25</span>     data[++Top] = item;</span><br><span class="line"><span class="number">26</span> &#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>队列</p>
+<p>　　队列与栈类似，仅仅是逻辑有一丢丢不同。队列是一种插入操作限定在表尾其他操作限定在表头的线性表。把进行插入操作的表尾称为队尾（Rear）,把进行其它操作的头部称为队首（Front）。入队、出队示意图如下：</p>
+<img src="/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160809152906777-1048463470.png" alt="img" style="zoom:50%;">
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"> <span class="number">1</span> <span class="comment">//链队入队</span></span><br><span class="line"> <span class="number">2</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">In</span><span class="params">(T item)</span></span></span><br><span class="line"><span class="function"> 3 </span>&#123;</span><br><span class="line"> <span class="number">4</span>     Node&lt;T&gt; node = <span class="keyword">new</span> Node&lt;T&gt;(item);</span><br><span class="line"> <span class="number">5</span>     <span class="keyword">if</span> (Rear == <span class="keyword">null</span>)</span><br><span class="line"> <span class="number">6</span>     &#123;</span><br><span class="line"> <span class="number">7</span>         Rear = node;</span><br><span class="line"> <span class="number">8</span>         Front = Rear;</span><br><span class="line"> <span class="number">9</span>     &#125;</span><br><span class="line"><span class="number">10</span>     <span class="keyword">else</span></span><br><span class="line"><span class="number">11</span>     &#123;</span><br><span class="line"><span class="number">12</span>         Rear.Next = node;</span><br><span class="line"><span class="number">13</span>         Rear = Rear.Next;</span><br><span class="line"><span class="number">14</span>     &#125;</span><br><span class="line"><span class="number">15</span>     ++num;</span><br><span class="line"><span class="number">16</span> &#125;</span><br><span class="line"><span class="number">17</span> </span><br><span class="line"><span class="number">18</span> <span class="comment">//循环队列入队</span></span><br><span class="line"><span class="number">19</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">In</span><span class="params">(T item)</span></span></span><br><span class="line"><span class="function">20 </span>&#123;</span><br><span class="line"><span class="number">21</span>     <span class="keyword">if</span> (IsFull())</span><br><span class="line"><span class="number">22</span>     &#123;</span><br><span class="line"><span class="number">23</span>         <span class="keyword">throw</span> <span class="keyword">new</span> Exception(<span class="string">&quot;Queue is full&quot;</span>);</span><br><span class="line"><span class="number">24</span>     &#125;</span><br><span class="line"><span class="number">25</span>     data[++Rear] = item;</span><br><span class="line"><span class="number">26</span> &#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h2 id="非线性结构："><a href="#非线性结构：" class="headerlink" title="非线性结构："></a>非线性结构：</h2><h3 id="一、相关概念"><a href="#一、相关概念" class="headerlink" title="一、相关概念"></a><strong>一、相关概念</strong></h3><p>　　树作为一种应用广泛的一对多非线性数据结构，不仅有数据间的指向关系，还有层级关系，示例见图一。因树的结构比较复杂，为了简化操作及存储，我们一般将树转换为二叉树处理，因此本文主要讨论二叉树。</p>
+<ol>
+<li><p><strong>二叉树</strong><br>　　二叉树是每个节点最多拥有两个子节点的树结构，若移除根节点则其余节点会被分成两个互不相交的子树，分别称为左子树和右子树。二叉树是有序树，左右子树有严格的次序，若颠倒则成为一棵不一样的二叉树。</p>
+</li>
+<li><p><strong>满二叉树</strong>　　</p>
+<p>​       满二叉树，顾名思义除叶子节点外所有节点都拥有两个孩子，且叶子节点在同一层的二叉树，示例见图二。</p>
+</li>
+<li><p><strong>完全二叉树</strong>　　</p>
+<p>​        完全二叉树，移除最后一层节点后是满二叉树，且最后一层的节点都连续集中在最左面，示例见图三。<img src="/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160812141855625-736751376.png" alt="img"></p>
+</li>
+</ol>
+<h3 id="二、二叉树存储结构"><a href="#二、二叉树存储结构" class="headerlink" title="二、二叉树存储结构"></a>二、二叉树存储结构</h3><ol>
+<li><p><strong>顺序存储</strong>　　</p>
+<p>​        根据完全二叉树的特性，可以计算出任意节点n的双亲节点及左右孩子节点的序号，因此完全二叉树的节点可以按照从上到下从左到右的顺序依次存储到一维数组中。非完全二叉树存储时应先将其改造为完全二叉树，以空替代不存在的节点，比较浪费存储空间，存储示意图见图四。</p>
+</li>
+<li><p><strong>链式存储</strong></p>
+<p>　　树结构链式存储类似线性结构链式存储，先定义包含数据域和引用域的节点(Node)，然后通过引用域存储节点之间的关系。根据二叉树的结构来看，节点Node至少包含数据域(Data)，引用域(左孩子LChild、右孩子RChild)，为了方便通过孩子节点查找父节点，引用域中可以考虑添加父节点引用(Parent)，存储示意图见图五。</p>
+<p><img src="/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160812161601265-1301764954.png" alt="img"> </p>
+</li>
+</ol>
+<h3 id="三、树与二叉树的转换"><a href="#三、树与二叉树的转换" class="headerlink" title="三、树与二叉树的转换"></a>三、树与二叉树的转换</h3><ol>
+<li><p>树转二叉树</p>
+<p><strong>加线</strong>，所有兄弟结点之间加一条连线。<br><strong>抹线</strong>，对树中的每个结点，只保留他与第一个孩子结点之间的连线，删除它与其它孩子结点之间的连线。<br><strong>整理</strong>，整理前两步得到的树，使之结构层次分明。</p>
+<p><img src="/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160812155626000-1300189010.png" alt="img"></p>
+</li>
+<li><p>二叉树转树</p>
+<p><strong>加线</strong>，若某结点的左孩子结点存在，将左孩子结点的右孩子结点、右孩子结点的右孩子结点……都作为该结点的孩子结点，将该结点与这些右孩子结点用线连接起来。<br><strong>抹线</strong>，删除原二叉树中所有结点与其右孩子结点的连线。<br><strong>整理</strong>，整理前两步得到的树，使之结构层次分明。<br><img src="/2020/12/01/%E7%AE%97%E6%B3%95%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84%E5%92%8C%E9%9D%9E%E7%BA%BF%E6%80%A7%E7%BB%93%E6%9E%84/629960-20160812160125515-698914833.png" alt="img"></p>
+</li>
+</ol>
+<h3 id="四、树遍历实现"><a href="#四、树遍历实现" class="headerlink" title="四、树遍历实现"></a>四、树遍历实现</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br></pre></td><td class="code"><pre><span class="line"> <span class="number">1</span> <span class="comment">/// &lt;summary&gt;</span></span><br><span class="line"> <span class="number">2</span> <span class="comment">/// 先序遍历（DLR）</span></span><br><span class="line"> <span class="number">3</span> <span class="comment">/// &lt;/summary&gt;</span></span><br><span class="line"> <span class="number">4</span> <span class="comment">/// &lt;![CDATA[首先访问跟节点，然后遍历左子树，最后右子树]]&gt;</span></span><br><span class="line"> <span class="number">5</span> <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">PreOrder</span><span class="params">(Node&lt;<span class="keyword">char</span>&gt; root)</span></span></span><br><span class="line"><span class="function"> 6 </span>&#123;</span><br><span class="line"> <span class="number">7</span>     <span class="keyword">if</span> (root == <span class="keyword">null</span>)</span><br><span class="line"> <span class="number">8</span>     &#123;</span><br><span class="line"> <span class="number">9</span>         <span class="keyword">return</span>;</span><br><span class="line"><span class="number">10</span>     &#125;</span><br><span class="line"><span class="number">11</span> </span><br><span class="line"><span class="number">12</span>     Print(root);</span><br><span class="line"><span class="number">13</span>     PreOrder(root.LChild);</span><br><span class="line"><span class="number">14</span>     PreOrder(root.RChild);</span><br><span class="line"><span class="number">15</span> &#125;</span><br><span class="line"><span class="number">16</span> </span><br><span class="line"><span class="number">17</span> <span class="comment">/// &lt;summary&gt;</span></span><br><span class="line"><span class="number">18</span> <span class="comment">/// 中序遍历（LDR）</span></span><br><span class="line"><span class="number">19</span> <span class="comment">/// &lt;/summary&gt;</span></span><br><span class="line"><span class="number">20</span> <span class="comment">/// &lt;![CDATA[先遍历左子树，然后根节点，最后遍历右子树]]&gt;</span></span><br><span class="line"><span class="number">21</span> <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">InOrder</span><span class="params">(Node&lt;<span class="keyword">char</span>&gt; root)</span></span></span><br><span class="line"><span class="function">22 </span>&#123;</span><br><span class="line"><span class="number">23</span>     <span class="keyword">if</span> (root == <span class="keyword">null</span>)</span><br><span class="line"><span class="number">24</span>     &#123;</span><br><span class="line"><span class="number">25</span>         <span class="keyword">return</span>;</span><br><span class="line"><span class="number">26</span>     &#125;</span><br><span class="line"><span class="number">27</span> </span><br><span class="line"><span class="number">28</span>     InOrder(root.LChild);</span><br><span class="line"><span class="number">29</span>     Print(root);</span><br><span class="line"><span class="number">30</span>     InOrder(root.RChild);</span><br><span class="line"><span class="number">31</span> &#125;</span><br><span class="line"><span class="number">32</span> </span><br><span class="line"><span class="number">33</span> <span class="comment">/// &lt;summary&gt;</span></span><br><span class="line"><span class="number">34</span> <span class="comment">/// 后序遍历（LRD）</span></span><br><span class="line"><span class="number">35</span> <span class="comment">/// &lt;/summary&gt;</span></span><br><span class="line"><span class="number">36</span> <span class="comment">/// &lt;![CDATA[先遍历左子树，然后遍历右子树，最后遍历根节点]]&gt;</span></span><br><span class="line"><span class="number">37</span> <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">PostOrder</span><span class="params">(Node&lt;<span class="keyword">char</span>&gt; root)</span></span></span><br><span class="line"><span class="function">38 </span>&#123;</span><br><span class="line"><span class="number">39</span>     <span class="keyword">if</span> (root == <span class="keyword">null</span>)</span><br><span class="line"><span class="number">40</span>     &#123;</span><br><span class="line"><span class="number">41</span>         <span class="keyword">return</span>;</span><br><span class="line"><span class="number">42</span>     &#125;</span><br><span class="line"><span class="number">43</span> </span><br><span class="line"><span class="number">44</span>     PostOrder(root.LChild);</span><br><span class="line"><span class="number">45</span>     PostOrder(root.RChild);</span><br><span class="line"><span class="number">46</span>     Print(root);</span><br><span class="line"><span class="number">47</span> &#125;</span><br><span class="line"><span class="number">48</span> </span><br><span class="line"><span class="number">49</span> <span class="comment">/// &lt;summary&gt;</span></span><br><span class="line"><span class="number">50</span> <span class="comment">/// 层序遍历</span></span><br><span class="line"><span class="number">51</span> <span class="comment">/// &lt;/summary&gt;</span></span><br><span class="line"><span class="number">52</span> <span class="comment">/// &lt;![CDATA[从上向下从左到右]]&gt;</span></span><br><span class="line"><span class="number">53</span> <span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">LevelOrder</span><span class="params">(Node&lt;<span class="keyword">char</span>&gt; root)</span></span></span><br><span class="line"><span class="function">54 </span>&#123;</span><br><span class="line"><span class="number">55</span>     <span class="keyword">if</span> (root == <span class="keyword">null</span>)</span><br><span class="line"><span class="number">56</span>     &#123;</span><br><span class="line"><span class="number">57</span>         <span class="keyword">return</span>;</span><br><span class="line"><span class="number">58</span>     &#125;</span><br><span class="line"><span class="number">59</span>     CSeqQueue&lt;Node&lt;<span class="keyword">char</span>&gt;&gt; sq = <span class="keyword">new</span> CSeqQueue&lt;Node&lt;<span class="keyword">char</span>&gt;&gt;(<span class="number">50</span>);</span><br><span class="line"><span class="number">60</span>     sq.In(root);</span><br><span class="line"><span class="number">61</span>     <span class="keyword">while</span> (!sq.IsEmpty())</span><br><span class="line"><span class="number">62</span>     &#123;</span><br><span class="line"><span class="number">63</span>         Node&lt;<span class="keyword">char</span>&gt; tmp = sq.Out();</span><br><span class="line"><span class="number">64</span>         Print(tmp);</span><br><span class="line"><span class="number">65</span> </span><br><span class="line"><span class="number">66</span>         <span class="keyword">if</span> (tmp.LChild != <span class="keyword">null</span>)</span><br><span class="line"><span class="number">67</span>         &#123;</span><br><span class="line"><span class="number">68</span>             sq.In(tmp.LChild);</span><br><span class="line"><span class="number">69</span>         &#125;</span><br><span class="line"><span class="number">70</span> </span><br><span class="line"><span class="number">71</span>         <span class="keyword">if</span> (tmp.RChild != <span class="keyword">null</span>)</span><br><span class="line"><span class="number">72</span>         &#123;</span><br><span class="line"><span class="number">73</span>             sq.In(tmp.RChild);</span><br><span class="line"><span class="number">74</span>         &#125;</span><br><span class="line"><span class="number">75</span>     &#125;</span><br><span class="line"><span class="number">76</span> &#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag"># 数据结构</a>
+              <a href="/tags/%E7%AE%97%E6%B3%95/" rel="tag"># 算法</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/11/30/java%E7%BA%BF%E7%A8%8B%E4%B9%8B%E7%BA%BF%E7%A8%8B%E6%B1%A0/" rel="prev" title="java线程池">
+                  <i class="fa fa-chevron-left"></i> java线程池
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/12/01/%E7%AE%97%E6%B3%95%EF%BC%88%E5%9B%9B%EF%BC%89%E4%B9%8B%E6%A0%91%E5%8F%8A%E4%BA%8C%E5%8F%89%E6%A0%91%E5%92%8C%E9%81%8D%E5%8E%86/" rel="next" title="算法（四）之树及二叉树和遍历">
+                  算法（四）之树及二叉树和遍历 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

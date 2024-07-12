@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="原理 注册和撤销服务，使用NamingProxy进行Http调用，使用jdk自带的Http协议API 查询服务，使用HostReactor类借助NamingProxy进行服务查询，重点是使用PushReceiver类创建UDP长连接，更新服务 subscribe&#x2F;unsubscribe,使用EventDispatcher类addListener方法添加监听，重点是使用PushReceiver类创建">
+<meta property="og:type" content="article">
+<meta property="og:title" content="nacos之注册中心原理解析">
+<meta property="og:url" content="http://example.com/2020/12/21/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bnacos%E4%B9%8B%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="原理 注册和撤销服务，使用NamingProxy进行Http调用，使用jdk自带的Http协议API 查询服务，使用HostReactor类借助NamingProxy进行服务查询，重点是使用PushReceiver类创建UDP长连接，更新服务 subscribe&#x2F;unsubscribe,使用EventDispatcher类addListener方法添加监听，重点是使用PushReceiver类创建">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/12/21/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bnacos%E4%B9%8B%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/baa968b2dce6422703ca528e5550ca19">
+<meta property="article:published_time" content="2020-12-21T08:08:19.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.256Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="nacos">
+<meta property="article:tag" content="注册中心">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/12/21/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bnacos%E4%B9%8B%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/baa968b2dce6422703ca528e5550ca19">
+
+
+<link rel="canonical" href="http://example.com/2020/12/21/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bnacos%E4%B9%8B%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>nacos之注册中心原理解析 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8"><span class="nav-number">2.</span> <span class="nav-text">简单使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NamingService"><span class="nav-number">3.</span> <span class="nav-text">NamingService</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A0%B8%E5%BF%83%E7%B1%BB"><span class="nav-number">4.</span> <span class="nav-text">核心类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NacosNamingService"><span class="nav-number">5.</span> <span class="nav-text">NacosNamingService</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EventDispatcher"><span class="nav-number">6.</span> <span class="nav-text">EventDispatcher</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NamingProxy"><span class="nav-number">7.</span> <span class="nav-text">NamingProxy</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#BeatReactor"><span class="nav-number">8.</span> <span class="nav-text">BeatReactor</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HostReactor"><span class="nav-number">9.</span> <span class="nav-text">HostReactor</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B6%E4%BB%96"><span class="nav-number">10.</span> <span class="nav-text">其他</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#PushReceiver"><span class="nav-number">10.1.</span> <span class="nav-text">PushReceiver</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FailoverReactor"><span class="nav-number">10.2.</span> <span class="nav-text">FailoverReactor</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Balancer"><span class="nav-number">10.3.</span> <span class="nav-text">Balancer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#DiskCache"><span class="nav-number">10.4.</span> <span class="nav-text">DiskCache</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Naming-API"><span class="nav-number">11.</span> <span class="nav-text">Naming API</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E6%95%B0%E5%88%97%E8%A1%A8%E5%8F%8A%E7%A4%BA%E4%BE%8B"><span class="nav-number">12.</span> <span class="nav-text">参数列表及示例</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E5%86%8C%E5%AE%9E%E4%BE%8B"><span class="nav-number">12.1.</span> <span class="nav-text">注册实例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E9%94%80%E5%AE%9E%E4%BE%8B"><span class="nav-number">12.2.</span> <span class="nav-text">注销实例</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E5%AE%9E%E4%BE%8B%E5%88%97%E8%A1%A8"><span class="nav-number">12.3.</span> <span class="nav-text">获取实例列表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%91%E9%80%81%E5%BF%83%E8%B7%B3"><span class="nav-number">12.4.</span> <span class="nav-text">发送心跳</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Nacos%E6%9C%8D%E5%8A%A1%E7%AB%AF%E7%8A%B6%E6%80%81"><span class="nav-number">12.5.</span> <span class="nav-text">Nacos服务端状态</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8E%B7%E5%8F%96%E6%89%80%E6%9C%89%E6%9C%8D%E5%8A%A1%E5%90%8D"><span class="nav-number">12.6.</span> <span class="nav-text">获取所有服务名</span></a></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/21/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bnacos%E4%B9%8B%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          nacos之注册中心原理解析
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-12-21 16:08:19" itemprop="dateCreated datePublished" datetime="2020-12-21T16:08:19+08:00">2020-12-21</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h2><ul>
+<li>注册和撤销服务，使用NamingProxy进行Http调用，使用jdk自带的Http协议API</li>
+<li>查询服务，使用HostReactor类借助NamingProxy进行服务查询，重点是使用PushReceiver类创建UDP长连接，更新服务</li>
+<li>subscribe/unsubscribe,使用EventDispatcher类addListener方法添加监听，重点是使用PushReceiver类创建UDP长连接，更新服务</li>
+<li>都是使用定时任务线程池ScheduledExecutorService进行多线程处理</li>
+</ul>
+<h2 id="简单使用"><a href="#简单使用" class="headerlink" title="简单使用"></a>简单使用</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">Properties properties = <span class="keyword">new</span> Properties();</span><br><span class="line">properties.setProperty(<span class="string">&quot;serverAddr&quot;</span>, System.getProperty(<span class="string">&quot;serverAddr&quot;</span>));</span><br><span class="line">properties.setProperty(<span class="string">&quot;namespace&quot;</span>, System.getProperty(<span class="string">&quot;namespace&quot;</span>));</span><br><span class="line"></span><br><span class="line">NamingService naming = NamingFactory.createNamingService(properties);</span><br><span class="line"></span><br><span class="line">naming.registerInstance(<span class="string">&quot;nacos.test.3&quot;</span>, <span class="string">&quot;11.11.11.11&quot;</span>, <span class="number">8888</span>, <span class="string">&quot;TEST1&quot;</span>);</span><br><span class="line">naming.registerInstance(<span class="string">&quot;nacos.test.3&quot;</span>, <span class="string">&quot;2.2.2.2&quot;</span>, <span class="number">9999</span>, <span class="string">&quot;DEFAULT&quot;</span>);</span><br><span class="line">System.out.println(naming.getAllInstances(<span class="string">&quot;nacos.test.3&quot;</span>));</span><br><span class="line">naming.deregisterInstance(<span class="string">&quot;nacos.test.3&quot;</span>, <span class="string">&quot;2.2.2.2&quot;</span>, <span class="number">9999</span>, <span class="string">&quot;DEFAULT&quot;</span>);</span><br><span class="line">System.out.println(naming.getAllInstances(<span class="string">&quot;nacos.test.3&quot;</span>));</span><br><span class="line"></span><br><span class="line">naming.subscribe(<span class="string">&quot;nacos.test.3&quot;</span>, <span class="keyword">new</span> EventListener() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onEvent</span><span class="params">(Event event)</span> </span>&#123;</span><br><span class="line">        System.out.println(((NamingEvent)event).getServiceName());</span><br><span class="line">        System.out.println(((NamingEvent)event).getInstances());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<h2 id="NamingService"><a href="#NamingService" class="headerlink" title="NamingService"></a>NamingService</h2><p>NamingService是Nacos对外提供给使用者的接口，其实现类为com.alibaba.nacos.client.naming.NacosNamingService，归纳起来，NamingService提供了以下方法：</p>
+<ul>
+<li>registerInstance：注册实例。</li>
+<li>deregisterInstance：注销实例。</li>
+<li>getAllInstances：获取某一服务的所有实例。</li>
+<li>selectInstances：获取某一服务健康或不健康的实例。</li>
+<li>selectOneHealthyInstance：根据权重选择一个健康的实例。</li>
+<li>getServerStatus：检测服务端健康状态。</li>
+<li>subscribe：注册对某个服务的监听。</li>
+<li>unsubscribe：注销对某个服务的监听。</li>
+<li>getSubscribeServices：获取被监听的服务。</li>
+<li>getServicesOfServer：获取命名空间（namespace)下的所有服务名。</li>
+</ul>
+<h2 id="核心类"><a href="#核心类" class="headerlink" title="核心类"></a>核心类</h2><img src="/2020/12/21/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bnacos%E4%B9%8B%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/baa968b2dce6422703ca528e5550ca19" alt="core-class" style="zoom: 50%;">
+
+<h2 id="NacosNamingService"><a href="#NacosNamingService" class="headerlink" title="NacosNamingService"></a>NacosNamingService</h2><p>NacosNamingService是NamingService接口的实现类。实现了上面提到的那些方法。此外，NacosNamingService还起到了初始化其他核心类的作用，因为对外提供的方法都是委托给其他核心类处理的。按顺序将依次初始化EventDispatcher、NamingProxy、BeatReactor、HostReactor。从NacosNamingService的构造函数我们也可以了解到，可以进行一些参数的自定义，可参考<a target="_blank" rel="noopener" href="https://nacos.io/zh-cn/docs/concepts.html">官方文档</a></p>
+<h2 id="EventDispatcher"><a href="#EventDispatcher" class="headerlink" title="EventDispatcher"></a>EventDispatcher</h2><p>EventDispatcher与其他事件分发的组件没什么不同，用于处理subscribe、unsubscribe等等与服务监听相关的方法，并分发NamingEvent到各Listener。成员变量ConcurrentMap&lt;String, List<EventListener>&gt; observerMap保存了注册的Listener，key为{服务名}@@{集群名}，value为各个EventListener的列表。EventDispatcher会启动<strong>1</strong>个名为com.alibaba.nacos.naming.client.listener的线程用于处理事件的分发。</EventListener></p>
+<blockquote>
+<p>注意点：</p>
+<ul>
+<li>分发NamingEvent时，按照subscribe(…)方法的调用顺序串行依次调用EventListener的onEvent(…)方法。</li>
+<li>调用subscribe(…)方法会引起对应Service的事件分发。</li>
+</ul>
+</blockquote>
+<h2 id="NamingProxy"><a href="#NamingProxy" class="headerlink" title="NamingProxy"></a>NamingProxy</h2><p>NamingProxy用于<strong>与Nacos服务端通信</strong>，注册服务、注销服务、发送心跳等都经由NamingProxy来请求服务端。NamingProxy会启动<strong>1</strong>个名为com.alibaba.nacos.client.naming.serverlist.updater的线程，用于定期调用refreshSrvIfNeed()方法更新Nacos服务端地址，默认间隔为<strong>30秒</strong>，对服务端API的调用将在后文总结。</p>
+<blockquote>
+<p>注意点：refreshSrvIfNeed()方法对Nacos服务端地址的更新仅在使用endpoint的时候才会进行实际更新，如果是通过serverAddr配置的Nacos服务端地址，refreshSrvIfNeed()方法将不会进行任何操作。</p>
+</blockquote>
+<h2 id="BeatReactor"><a href="#BeatReactor" class="headerlink" title="BeatReactor"></a>BeatReactor</h2><p>BeatReactor用于<strong>向Nacos服务端发送已注册服务的心跳</strong>。成员变量Map&lt;String, BeatInfo&gt; dom2Beat中保存了需要发送的BeatInfo，key为{serviceName}#{ip}#{port}，value为对应的BeatInfo。BeatReactor会启动名为com.alibaba.nacos.naming.beat.sender的线程来发送心跳，默认线程数为1~CPU核心数的一半，可由namingClientBeatThreadCount参数指定。<br>默认情况下每<strong>5秒</strong>发送一次心跳，可根据Nacos服务端返回的clientBeatInterval的值调整心跳间隔。</p>
+<h2 id="HostReactor"><a href="#HostReactor" class="headerlink" title="HostReactor"></a>HostReactor</h2><p>HostReactor<strong>用于获取、保存、更新各Service实例信息。</strong>成员变量Map&lt;String, ServiceInfo&gt; serviceInfoMap中保存了已获取到的服务的信息，key为{服务名}@@{集群名}。HostReactor会启动名为com.alibaba.nacos.client.naming.updater的线程来更新服务信息，默认线程数为1~CPU核心数的一半，可由namingPollingThreadCount参数指定。定时任务UpdateTask会根据服务的cacheMillis值定时更新服务信息，默认值为<strong>10秒</strong>。该定时任务会在获取某一服务信息时创建，保存在成员变量Map&lt;String, ScheduledFuture&lt;?&gt;&gt; futureMap中。</p>
+<h2 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h2><h3 id="PushReceiver"><a href="#PushReceiver" class="headerlink" title="PushReceiver"></a>PushReceiver</h3><p>PushReceiver<strong>用于接收Nacos服务端的推送</strong>，初始化时会创建DatagramSocket使用UDP的方式接收推送。会启动<strong>1</strong>个名为com.alibaba.nacos.naming.push.receiver的线程。</p>
+<h3 id="FailoverReactor"><a href="#FailoverReactor" class="headerlink" title="FailoverReactor"></a>FailoverReactor</h3><p>用于故障转移，会启动<strong>1</strong>个名为com.alibaba.nacos.naming.failover的线程并定时读取名为00-00—000-VIPSRV_FAILOVER_SWITCH-000—00-00的文件，内容为1时表示开启，此时获取服务信息时会返回FailoverReactor缓存的服务信息。</p>
+<h3 id="Balancer"><a href="#Balancer" class="headerlink" title="Balancer"></a>Balancer</h3><p>根据服务实例的权重挑选一个实例，实现简单的负载均衡。</p>
+<h3 id="DiskCache"><a href="#DiskCache" class="headerlink" title="DiskCache"></a>DiskCache</h3><p>用于服务信息的持久化。</p>
+<h2 id="Naming-API"><a href="#Naming-API" class="headerlink" title="Naming API"></a>Naming API</h2><p>API汇总如下：</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>URI</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>POST</td>
+<td>/nacos/v1/ns/instance</td>
+<td>注册实例</td>
+</tr>
+<tr>
+<td>DELETE</td>
+<td>/nacos/v1/ns/instance</td>
+<td>注销实例</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/nacos/v1/ns/instance/list</td>
+<td>获取实例列表</td>
+</tr>
+<tr>
+<td>PUT</td>
+<td>/nacos/v1/ns/instance/beat</td>
+<td>发送心跳</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/nacos/v1/ns/api/hello</td>
+<td>Nacos服务端状态</td>
+</tr>
+<tr>
+<td>GET</td>
+<td>/nacos/v1/ns/service/list</td>
+<td>获取所有服务名</td>
+</tr>
+</tbody></table>
+<h2 id="参数列表及示例"><a href="#参数列表及示例" class="headerlink" title="参数列表及示例"></a>参数列表及示例</h2><h3 id="注册实例"><a href="#注册实例" class="headerlink" title="注册实例"></a>注册实例</h3><table>
+<thead>
+<tr>
+<th>key</th>
+<th>含义</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>namespaceId</td>
+<td>命名空间</td>
+<td>默认为public</td>
+</tr>
+<tr>
+<td>ip</td>
+<td>实例IP地址</td>
+<td></td>
+</tr>
+<tr>
+<td>port</td>
+<td>实例端口</td>
+<td></td>
+</tr>
+<tr>
+<td>weight</td>
+<td>权重</td>
+<td>默认为1.0</td>
+</tr>
+<tr>
+<td>enable</td>
+<td>是否开启</td>
+<td>默认为true</td>
+</tr>
+<tr>
+<td>healthy</td>
+<td>健康状态</td>
+<td>默认为true</td>
+</tr>
+<tr>
+<td>metadata</td>
+<td>其他信息</td>
+<td></td>
+</tr>
+<tr>
+<td>serviceName</td>
+<td>服务名</td>
+<td></td>
+</tr>
+<tr>
+<td>clusterName</td>
+<td>集群名</td>
+<td>默认为DEFAULT</td>
+</tr>
+</tbody></table>
+<p>请求示例：<a target="_blank" rel="noopener" href="http://localhost:8848/nacos/v1/ns/instance?metadata=%7B%7D&namespaceId=public&port=8888&enable=true&healthy=true&ip=11.11.11.11&clusterName=TEST1&weight=1.0&serviceName=nacos.test.3&encoding=UTF-8&">http://localhost:8848/nacos/v1/ns/instance?metadata=%7B%7D&amp;namespaceId=public&amp;port=8888&amp;enable=true&amp;healthy=true&amp;ip=11.11.11.11&amp;clusterName=TEST1&amp;weight=1.0&amp;serviceName=nacos.test.3&amp;encoding=UTF-8&amp;</a></p>
+<p>返回示例：ok</p>
+<h3 id="注销实例"><a href="#注销实例" class="headerlink" title="注销实例"></a>注销实例</h3><table>
+<thead>
+<tr>
+<th>key</th>
+<th>含义</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>namespaceId</td>
+<td>命名空间</td>
+<td>默认为public</td>
+</tr>
+<tr>
+<td>ip</td>
+<td>实例IP地址</td>
+<td></td>
+</tr>
+<tr>
+<td>port</td>
+<td>实例端口</td>
+<td></td>
+</tr>
+<tr>
+<td>serviceName</td>
+<td>服务名</td>
+<td></td>
+</tr>
+<tr>
+<td>clusterName</td>
+<td>集群名</td>
+<td>默认为DEFAULT</td>
+</tr>
+</tbody></table>
+<p>请求示例：<a target="_blank" rel="noopener" href="http://localhost:8848/nacos/v1/ns/instance?cluster=DEFAULT&amp;serviceName=nacos.test.3&amp;encoding=UTF-8&amp;namespaceId=public&amp;port=9999&amp;ip=2.2.2.2&amp;">http://localhost:8848/nacos/v1/ns/instance?cluster=DEFAULT&amp;serviceName=nacos.test.3&amp;encoding=UTF-8&amp;namespaceId=public&amp;port=9999&amp;ip=2.2.2.2&amp;</a></p>
+<p>返回示例：ok</p>
+<h3 id="获取实例列表"><a href="#获取实例列表" class="headerlink" title="获取实例列表"></a>获取实例列表</h3><table>
+<thead>
+<tr>
+<th>key</th>
+<th>含义</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>namespaceId</td>
+<td>命名空间</td>
+<td>默认为public</td>
+</tr>
+<tr>
+<td>serviceName</td>
+<td>服务名</td>
+<td></td>
+</tr>
+<tr>
+<td>clusters</td>
+<td>集群名</td>
+<td>默认为DEFAULT</td>
+</tr>
+<tr>
+<td>udpPort</td>
+<td>监听的UPD端口号</td>
+<td>由PushReceiver创建</td>
+</tr>
+<tr>
+<td>clientIP</td>
+<td>客户端IP</td>
+<td></td>
+</tr>
+<tr>
+<td>healthyOnly</td>
+<td>是否只返回健康的实例</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>请求示例：<a target="_blank" rel="noopener" href="http://localhost:8848/nacos/v1/ns/instance/list?healthyOnly=false&amp;namespaceId=public&amp;clientIP=172.16.20.114&amp;serviceName=nacos.test.3&amp;udpPort=53957&amp;encoding=UTF-8&amp;">http://localhost:8848/nacos/v1/ns/instance/list?healthyOnly=false&amp;namespaceId=public&amp;clientIP=172.16.20.114&amp;serviceName=nacos.test.3&amp;udpPort=53957&amp;encoding=UTF-8&amp;</a></p>
+<p>返回示例：{“metadata”:{},”dom”:”nacos.test.3”,”cacheMillis”:10000,”useSpecifiedURL”:false,”hosts”:[{“valid”:true,”marked”:false,”metadata”:{},”instanceId”:”2.2.2.2#9999#DEFAULT#nacos.test.3”,”port”:9999,”ip”:”2.2.2.2”,”clusterName”:”DEFAULT”,”weight”:1.0,”serviceName”:”nacos.test.3”,”enabled”:true},{“valid”:true,”marked”:false,”metadata”:{},”instanceId”:”11.11.11.11#8888#TEST1#nacos.test.3”,”port”:8888,”ip”:”11.11.11.11”,”clusterName”:”TEST1”,”weight”:1.0,”serviceName”:”nacos.test.3”,”enabled”:true}],”checksum”:”bd1054e6afb8d10730d945d74c4ce4421550584589236”,”lastRefTime”:1550584589236,”env”:””,”clusters”:””}</p>
+<h3 id="发送心跳"><a href="#发送心跳" class="headerlink" title="发送心跳"></a>发送心跳</h3><table>
+<thead>
+<tr>
+<th>key</th>
+<th>含义</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>namespaceId</td>
+<td>命名空间</td>
+<td>默认为public</td>
+</tr>
+<tr>
+<td>serviceName</td>
+<td>服务名</td>
+<td></td>
+</tr>
+<tr>
+<td>beat</td>
+<td>BeatInfo的JSON字符串</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>BeatInfo对象结构如下，与Instance对象类似：</p>
+<table>
+<thead>
+<tr>
+<th>field</th>
+<th>含义</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>port</td>
+<td>端口</td>
+<td></td>
+</tr>
+<tr>
+<td>ip</td>
+<td>IP地址</td>
+<td></td>
+</tr>
+<tr>
+<td>weight</td>
+<td>权重</td>
+<td></td>
+</tr>
+<tr>
+<td>metadata</td>
+<td>其他信息</td>
+<td></td>
+</tr>
+<tr>
+<td>serviceName</td>
+<td>服务名</td>
+<td></td>
+</tr>
+<tr>
+<td>clusterName</td>
+<td>集群名</td>
+<td></td>
+</tr>
+<tr>
+<td>scheduled</td>
+<td>是否心跳中</td>
+<td>这个是BeatReactor用来标识状态的</td>
+</tr>
+</tbody></table>
+<p>请求示例：<a target="_blank" rel="noopener" href="http://localhost:8848/nacos/v1/ns/instance/beat?beat=%7B%22cluster%22:%22DEFAULT%22,%22ip%22:%222.2.2.2%22,%22metadata%22:%7B%7D,%22port%22:9999,%22scheduled%22:true,%22serviceName%22:%22nacos.test.3%22,%22weight%22:1.0%7D&serviceName=nacos.test.3&encoding=UTF-8&namespaceId=public&">http://localhost:8848/nacos/v1/ns/instance/beat?beat=%7B%22cluster%22%3A%22DEFAULT%22%2C%22ip%22%3A%222.2.2.2%22%2C%22metadata%22%3A%7B%7D%2C%22port%22%3A9999%2C%22scheduled%22%3Atrue%2C%22serviceName%22%3A%22nacos.test.3%22%2C%22weight%22%3A1.0%7D&amp;serviceName=nacos.test.3&amp;encoding=UTF-8&amp;namespaceId=public&amp;</a></p>
+<p>返回示例：{“clientBeatInterval”:5000}</p>
+<h3 id="Nacos服务端状态"><a href="#Nacos服务端状态" class="headerlink" title="Nacos服务端状态"></a>Nacos服务端状态</h3><table>
+<thead>
+<tr>
+<th>key</th>
+<th>含义</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>namespaceId</td>
+<td>命名空间</td>
+<td>默认为public</td>
+</tr>
+</tbody></table>
+<p>请求示例：<a target="_blank" rel="noopener" href="http://localhost:8848/nacos/v1/ns/api/hello?encoding=UTF-8&amp;namespaceId=public&amp;">http://localhost:8848/nacos/v1/ns/api/hello?encoding=UTF-8&amp;namespaceId=public&amp;</a></p>
+<p>返回示例：{“msg”:”Hello! I am Nacos-Naming and healthy! total services: raft 2, local port:8848”}</p>
+<h3 id="获取所有服务名"><a href="#获取所有服务名" class="headerlink" title="获取所有服务名"></a>获取所有服务名</h3><table>
+<thead>
+<tr>
+<th>key</th>
+<th>含义</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>namespaceId</td>
+<td>命名空间</td>
+<td>默认为public</td>
+</tr>
+<tr>
+<td>pageNo</td>
+<td>页码</td>
+<td>注意从1开始</td>
+</tr>
+<tr>
+<td>pageSize</td>
+<td>返回数量</td>
+<td></td>
+</tr>
+<tr>
+<td>selector</td>
+<td>过滤器</td>
+<td></td>
+</tr>
+</tbody></table>
+<p>请求示例：<a target="_blank" rel="noopener" href="http://localhost:8848/nacos/v1/ns/service/list?pageSize=100&amp;encoding=UTF-8&amp;namespaceId=public&amp;pageNo=0&amp;">http://localhost:8848/nacos/v1/ns/service/list?pageSize=100&amp;encoding=UTF-8&amp;namespaceId=public&amp;pageNo=0&amp;</a></p>
+<p>返回示例：{“count”:1,”doms”:[“nacos.test.3”]}</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/nacos/" rel="tag"># nacos</a>
+              <a href="/tags/%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83/" rel="tag"># 注册中心</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/12/21/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bnacos%E4%B9%8B%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/" rel="prev" title="nacos之配置中心原理解析">
+                  <i class="fa fa-chevron-left"></i> nacos之配置中心原理解析
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/12/21/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bnacos%E4%B9%8BgRPC%E8%B0%83%E7%94%A8/" rel="next" title="nacos之gRPC调用">
+                  nacos之gRPC调用 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

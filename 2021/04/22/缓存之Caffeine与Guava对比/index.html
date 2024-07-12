@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="GuavaCache和Caffeine差异 剔除算法方面，GuavaCache采用的是「LRU」算法，而Caffeine采用的是「Window TinyLFU」算法，这是两者之间最大，也是根本的区别。 立即失效方面，Guava会把立即失效 (例如：expireAfterAccess(0) and expireAfterWrite(0)) 转成设置最大Size为0。这就会导致剔除提醒的原因是SIZE">
+<meta property="og:type" content="article">
+<meta property="og:title" content="缓存之Caffeine与Guava对比">
+<meta property="og:url" content="http://example.com/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine%E4%B8%8EGuava%E5%AF%B9%E6%AF%94/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="GuavaCache和Caffeine差异 剔除算法方面，GuavaCache采用的是「LRU」算法，而Caffeine采用的是「Window TinyLFU」算法，这是两者之间最大，也是根本的区别。 立即失效方面，Guava会把立即失效 (例如：expireAfterAccess(0) and expireAfterWrite(0)) 转成设置最大Size为0。这就会导致剔除提醒的原因是SIZE">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine%E4%B8%8EGuava%E5%AF%B9%E6%AF%94/%E5%AF%B9%E6%AF%94.png">
+<meta property="og:image" content="http://example.com/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine%E4%B8%8EGuava%E5%AF%B9%E6%AF%94/aHR0cHM6Ly9tbWJpei5xcGljLmNuL21tYml6X3BuZy80bzIyT0ZjbXpIbE4wbXBTQlNITGdYTUp0VWRNQmliYzFOODRiaWJPWUlvNGZ1STA1MWlhd0RwN3VzVTVra3VmSGR4TDNkM3VMWGliVXZOQWpmU3hjWTNRencvNjQw">
+<meta property="og:image" content="http://example.com/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine%E4%B8%8EGuava%E5%AF%B9%E6%AF%94/aHR0cHM6Ly9tbWJpei5xcGljLmNuL21tYml6X3BuZy80bzIyT0ZjbXpIbE4wbXBTQlNITGdYTUp0VWRNQmliYzEzeEY1OHVYakZ2S1FXTktRVXNhYW94UkhGbDBXRmUyaWNDemdlS05zVnlUVWo1a1EyRGFkQUFRLzY0MA">
+<meta property="og:image" content="http://example.com/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine%E4%B8%8EGuava%E5%AF%B9%E6%AF%94/aHR0cHM6Ly9tbWJpei5xcGljLmNuL21tYml6X3BuZy80bzIyT0ZjbXpIbE4wbXBTQlNITGdYTUp0VWRNQmliYzFvQjdwamJGVmc4MlFVdm9QQ1EwNVJVbVp5aEZod3ZYb05aT2pYZDk3aWJDZG9SdFlQQjJjdnBRLzY0MA">
+<meta property="og:image" content="http://example.com/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine%E4%B8%8EGuava%E5%AF%B9%E6%AF%94/aHR0cHM6Ly9tbWJpei5xcGljLmNuL21tYml6X3BuZy80bzIyT0ZjbXpIbE4wbXBTQlNITGdYTUp0VWRNQmliYzFmTFNmZlBqMDdpY2h6Znk3aWNyYTVtOWE3Z2pvMjZjcXZNcUVYcHdPNjFGcEs2THpyeVdmbWJaZy82NDA">
+<meta property="article:published_time" content="2021-04-22T03:18:41.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.353Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="Caffeine">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine%E4%B8%8EGuava%E5%AF%B9%E6%AF%94/%E5%AF%B9%E6%AF%94.png">
+
+
+<link rel="canonical" href="http://example.com/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine%E4%B8%8EGuava%E5%AF%B9%E6%AF%94/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>缓存之Caffeine与Guava对比 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#GuavaCache%E5%92%8CCaffeine%E5%B7%AE%E5%BC%82"><span class="nav-number">1.</span> <span class="nav-text">GuavaCache和Caffeine差异</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E5%8D%A0%E7%94%A8%E5%AF%B9%E6%AF%94"><span class="nav-number">1.1.</span> <span class="nav-text">内存占用对比</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#LRU-P-K-W-TinyLFU"><span class="nav-number">2.</span> <span class="nav-text">LRU P.K. W-TinyLFU</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Guava%E8%BF%81%E7%A7%BB"><span class="nav-number">3.</span> <span class="nav-text">Guava迁移</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine%E4%B8%8EGuava%E5%AF%B9%E6%AF%94/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          缓存之Caffeine与Guava对比
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-04-22 11:18:41" itemprop="dateCreated datePublished" datetime="2021-04-22T11:18:41+08:00">2021-04-22</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Caffeine/" itemprop="url" rel="index"><span itemprop="name">Caffeine</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="GuavaCache和Caffeine差异"><a href="#GuavaCache和Caffeine差异" class="headerlink" title="GuavaCache和Caffeine差异"></a>GuavaCache和Caffeine差异</h2><ol>
+<li>剔除算法方面，GuavaCache采用的是<strong>「LRU」</strong>算法，而Caffeine采用的是<strong>「Window TinyLFU」</strong>算法，这是两者之间最大，也是根本的区别。</li>
+<li>立即失效方面，Guava会把立即失效 (例如：expireAfterAccess(0) and expireAfterWrite(0)) 转成设置最大Size为0。这就会导致剔除提醒的原因是SIZE而不是EXPIRED。Caffiene能正确识别这种剔除原因。</li>
+<li>取代提醒方面，Guava只要数据被替换，不管什么原因，都会触发剔除监听器。而Caffiene在取代值和先前值的引用完全一样时不会触发监听器。</li>
+<li>异步化方方面，Caffiene的很多工作都是交给线程池去做的（默认：ForkJoinPool.commonPool()），例如：剔除监听器，刷新机制，维护工作等。</li>
+</ol>
+<h3 id="内存占用对比"><a href="#内存占用对比" class="headerlink" title="内存占用对比"></a>内存占用对比</h3><p>Caffeine可以根据使用情况延迟初始化，或者动态调整它内部数据结构。这样能减少对内存的占用。如下图所示，使用了gradle memoryOverhead对内存占用进行了压测。结果可能会受到JVM的指针压缩、对象Padding等影响：<img src="/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine%E4%B8%8EGuava%E5%AF%B9%E6%AF%94/%E5%AF%B9%E6%AF%94.png" alt="img"></p>
+<h2 id="LRU-P-K-W-TinyLFU"><a href="#LRU-P-K-W-TinyLFU" class="headerlink" title="LRU P.K. W-TinyLFU"></a>LRU P.K. W-TinyLFU</h2><p>缓存的驱逐策略是为了预测哪些数据在短期内最可能被再次用到，从而提升缓存的命中率。由于简洁的实现、高效的运行时表现以及在常规的使用场景下有不错的命中率，LRU（Least Recently Used）策略或许是最流行的驱逐策略,，它在保持算法简单的前提下，效果还不错。但LRU对未来的预测有明显的局限性，它会认为<strong>「最后到来的数据是最可能被再次访问」</strong>的，从而给予它最高的优先级。</p>
+<p>现代缓存扩展了对历史数据的使用，结合就近程度（recency）和访问频次（frequency）来更好的预测数据。其中一种保留历史信息的方式是使用<strong>「popularity sketch」</strong>（一种压缩、概率性的数据结构）来从一大堆访问事件中定位频繁的访问者。可以参考<strong>「CountMin Sketch」</strong>算法，它由计数矩阵和多个哈希方法实现。发生一次读取时，矩阵中每行对应的计数器增加计数，估算频率时，取数据对应是所有行中计数的最小值。这个方法让我们从空间、效率、以及适配矩阵的长宽引起的哈希碰撞的错误率上做权衡：<img src="/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine%E4%B8%8EGuava%E5%AF%B9%E6%AF%94/aHR0cHM6Ly9tbWJpei5xcGljLmNuL21tYml6X3BuZy80bzIyT0ZjbXpIbE4wbXBTQlNITGdYTUp0VWRNQmliYzFOODRiaWJPWUlvNGZ1STA1MWlhd0RwN3VzVTVra3VmSGR4TDNkM3VMWGliVXZOQWpmU3hjWTNRencvNjQw" alt="img"></p>
+<p>Window TinyLFU（W-TinyLFU）算法将Sketch作为过滤器，当新来的数据比要驱逐的数据高频时，这个数据才会被缓存接纳（admission）。这个许可窗口给予每个数据项积累热度的机会，而<strong>「不是立即过滤掉」</strong>。这避免了持续的未命中，特别是在突然流量暴涨的的场景中，一些短暂的重复流量就不会被长期保留。为了刷新历史数据，一个时间衰减进程被周期性或增量的执行，给所有计数器减半：<img src="/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine%E4%B8%8EGuava%E5%AF%B9%E6%AF%94/aHR0cHM6Ly9tbWJpei5xcGljLmNuL21tYml6X3BuZy80bzIyT0ZjbXpIbE4wbXBTQlNITGdYTUp0VWRNQmliYzEzeEY1OHVYakZ2S1FXTktRVXNhYW94UkhGbDBXRmUyaWNDemdlS05zVnlUVWo1a1EyRGFkQUFRLzY0MA" alt="img"></p>
+<p>对于长期保留的数据，W-TinyLFU使用了分段LRU（Segmented LRU，缩写SLRU）策略。起初，一个数据项存储被存储在试用段（probationary segment）中，在后续被访问到时，它会被提升到保护段（protected segment）中（保护段占总容量的80%）。保护段满后，有的数据会被淘汰回试用段，这也可能级联的触发试用段的淘汰。这套机制确保了访问间隔小的热数据被保存下来，而被重复访问少的冷数据则被回收：<img src="/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine%E4%B8%8EGuava%E5%AF%B9%E6%AF%94/aHR0cHM6Ly9tbWJpei5xcGljLmNuL21tYml6X3BuZy80bzIyT0ZjbXpIbE4wbXBTQlNITGdYTUp0VWRNQmliYzFvQjdwamJGVmc4MlFVdm9QQ1EwNVJVbVp5aEZod3ZYb05aT2pYZDk3aWJDZG9SdFlQQjJjdnBRLzY0MA" alt="img"></p>
+<p>如图中数据库和搜索场景的结果展示，通过考虑就近程度和频率能大大提升LRU的表现。一些高级的策略，像ARC，LIRS和W-TinyLFU都提供了接近最理想的命中率。想看更多的场景测试，请查看相应的论文，也可以在使用simulator来测试自己的场景：<img src="/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine%E4%B8%8EGuava%E5%AF%B9%E6%AF%94/aHR0cHM6Ly9tbWJpei5xcGljLmNuL21tYml6X3BuZy80bzIyT0ZjbXpIbE4wbXBTQlNITGdYTUp0VWRNQmliYzFmTFNmZlBqMDdpY2h6Znk3aWNyYTVtOWE3Z2pvMjZjcXZNcUVYcHdPNjFGcEs2THpyeVdmbWJaZy82NDA" alt="img"></p>
+<h2 id="Guava迁移"><a href="#Guava迁移" class="headerlink" title="Guava迁移"></a>Guava迁移</h2><p>那么，如果我的项目之前用的是GuavaCache，如何以尽可能低的成本迁移到Caffeine上来呢？嘿嘿，Caffeine已经想到了这一点，它提供了一个适配器，让你用Guava的接口操作它的缓存。代码片段如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Guava&#x27;s LoadingCache interface</span></span><br><span class="line">LoadingCache&lt;Key, Graph&gt; graphs = CaffeinatedGuava.build(</span><br><span class="line">    Caffeine.newBuilder().maximumSize(<span class="number">10_000</span>),</span><br><span class="line">    <span class="keyword">new</span> CacheLoader&lt;Key, Graph&gt;() &#123; <span class="comment">// Guava&#x27;s CacheLoader</span></span><br><span class="line">        <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> Graph <span class="title">load</span><span class="params">(Key key)</span> <span class="keyword">throws</span> Exception </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> createExpensiveGraph(key);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Caffeine/" rel="tag"># Caffeine</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine/" rel="prev" title="缓存之Caffeine">
+                  <i class="fa fa-chevron-left"></i> 缓存之Caffeine
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/04/23/java%E7%BA%BF%E7%A8%8B%E4%B9%8B%E5%A0%B5%E5%A1%9E%E5%8C%BA%E5%88%AB/" rel="next" title="java线程之堵塞区别">
+                  java线程之堵塞区别 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

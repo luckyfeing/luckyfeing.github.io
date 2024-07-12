@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="概念 JVM 中的垃圾回收是基于 标记-复制、标记-清除和标记-整理三种模式的，那么其中最重要的其实是如何标记，像Serial、Parallel这类的回收器，无论是单线程标记和多线程标记，其本质采用的是暂停用户线程进行全面标记的算法，这种算法的好处就是标记的很干净，而且实现简单，缺点就是标记时间相对很长，导致STW的时间很长。 那么后来就有了并发标记，适用于CMS和G1，并发标记的意思就是可以在不">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JVM之垃圾回收器三色标记">
+<meta property="og:url" content="http://example.com/2021/07/02/JVM%E4%B9%8B%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="概念 JVM 中的垃圾回收是基于 标记-复制、标记-清除和标记-整理三种模式的，那么其中最重要的其实是如何标记，像Serial、Parallel这类的回收器，无论是单线程标记和多线程标记，其本质采用的是暂停用户线程进行全面标记的算法，这种算法的好处就是标记的很干净，而且实现简单，缺点就是标记时间相对很长，导致STW的时间很长。 那么后来就有了并发标记，适用于CMS和G1，并发标记的意思就是可以在不">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2021/07/02/JVM%E4%B9%8B%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0/aHR0cHM6Ly91cGxvYWQtaW1hZ2VzLmppYW5zaHUuaW8vdXBsb2FkX2ltYWdlcy83Nzc5NjA3LTkwZmI1NmQxYjM2MmEwNzQucG5nP2ltYWdlTW9ncjIvYXV0by1vcmllbnQvc3RyaXB8aW1hZ2VWaWV3Mi8yL3cvNTA5">
+<meta property="og:image" content="http://example.com/2021/07/02/JVM%E4%B9%8B%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0/20200730105400197.gif">
+<meta property="og:image" content="http://example.com/2021/07/02/JVM%E4%B9%8B%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0/20200730143812205.png">
+<meta property="og:image" content="http://example.com/2021/07/02/JVM%E4%B9%8B%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0/20200730144111702.png">
+<meta property="article:published_time" content="2021-07-02T03:04:42.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:26.787Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="JVM">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2021/07/02/JVM%E4%B9%8B%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0/aHR0cHM6Ly91cGxvYWQtaW1hZ2VzLmppYW5zaHUuaW8vdXBsb2FkX2ltYWdlcy83Nzc5NjA3LTkwZmI1NmQxYjM2MmEwNzQucG5nP2ltYWdlTW9ncjIvYXV0by1vcmllbnQvc3RyaXB8aW1hZ2VWaWV3Mi8yL3cvNTA5">
+
+
+<link rel="canonical" href="http://example.com/2021/07/02/JVM%E4%B9%8B%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>JVM之垃圾回收器三色标记 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E5%BF%B5"><span class="nav-number">1.</span> <span class="nav-text">概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E7%AE%97%E6%B3%95"><span class="nav-number">2.</span> <span class="nav-text">基本算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E8%AE%B0%E8%BF%87%E7%A8%8B"><span class="nav-number">2.1.</span> <span class="nav-text">标记过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%97%AE%E9%A2%98%E7%82%B9"><span class="nav-number">2.2.</span> <span class="nav-text">问题点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%AE%E5%8A%A8%E5%9E%83%E5%9C%BE"><span class="nav-number">2.3.</span> <span class="nav-text">浮动垃圾</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BC%8F%E6%A0%87"><span class="nav-number">2.4.</span> <span class="nav-text">漏标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%EF%BC%9A"><span class="nav-number">2.5.</span> <span class="nav-text">解决方案：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AF%B9%E6%AF%94"><span class="nav-number">2.6.</span> <span class="nav-text">对比</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0"><span class="nav-number">3.</span> <span class="nav-text">三色标记</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/02/JVM%E4%B9%8B%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          JVM之垃圾回收器三色标记
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-07-02 11:04:42" itemprop="dateCreated datePublished" datetime="2021-07-02T11:04:42+08:00">2021-07-02</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:26" itemprop="dateModified" datetime="2024-07-12T10:34:26+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/java%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">java基础</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p> JVM 中的垃圾回收是基于 标记-复制、标记-清除和标记-整理三种模式的，那么其中最重要的其实是如何标记，像Serial、Parallel这类的回收器，无论是单线程标记和多线程标记，其本质采用的是暂停用户线程进行全面标记的算法，这种算法的好处就是标记的很干净，而且实现简单，缺点就是标记时间相对很长，导致STW的时间很长。</p>
+<p>那么后来就有了并发标记，适用于CMS和G1，并发标记的意思就是可以在不暂停用户线程的情况下对其进行标记，那么实现这种并发标记的算法就是三色标记法，三色标记法最大的特点就是可以异步执行，从而可以以中断时间极少的代价或者完全没有中断来进行整个GC。</p>
+<h2 id="基本算法"><a href="#基本算法" class="headerlink" title="基本算法"></a>基本算法</h2><p>要找出存活对象，根据可达性分析，从GC Roots开始进行遍历访问，可达的则为存活对象：如下图，最终结果：A/D/E/F/G 可达</p>
+<img src="/2021/07/02/JVM%E4%B9%8B%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0/aHR0cHM6Ly91cGxvYWQtaW1hZ2VzLmppYW5zaHUuaW8vdXBsb2FkX2ltYWdlcy83Nzc5NjA3LTkwZmI1NmQxYjM2MmEwNzQucG5nP2ltYWdlTW9ncjIvYXV0by1vcmllbnQvc3RyaXB8aW1hZ2VWaWV3Mi8yL3cvNTA5" style="zoom:80%;">
+我们把遍历对象图**过程**中遇到的对象，按“是否访问过”这个条件标记成以下三种颜色：
+
+<ul>
+<li><strong>白色</strong>：尚未被GC访问过的对象，如果全部标记已完成依旧为白色的，称为不可达对象，既垃圾对象。</li>
+<li><strong>黑色</strong>：本对象已经被GC访问过，且本对象的子引用对象也已经被访问过了。</li>
+<li><strong>灰色</strong>：本对象已访问过，但是本对象的子引用对象还没有被访问过，全部访问完会变成黑色，属于中间态。</li>
+</ul>
+<p><img src="/2021/07/02/JVM%E4%B9%8B%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0/20200730105400197.gif" alt="img"></p>
+<h3 id="标记过程"><a href="#标记过程" class="headerlink" title="标记过程"></a>标记过程</h3><ol>
+<li>在GC并发标记刚开始时，所以对象均为白色集合。</li>
+<li>将所有GCRoots直接引用的对象标记为灰色集合。</li>
+<li>判断若灰色集合中的对象不存在子引用，则将其放入黑色集合，若存在子引用对象，则将其所有的子引用对象放入灰色集合，当前对象放入黑色集合</li>
+<li>按照步骤三，以此类推，直至灰色集合中的所有对象变成黑色后，本轮标记完成，且当前白色集合内的对象称为不可达对象，既垃圾对象。</li>
+</ol>
+<h3 id="问题点"><a href="#问题点" class="headerlink" title="问题点"></a>问题点</h3><p>由于此过程是在和用户线程并发运行的情况下，对象的引用处于随时可变的情况下，那么就会造成多标和漏标的问题。多标可以理解为浮动垃圾，只是导致部分对象不会被清除，占用内存空间。漏标的问题需要解决，漏标导致对象被清除，导致程序异常。</p>
+<h3 id="浮动垃圾"><a href="#浮动垃圾" class="headerlink" title="浮动垃圾"></a>浮动垃圾</h3><p><strong>本应该被标记为白色的对象，没有被标记，造成该对象可能不会被回收</strong></p>
+<ul>
+<li>比如E对象在GC扫描D对象时,E还正在被D引用，那么此时E就被标记为灰色，此时业务逻辑的变化，D指向E的引用被置空了，这时候E以及后续子引用本应该被当成垃圾回收，但是此时E已经被标记为灰色，导致E对象以及其子对象没有被及时清理掉，变成了浮动垃圾，</li>
+<li>还有在并发标记开始后的新对象，通常的做法是直接全部当成黑色，本轮不会进行清除。这部分对象期间可能会变为垃圾，这也算是浮动垃圾的一部分。</li>
+</ul>
+<h3 id="漏标"><a href="#漏标" class="headerlink" title="漏标"></a>漏标</h3><p><strong>灰色对象指向白色对象的引用消失了，然后一个黑色的对象重新引用了白色对象。</strong></p>
+<p>D对象引用E对象，E引用G，此时GC正好处于D已经变成黑色，E处于灰色，G是白色的情况下，此时因为业务逻辑的变化，E不引用G了，D对象引用了G，按照三色标记法看，黑色对象是已完成状态，不可能再去找子引用，所以G就不会变成灰色，这样就会造成白色对象此时正在被线程使用中，但是无法被标记成灰色或者白色，造成一个正在被使用的对象被错误回收。</p>
+<img src="/2021/07/02/JVM%E4%B9%8B%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0/20200730143812205.png" style="zoom: 50%;">
+<img src="/2021/07/02/JVM%E4%B9%8B%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8%E4%B8%89%E8%89%B2%E6%A0%87%E8%AE%B0/20200730144111702.png">
+漏标只有**同时满足**以下两个条件时才会发生：
+**条件一：灰色对象 断开了 白色对象的引用；即灰色对象 原来成员变量的引用 发生了变化。
+条件二：黑色对象 重新引用了 该白色对象；即黑色对象 成员变量增加了 新的引用。**
+
+<h3 id="解决方案："><a href="#解决方案：" class="headerlink" title="解决方案："></a>解决方案：</h3><p>CMS：Incremental Update算法（增量更新）</p>
+<p>当一个白色对象被一个黑色对象引用，将黑色对象重新标记为灰色，让垃圾回收器重新扫描。（破坏条件二）</p>
+<p>G1：SATB（Snapshot At The Beginning）算法（原始快照）</p>
+<p>当原来成员变量的引用发生变化之前，记录下原来的引用对象，既原始快照，当B和C之间的引用马上被断掉时，将这个引用记录下来，使GC依旧能够访问到，那样白色就不会漏标。在并发扫描结束之后，再将这些记录过得引用关系中的灰色对象为根，重新扫描一次。总而言之就是：无论引用关系删除与否，都会按照刚刚开始扫描的那一刻的对象图快照来进行搜索。（破坏条件一）</p>
+<h3 id="对比"><a href="#对比" class="headerlink" title="对比"></a>对比</h3><ul>
+<li>SATB 算法是关注引用的删除。（B-&gt;C 的引用）</li>
+<li>Incremental Update 算法关注引用的增加。（A-&gt;C 的引用）</li>
+<li>G1 如果使用Incremental Update 算法，因为变成灰色的成员还要重新扫，重新再来一遍，效率太低了。所以G1 在处理并发标记的过程比CMS 效率要高，这个主要是解决漏标的算法决定的。</li>
+</ul>
+<h2 id="三色标记"><a href="#三色标记" class="headerlink" title="三色标记"></a><a target="_blank" rel="noopener" href="https://blog.csdn.net/u010800201/article/details/107684597">三色标记</a></h2>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/JVM/" rel="tag"># JVM</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/06/22/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E4%B9%8B%E7%A7%92%E6%9D%80/" rel="prev" title="解决方案之秒杀">
+                  <i class="fa fa-chevron-left"></i> 解决方案之秒杀
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/07/02/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E9%9B%86%E7%BE%A4/" rel="next" title="中间件之RabbitMQ集群">
+                  中间件之RabbitMQ集群 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

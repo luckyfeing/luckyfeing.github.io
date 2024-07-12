@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="统一建模语言(Unified Modeling Language，UML)UML作为一种统一的软件建模语言具有广泛的建模能力。UML是在消化、吸收、提炼至今存在的所有软件建模语言的基础上提出的，集百家之所长，它是软件建模语言的集大成者。UML还突破了软件的限制，广泛吸收了其他领域的建模方法，并根据建模的一般原理，结合了软件的特点，因此具有坚实的理论基础和广泛性。UML不仅可以用于软件建模，还可以用">
+<meta property="og:type" content="article">
+<meta property="og:title" content="设计之设计模式">
+<meta property="og:url" content="http://example.com/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="统一建模语言(Unified Modeling Language，UML)UML作为一种统一的软件建模语言具有广泛的建模能力。UML是在消化、吸收、提炼至今存在的所有软件建模语言的基础上提出的，集百家之所长，它是软件建模语言的集大成者。UML还突破了软件的限制，广泛吸收了其他领域的建模方法，并根据建模的一般原理，结合了软件的特点，因此具有坚实的理论基础和广泛性。UML不仅可以用于软件建模，还可以用">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/image-20210713142258000.png">
+<meta property="og:image" content="http://example.com/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/image-20210713142210958.png">
+<meta property="og:image" content="http://example.com/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/image-20210713142628986.png">
+<meta property="og:image" content="http://example.com/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/image-20210713142416879.png">
+<meta property="article:published_time" content="2021-07-13T05:41:41.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.373Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="设计模式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/image-20210713142258000.png">
+
+
+<link rel="canonical" href="http://example.com/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>设计之设计模式 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%9F%E4%B8%80%E5%BB%BA%E6%A8%A1%E8%AF%AD%E8%A8%80-Unified-Modeling-Language%EF%BC%8CUML"><span class="nav-number">1.</span> <span class="nav-text">统一建模语言(Unified Modeling Language，UML)</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B1%BB%E5%9B%BE"><span class="nav-number">2.</span> <span class="nav-text">类图</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="nav-number">3.</span> <span class="nav-text">设计模式的作用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F%EF%BC%88%E6%80%8E%E6%A0%B7%E5%88%9B%E5%BB%BA%E5%AF%B9%E8%B1%A1%EF%BC%89"><span class="nav-number">4.</span> <span class="nav-text">创建型模式（怎样创建对象）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F"><span class="nav-number">5.</span> <span class="nav-text">结构型模式</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%8C%E4%B8%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F"><span class="nav-number">6.</span> <span class="nav-text">行为型模式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F"><span class="nav-number">6.1.</span> <span class="nav-text">简单工厂模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F"><span class="nav-number">6.2.</span> <span class="nav-text">抽象工厂模式</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F"><span class="nav-number">6.2.1.</span> <span class="nav-text">单例模式</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E5%9E%8B%E6%A8%A1%E5%BC%8F"><span class="nav-number">6.3.</span> <span class="nav-text">原型模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BB%BA%E9%80%A0%E8%80%85%E6%A8%A1%E5%BC%8F"><span class="nav-number">6.4.</span> <span class="nav-text">建造者模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%80%82%E9%85%8D%E5%99%A8%E6%A8%A1%E5%BC%8F"><span class="nav-number">6.5.</span> <span class="nav-text">适配器模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A3%85%E9%A5%B0%E6%A8%A1%E5%BC%8F"><span class="nav-number">6.6.</span> <span class="nav-text">装饰模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F"><span class="nav-number">6.7.</span> <span class="nav-text">代理模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F"><span class="nav-number">6.8.</span> <span class="nav-text">观察者模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AD%96%E7%95%A5%E6%A8%A1%E5%BC%8F"><span class="nav-number">6.9.</span> <span class="nav-text">策略模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A8%A1%E6%9D%BF%E6%A8%A1%E5%BC%8F"><span class="nav-number">6.10.</span> <span class="nav-text">模板模式</span></a></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          设计之设计模式
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-07-13 13:41:41" itemprop="dateCreated datePublished" datetime="2021-07-13T13:41:41+08:00">2021-07-13</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1/" itemprop="url" rel="index"><span itemprop="name">设计</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="统一建模语言-Unified-Modeling-Language，UML"><a href="#统一建模语言-Unified-Modeling-Language，UML" class="headerlink" title="统一建模语言(Unified Modeling Language，UML)"></a>统一建模语言(Unified Modeling Language，<code>UML</code>)</h2><p>UML作为一种统一的软件建模语言具有广泛的建模能力。UML是在消化、吸收、提炼至今存在的所有软件建模语言的基础上提出的，集百家之所长，它是软件建模语言的集大成者。UML还突破了软件的限制，广泛吸收了其他领域的建模方法，并根据建模的一般原理，结合了软件的特点，因此具有坚实的理论基础和广泛性。UML不仅可以用于软件建模，还可以用于其他领域的建模工作。</p>
+<ul>
+<li>用例图；描述角色以及角色与用例之间的连接关系。说明是谁要使用系统，以及他们使用该系统可以做些什么。一个用例图包含了多个模型元素，如系统、参与者和用例，并且显示了这些元素之间的各种关系，如泛化、关联和依赖。</li>
+<li>类图；类图是描述系统中的类，以及各个类之间的关系的静态视图。能够让我们在正确编写代码以前对系统有一个全面的认识。类图是一种模型类型，确切地说，是一种静态模型类型。类图表示类、接口和它们之间的协作关系。</li>
+<li>对象图；与类图极为相似，它是类图的实例，对象图显示类的多个对象实例，而不是实际的类。它描述的不是类之间的关系，而是对象之间的关系。</li>
+<li>活动图；描述用例要求所要进行的活动，以及活动间的约束关系，有利于识别并行活动。能够演示出系统中哪些地方存在功能，以及这些功能和系统中其他组件的功能如何共同满足前面使用用例图建模的商务需求。</li>
+<li>状态图；描述类的对象所有可能的状态，以及事件发生时状态的转移条件，可以捕获对象、子系统和系统的生命周期。它可以告知一个对象可以拥有的状态，并且事件(如消息的接收、时间的流逝、错误、条件变为真等)会怎么随着时间的推移来影响这些状态。一个状态图应该连接到所有具有清晰的可标识状态和复杂行为的类;该图可以确定类的行为，以及该行为如何根据当前的状态变化，也可以展示哪些事件将会改变类的对象的状态。状态图是对类图的补充。</li>
+<li>序列图(时序图)；序列图是用来显示参与者如何以一系列顺序的步骤与系统的对象交互的模型。顺序图可以用来展示对象之间是如何进行交互的。顺序图将显示的重点放在消息序列上，即强调消息是如何在对象之间被发送和接收的。</li>
+<li>协作图；和序列图相似，显示对象间的动态合作关系。可以看成是类图和顺序图的交集，协作图建模对象或者角色，以及它们彼此之间是如何通信的。如果强调时间和顺序，则使用序列图;如果强调上下级关系，则选择协作图;这两种图合称为交互图。</li>
+<li>构件图(组件图)；描述代码构件的物理结构以及各种构建之间的依赖关系。用来建模软件的组件及其相互之间的关系，这些图由构件标记符和构件之间的关系构成。在组件图，构件时软件单个组成部分，它可以是一个文件，产品、可执行文件和脚本等。</li>
+<li>部署图(配置图)；用来建模系统的物理部署。例如，计算机和设备，以及它们之间是如何连接的。部署图的使用者是开发人员、系统集成人员和测试人员。部署图用于表示一组物理结点的集合及结点间的相互关系，从而建立了系统物理层面的模型。</li>
+</ul>
+<h2 id="类图"><a href="#类图" class="headerlink" title="类图"></a>类图</h2><ul>
+<li>继承：带空心三角形的实线表示，student继承person，空心三角形指向person</li>
+<li>实现：带空心三角形的虚线表示，指向接口</li>
+<li>聚合：聚合关系强调是“整体”包含“部分”，但是“部分”可以脱离“整体”而单独存在。比如汽车包含了发动机，而发动机脱离了汽车也能单独存在。<img src="/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/image-20210713142258000.png" alt="image-20210713142258000" style="zoom:67%;"></li>
+<li>组合：组合关系与聚合关系见得最大不同在于：这里的“部分”脱离了“整体”便不复存在。<img src="/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/image-20210713142210958.png" alt="image-20210713142210958" style="zoom:67%;"></li>
+<li>关联：单向关联，双向关联，自关联，用一条带有箭头的实线表示<img src="/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/image-20210713142628986.png" alt="image-20210713142628986" style="zoom:67%;"></li>
+<li>依赖：依赖关系用一条带有箭头的虚线表示。<img src="/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/image-20210713142416879.png" alt="image-20210713142416879" style="zoom:67%;">
+
+</li>
+</ul>
+<h2 id="设计模式的作用"><a href="#设计模式的作用" class="headerlink" title="设计模式的作用"></a>设计模式的作用</h2><p>设计模式是一套被反复使用的、多数人知晓、经过分类编目的优秀代码设计经验的总结。<br>特定环境下特定问题的处理方法。<br>1）重用设计和代码：重用设计比重用代码更有意义，自动带来代码重用<br>2）提高扩展性：大量使用面向接口编程，预留扩展插槽，新的功能或特性很容易加入到系统中来<br>3）提高灵活性：通过组合提高灵活性，可允许代码修改平稳发生，对一处修改不会波及到其他模块<br>4） 提高开发效率：正确使用设计模式，可以节省大量的时间</p>
+<h2 id="创建型模式（怎样创建对象）"><a href="#创建型模式（怎样创建对象）" class="headerlink" title="创建型模式（怎样创建对象）"></a>创建型模式（怎样创建对象）</h2><p>特点：将对象的创建与使用分离；这样可以降低系统的耦合度，使用者不需要关注对象的创建细节，对象的创建由相关的工厂来完成。就像我们去商场购买商品时，不需要知道商品是怎么生产出来一样，因为它们由专门的厂商生产</p>
+<ul>
+<li>单例模式（singleton）：某个类只能生成一个实例，该类提供了一个全局访问点供外部获取该实例，其拓展是有限多例模式。</li>
+<li>原型模式（Prototype）：将一个对象作为原型，通过对其进行复制而克隆出多个和原型类似的新实例。</li>
+<li>工厂方法模式（FactoryMethod）:定义一个用于创建产品的接口，由子类决定生产什么产品。</li>
+<li>抽象工厂模式（AbstractFactory）:提供一个创建产品族的接口，其每个子类可以生产一系列相关的产品。</li>
+<li>建造者模式（Builder）:将一个复杂对象分解成多个相对简单的部分，然后根据不同需要分别创建它们，最后构建成该复杂对象。</li>
+</ul>
+<p>以上 5 种创建型模式，除了工厂方法模式属于类创建型模式，其他的全部属于对象创建型模式</p>
+<h2 id="结构型模式"><a href="#结构型模式" class="headerlink" title="结构型模式"></a>结构型模式</h2><p>结构型模式描述如何将类或对象按某种布局组成更大的结构。它分为类结构型模式和对象结构型模式，前者采用继承机制来组织接口和类，后者釆用组合或聚合来组合对象。（通过改变一些对象的组织结构来起到所需的作用，于是统称为结构型模式。就比如说组合模式：这个模式就是把单个对象组合起来，为了实现对象的一致性，所以采用了组合这种结构策略。这就是个对对象结构进行了改变，然后达到了我们所需的目地。）</p>
+<p>由于组合关系或聚合关系比继承关系耦合度低，满足“合成复用原则”，所以对象结构型模式比类结构型模式具有更大的灵活性。</p>
+<ul>
+<li>代理（Proxy）模式：为某对象提供一种代理以控制对该对象的访问。即客户端通过代理间接地访问该对象，从而限制、增强或修改该对象的一些特性。代理模式是控制对象访问。代理模式是给一个对象提供一个代理对象，并由代理对象来控制对原有对象的引用；</li>
+<li>装饰（Decorator）模式：动态地给对象增加一些职责，即增加其额外的功能。装饰模式的功能实现是由上层调用者决定的。对客户端透明的方式扩展对象的功能，是继承方案的一个替代方案。</li>
+<li>适配器（Adapter）模式：将一个类的接口转换成客户希望的另外一个接口，使得原本由于接口不兼容而不能一起工作的那些类能一起工作。类适配，对象适配，接口适配（接口默认实现类）</li>
+<li>桥接（Bridge）模式：将抽象与实现分离，使它们可以独立变化。它是用组合关系代替继承关系来实现的，从而降低了抽象和实现这两个可变维度的耦合度。日志log4j中基于SPI，JDBC中Driver基于Class加载 （会员优惠+商品折扣/订单优惠）</li>
+<li>外观（Facade）模式：为多个复杂的子系统提供一个一致的接口，使这些子系统更加容易被访问。</li>
+<li>享元（Flyweight）模式：运用共享技术来有效地支持大量细粒度对象的复用。黑白棋子，颜色不变，改变location坐标即可。</li>
+<li>组合（Composite）模式：将对象组合成树状层次结构，使用户对单个对象和组合对象具有一致的访问性。</li>
+</ul>
+<p>以上7种结构型模式，除了适配器模式分为类结构型模式和对象结构型模式两种，其他的全部属于对象结构型模式</p>
+<h2 id="行为型模式"><a href="#行为型模式" class="headerlink" title="行为型模式"></a>行为型模式</h2><p>行为型模式用于描述程序在运行时复杂的流程控制，即描述多个类或对象之间怎样相互协作共同完成单个对象都无法单独完成的任务，它涉及算法与对象间职责的分配。</p>
+<p>行为型模式分为类行为模式和对象行为模式，前者采用继承机制来在类间分派行为，后者采用组合或聚合在对象间分配行为。由于组合关系或聚合关系比继承关系耦合度低，满足“合成复用原则”，所以对象行为模式比类行为模式具有更大的灵活性。</p>
+<p>行为型模式是 GoF 设计模式中最为庞大的一类，它包含以下 11 种模式。</p>
+<ul>
+<li>模板方法（Template Method）模式：定义一个操作中的算法骨架，将算法的一些步骤延迟到子类中，使得子类在可以不改变该算法结构的情况下重定义该算法的某些特定步骤。接口推送</li>
+<li>策略（Strategy）模式：定义了一系列算法，并将每个算法封装起来，使它们可以相互替换，且算法的改变不会影响使用算法的客户。分单规则</li>
+<li>命令（Command）模式：将一个请求封装为一个对象，使发出请求的责任和执行请求的责任分割开。灯开关命令，灯对象包含开灯方法和关灯方法，命令具有execute和undo方法，关灯命令类传入灯对象，开灯命令类传入灯对象</li>
+<li>职责链（Chain of Responsibility）模式：把请求从链中的一个对象传到下一个对象，直到请求被响应为止。通过这种方式去除对象之间的耦合。拦截器Interceptor 拦截器链InterceptorChain   过滤器filter</li>
+<li>状态（State）模式：允许一个对象在其内部状态发生改变时改变其行为能力。</li>
+<li>观察者（Observer）模式：多个对象间存在一对多关系，当一个对象发生改变时，把这种改变通知给其他多个对象，从而影响其他对象的行为。Spring中事件传播机制</li>
+<li>中介者（Mediator）模式：定义一个中介对象来简化原有对象之间的交互关系，降低系统中对象间的耦合度，使原有对象之间不必相互了解。</li>
+<li>迭代器（Iterator）模式：提供一种方法来顺序访问聚合对象中的一系列数据，而不暴露聚合对象的内部表示。JDK集合迭代器</li>
+<li>访问者（Visitor）模式：在不改变集合元素的前提下，为一个集合中的每个元素提供多种访问方式，即每个元素有多个访问者对象访问。</li>
+<li>备忘录（Memento）模式：在不破坏封装性的前提下，获取并保存一个对象的内部状态，以便以后恢复它。</li>
+<li>解释器（Interpreter）模式：提供如何定义语言的文法，以及对语言句子的解释方法，即解释器。</li>
+</ul>
+<p>以上 11 种行为型模式，除了模板方法模式和解释器模式是类行为型模式，其他的全部属于对象行为型模式</p>
+<h3 id="简单工厂模式"><a href="#简单工厂模式" class="headerlink" title="简单工厂模式"></a>简单工厂模式</h3><ol>
+<li>接口类</li>
+<li>多个具体实现</li>
+<li>factory工厂类，根据条件创建不同实现返回</li>
+<li>客户端，调用工厂类，获取不同实现</li>
+</ol>
+<h3 id="抽象工厂模式"><a href="#抽象工厂模式" class="headerlink" title="抽象工厂模式"></a>抽象工厂模式</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public abstract class AbstractFactory &#123;</span><br><span class="line">   public abstract Color getColor(String color);</span><br><span class="line">   public abstract Shape getShape(String shape) ;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>抽象工厂类a，多个工厂实现类b\c，工厂生成类d 由d去生成具体的工厂，客户端类e，使用d生存具体工厂b\c，调用实现类里的方法生成对象</p>
+<h4 id="单例模式"><a href="#单例模式" class="headerlink" title="单例模式"></a>单例模式</h4><ul>
+<li>饿汉模式：类加载的时候实例化单例对象，懒加载问题</li>
+<li>懒汉模式：同步方法锁，执行效率问题</li>
+<li>双检测模式：instance = new Singleton()不能保证顺序，先分配空间，之后赋值，最后才生成对象</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">private static volatile Singleton instance;</span><br><span class="line">public static Singleton newInstance()&#123;</span><br><span class="line">    if(instance&#x3D;&#x3D;null)&#123;</span><br><span class="line">        sychrinored(Singleton.class)&#123;</span><br><span class="line">            if(instance&#x3D;&#x3D;null)&#123;</span><br><span class="line">                instance &#x3D; new Singleton();</span><br><span class="line">    &#125;&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>静态内部类：调用的时候才会加载类，进行实例化</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">private Singleton ()&#123;&#125;</span><br><span class="line">public static Singleton newInstance()&#123;</span><br><span class="line">     SingletonHolder.INSTANCE;</span><br><span class="line">&#125;</span><br><span class="line">private static class SingletonHolder &#123;  </span><br><span class="line">    private static final Singleton INSTANCE &#x3D; new Singleton();  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="原型模式"><a href="#原型模式" class="headerlink" title="原型模式"></a>原型模式</h3><p>浅复制：实现Clonable接口，重写clone（）方法，调用父类的clone（）方法 深复制：使用流序列化方式</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String[] args) throws Exception&#123;</span><br><span class="line">        ByteArrayOutputStream byteArrayOutputStream &#x3D; new ByteArrayOutputStream();</span><br><span class="line">        ObjectOutputStream objectOutputStream &#x3D; new ObjectOutputStream(byteArrayOutputStream);</span><br><span class="line">        objectOutputStream.writeObject(new Object());</span><br><span class="line"></span><br><span class="line">        ByteArrayInputStream byteArrayInputStream &#x3D; new ByteArrayInputStream(byteArrayOutputStream.toByteArray());</span><br><span class="line">        ObjectInputStream objectInputStream &#x3D; new ObjectInputStream(byteArrayInputStream);</span><br><span class="line">        Object object &#x3D; objectInputStream.readObject();</span><br><span class="line">        System.out.println(object);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="建造者模式"><a href="#建造者模式" class="headerlink" title="建造者模式"></a>建造者模式</h3><p>屏蔽对复杂对象的创建，如多属性的配置，用于返回值对象生成</p>
+<h3 id="适配器模式"><a href="#适配器模式" class="headerlink" title="适配器模式"></a>适配器模式</h3><p>类适配，对象适配，接口适配</p>
+<ul>
+<li>类适配:希望将一个类转换成一个满足新接口的类时，使用新类继承旧类，实现接口</li>
+<li>对象适配:希望将一个对象转换成一个满足新接口对象时，新类wrapper持有实现类的实例，实现接口</li>
+<li>接口适配:希望不实现一个接口中所有的方法时，创建一个抽象类，实现所有的方法，继承抽象类</li>
+</ul>
+<h3 id="装饰模式"><a href="#装饰模式" class="headerlink" title="装饰模式"></a>装饰模式</h3><p>给对象动态的增加些新的功能，扩展类的功能，强调加强概念。</p>
+<p>装饰类a实现接口并持有接口属性b，装饰类方法中b.method()，当需要加强更多的功能时，可以使用抽象装饰类，多个具体实现类继承抽象类，客户端可用接口实例调用方法</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/andong154564667/article/details/80258061">装饰模式与代理模式区别</a></p>
+<h3 id="代理模式"><a href="#代理模式" class="headerlink" title="代理模式"></a>代理模式</h3><p>代理模式强调的是控制权，通过代理类对实际对象进行控制操作</p>
+<p>接口类a，实现类b，代理类c实现接口类a c类中持有实现类b实例属性，通过b的实例属性调用实现类里的方法</p>
+<h3 id="观察者模式"><a href="#观察者模式" class="headerlink" title="观察者模式"></a>观察者模式</h3><p>观察者，只有一个方法，接受通知，执行操作</p>
+<p>被观察者，持有观察者实例，当有变动时通知观察者</p>
+<h3 id="策略模式"><a href="#策略模式" class="headerlink" title="策略模式"></a>策略模式</h3><p>1、算法/行为接口<br>2、具体实现多个<br>3、context上下文，实例化对象，提供结果方法<br>4、客户端new具体实现类，new context 传入具体实现类，调用方法获取结果</p>
+<ul>
+<li>一般可以和工厂模式一起使用，客户端不用考虑对象实例化</li>
+</ul>
+<h3 id="模板模式"><a href="#模板模式" class="headerlink" title="模板模式"></a>模板模式</h3><ol>
+<li>接口类</li>
+<li>抽象类继承接口，默认实现方法</li>
+<li>实现类，实现方法/不实现方法</li>
+<li>客户端调用，未实现方法则调用抽象类的方法，如果实现了方法，则调用实现类的方法</li>
+<li></li>
+</ol>
+<p><a target="_blank" rel="noopener" href="http://ifeve.com/spring-interview-questions-and-answers/">http://ifeve.com/spring-interview-questions-and-answers/</a></p>
+<p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/k-PEJNUG7JdHn1AjR8GghQ">Mybatis中9种设计模式</a></p>
+<p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/xpQ6GmuDT25pWzjt5bo9xA">Spring中9种设计模式</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" rel="tag"># 设计模式</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/07/09/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E4%B9%8B%E7%BC%93%E5%AD%98%E9%97%AE%E9%A2%98/" rel="prev" title="解决方案之缓存问题">
+                  <i class="fa fa-chevron-left"></i> 解决方案之缓存问题
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/07/19/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BKafka%E4%B8%8EMQ%E5%AF%B9%E6%AF%94/" rel="next" title="中间件之Kafka与MQ对比">
+                  中间件之Kafka与MQ对比 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

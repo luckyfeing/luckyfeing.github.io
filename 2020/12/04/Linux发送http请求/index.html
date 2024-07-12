@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="作者：kaleidoscopic 出处：https:&#x2F;&#x2F;www.cnblogs.com&#x2F;kaleidoscope&#x2F;p&#x2F;9719841.html Get请求curl命令模拟Get请求：1、使用curl命令： 1234curl &quot;http:&#x2F;&#x2F;www.baidu.com&quot;     如果这里的URL指向的是一个文件或者一幅图都可以直接下载到本地curl -i &quot;http:&#x2F;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux发送http请求">
+<meta property="og:url" content="http://example.com/2020/12/04/Linux%E5%8F%91%E9%80%81http%E8%AF%B7%E6%B1%82/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="作者：kaleidoscopic 出处：https:&#x2F;&#x2F;www.cnblogs.com&#x2F;kaleidoscope&#x2F;p&#x2F;9719841.html Get请求curl命令模拟Get请求：1、使用curl命令： 1234curl &quot;http:&#x2F;&#x2F;www.baidu.com&quot;     如果这里的URL指向的是一个文件或者一幅图都可以直接下载到本地curl -i &quot;http:&#x2F;">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-12-04T12:11:27.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:26.793Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="linux">
+<meta property="article:tag" content="http">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2020/12/04/Linux%E5%8F%91%E9%80%81http%E8%AF%B7%E6%B1%82/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Linux发送http请求 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Get%E8%AF%B7%E6%B1%82"><span class="nav-number">1.</span> <span class="nav-text">Get请求</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#curl%E5%91%BD%E4%BB%A4%E6%A8%A1%E6%8B%9FGet%E8%AF%B7%E6%B1%82%EF%BC%9A"><span class="nav-number">1.1.</span> <span class="nav-text">curl命令模拟Get请求：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#curl%E5%91%BD%E4%BB%A4%E6%A8%A1%E6%8B%9FGet%E8%AF%B7%E6%B1%82%E6%90%BA%E5%B8%A6%E5%8F%82%E6%95%B0%EF%BC%88linux%EF%BC%89%EF%BC%9A"><span class="nav-number">1.2.</span> <span class="nav-text">curl命令模拟Get请求携带参数（linux）：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Post%E8%AF%B7%E6%B1%82"><span class="nav-number">2.</span> <span class="nav-text">Post请求</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#curl%E5%92%8Cwget%E5%8C%BA%E5%88%AB"><span class="nav-number">3.</span> <span class="nav-text">curl和wget区别</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/04/Linux%E5%8F%91%E9%80%81http%E8%AF%B7%E6%B1%82/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux发送http请求
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-12-04 20:11:27" itemprop="dateCreated datePublished" datetime="2020-12-04T20:11:27+08:00">2020-12-04</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:26" itemprop="dateModified" datetime="2024-07-12T10:34:26+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%BF%90%E7%BB%B4%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">运维技术</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>作者：<a target="_blank" rel="noopener" href="https://home.cnblogs.com/u/kaleidoscope/">kaleidoscopic</a></p>
+<p>出处：<a target="_blank" rel="noopener" href="https://www.cnblogs.com/kaleidoscope/p/9719841.html">https://www.cnblogs.com/kaleidoscope/p/9719841.html</a></p>
+<h2 id="Get请求"><a href="#Get请求" class="headerlink" title="Get请求"></a>Get请求</h2><h3 id="curl命令模拟Get请求："><a href="#curl命令模拟Get请求：" class="headerlink" title="curl命令模拟Get请求："></a>curl命令模拟Get请求：</h3><p>1、使用curl命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">curl &quot;http://www.baidu.com&quot;     如果这里的URL指向的是一个文件或者一幅图都可以直接下载到本地</span><br><span class="line">curl -i &quot;http://www.baidu.com&quot;  显示全部信息</span><br><span class="line">curl -I &quot;http://www.baidu.com&quot;  只显示头部信息</span><br><span class="line">curl -v &quot;http://www.baidu.com&quot;  显示get请求全过程解析</span><br></pre></td></tr></table></figure>
+
+<p>2、使用wget命令：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget &quot;http://www.baidu.com&quot;</span><br></pre></td></tr></table></figure>
+
+<h3 id="curl命令模拟Get请求携带参数（linux）："><a href="#curl命令模拟Get请求携带参数（linux）：" class="headerlink" title="curl命令模拟Get请求携带参数（linux）："></a>curl命令模拟Get请求携带参数（linux）：</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -v http://127.0.0.1:80/xcloud/test?version=1&amp;client_version=1.1.0&amp;seq=1001&amp;host=aaa.com</span><br></pre></td></tr></table></figure>
+
+<p>上述命令在linux系统，get请求携带的参数只到version=1，”&amp;”符号在linux系统中为后台运行的操作符，此处需要使用反斜杠”\”转义，即：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -v http://127.0.0.1:80/xcloud/test?version=1\&amp;client_version=1.1.0\&amp;seq=1001\&amp;host=aaa.com</span><br></pre></td></tr></table></figure>
+
+<p>或者</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -v &quot;http://127.0.0.1:80/xcloud/test?version=1&amp;client_version=1.1.0&amp;seq=1001&amp;host=aaa.com&quot;</span><br></pre></td></tr></table></figure>
+
+<h2 id="Post请求"><a href="#Post请求" class="headerlink" title="Post请求"></a>Post请求</h2><p>1、使用curl命令，通过-d参数，把访问参数放在里面，如果没有参数，则不需要-d，</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -d &quot;username=user1&amp;password=123&quot; &quot;www.test.com/login&quot;</span><br></pre></td></tr></table></figure>
+
+<p>2、使用wget命令</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">wget –post-data &#x27;username=user1&amp;password=123&#x27; http://www.baidu.com</span><br></pre></td></tr></table></figure>
+
+<p>3、发送格式化json请求</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">curl -i -k -H &quot;Content-type: application/json&quot; -X POST -d &#x27;&#123;&quot;version&quot;:&quot;6.6.0&quot;, &quot;from&quot;:&quot;mu&quot;, &quot;product_version&quot;:&quot;1.1.1.0&quot;&#125;&#x27; https://10.10.10.10:80/test</span><br></pre></td></tr></table></figure>
+
+<h2 id="curl和wget区别"><a href="#curl和wget区别" class="headerlink" title="curl和wget区别"></a>curl和wget区别</h2><p>curl模拟的访问请求一般直接在控制台显示，而wget则把结果保存为一个文件。如果结果内容比较少，需要直接看到结果可以考虑使用curl进行模拟请求，如果返回结果比较多，则可考虑wget进行模拟请求。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/linux/" rel="tag"># linux</a>
+              <a href="/tags/http/" rel="tag"># http</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/12/04/%E7%AE%97%E6%B3%95%EF%BC%88%E5%85%AB%EF%BC%89%E4%B9%8B%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8F/" rel="prev" title="算法（八）之快速排序">
+                  <i class="fa fa-chevron-left"></i> 算法（八）之快速排序
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/12/08/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B9%9D%EF%BC%89%E4%B9%8B%E5%A0%86%E6%8E%92%E5%BA%8F/" rel="next" title="算法（九）之堆排序">
+                  算法（九）之堆排序 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

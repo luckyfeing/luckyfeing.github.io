@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="作者：一步一年 出处：https:&#x2F;&#x2F;www.cnblogs.com&#x2F;ybyn&#x2F;p&#x2F;13691058.html 消费端在处理消息过程中可能会报错，此时该如何重新处理消息呢？解决方案有以下两种。   在redis或者数据库中记录重试次数，达到最大重试次数以后消息进入死信队列或者其他队列，再单独针对这些消息进行处理； 使用spring-rabbit中自带的retry功能；   第一种方案我们就不再详细">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RabbitMQ之Spring重试机制">
+<meta property="og:url" content="http://example.com/2020/12/10/Spring-boot-amqp%E9%87%8D%E8%AF%95%E6%9C%BA%E5%88%B6/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="作者：一步一年 出处：https:&#x2F;&#x2F;www.cnblogs.com&#x2F;ybyn&#x2F;p&#x2F;13691058.html 消费端在处理消息过程中可能会报错，此时该如何重新处理消息呢？解决方案有以下两种。   在redis或者数据库中记录重试次数，达到最大重试次数以后消息进入死信队列或者其他队列，再单独针对这些消息进行处理； 使用spring-rabbit中自带的retry功能；   第一种方案我们就不再详细">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/12/10/Spring-boot-amqp%E9%87%8D%E8%AF%95%E6%9C%BA%E5%88%B6/2159277-20200918142316393-1426680370.png">
+<meta property="og:image" content="https://img2020.cnblogs.com/blog/2159277/202009/2159277-20200918142342030-85649685.png">
+<meta property="og:image" content="http://example.com/2020/12/10/Spring-boot-amqp%E9%87%8D%E8%AF%95%E6%9C%BA%E5%88%B6/2159277-20200918142352326-326808881.png">
+<meta property="og:image" content="http://example.com/2020/12/10/Spring-boot-amqp%E9%87%8D%E8%AF%95%E6%9C%BA%E5%88%B6/2159277-20200918142500644-1269082311.png">
+<meta property="og:image" content="http://example.com/2020/12/10/Spring-boot-amqp%E9%87%8D%E8%AF%95%E6%9C%BA%E5%88%B6/2159277-20200918142520353-1806232438.png">
+<meta property="article:published_time" content="2020-12-10T03:36:47.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:26.896Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="RabbitMQ">
+<meta property="article:tag" content="MQ">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/12/10/Spring-boot-amqp%E9%87%8D%E8%AF%95%E6%9C%BA%E5%88%B6/2159277-20200918142316393-1426680370.png">
+
+
+<link rel="canonical" href="http://example.com/2020/12/10/Spring-boot-amqp%E9%87%8D%E8%AF%95%E6%9C%BA%E5%88%B6/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>RabbitMQ之Spring重试机制 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#MessageRecoverer"><span class="nav-number">1.</span> <span class="nav-text">MessageRecoverer</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RepublishMessageRecoverer"><span class="nav-number">1.1.</span> <span class="nav-text">RepublishMessageRecoverer</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AD%BB%E4%BF%A1%E9%98%9F%E5%88%97"><span class="nav-number">2.</span> <span class="nav-text">死信队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#retry%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="nav-number">3.</span> <span class="nav-text">retry使用场景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#retry%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="nav-number">4.</span> <span class="nav-text">retry最佳实践</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/10/Spring-boot-amqp%E9%87%8D%E8%AF%95%E6%9C%BA%E5%88%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          RabbitMQ之Spring重试机制
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-12-10 11:36:47" itemprop="dateCreated datePublished" datetime="2020-12-10T11:36:47+08:00">2020-12-10</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:26" itemprop="dateModified" datetime="2024-07-12T10:34:26+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/MQ/" itemprop="url" rel="index"><span itemprop="name">MQ</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>作者：<a target="_blank" rel="noopener" href="https://home.cnblogs.com/u/ybyn/">一步一年</a></p>
+<p>出处：<a target="_blank" rel="noopener" href="https://www.cnblogs.com/ybyn/p/13691058.html">https://www.cnblogs.com/ybyn/p/13691058.html</a></p>
+<p>消费端在处理消息过程中可能会报错，此时该如何重新处理消息呢？解决方案有以下两种。</p>
+<blockquote>
+<ul>
+<li>在redis或者数据库中记录重试次数，达到最大重试次数以后消息进入死信队列或者其他队列，再单独针对这些消息进行处理；</li>
+<li>使用spring-rabbit中自带的retry功能；</li>
+</ul>
+</blockquote>
+<p>第一种方案我们就不再详细说了，我们主要来看一下第二种方案，老规矩，先上代码：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">  <span class="attr">rabbitmq:</span></span><br><span class="line">    <span class="attr">listener:</span></span><br><span class="line">      <span class="attr">simple:</span></span><br><span class="line">        <span class="attr">acknowledge-mode:</span> <span class="string">auto</span>  <span class="comment"># 自动ack</span></span><br><span class="line">        <span class="attr">retry:</span></span><br><span class="line">          <span class="attr">enabled:</span> <span class="literal">true</span></span><br><span class="line">          <span class="attr">max-attempts:</span> <span class="number">5</span></span><br><span class="line">          <span class="attr">max-interval:</span> <span class="number">10000</span>   <span class="comment"># 重试最大间隔时间</span></span><br><span class="line">          <span class="attr">initial-interval:</span> <span class="number">2000</span>  <span class="comment"># 重试初始间隔时间</span></span><br><span class="line">          <span class="attr">multiplier:</span> <span class="number">2</span> <span class="comment"># 间隔时间乘子，间隔时间*乘子=下一次的间隔时间，最大不能超过设置的最大间隔时间</span></span><br></pre></td></tr></table></figure>
+
+<p>此时我们的消费者代码如下所示：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RabbitHandler</span></span><br><span class="line"><span class="meta">@RabbitListener(queues = &#123;&quot;$&#123;platform.queue-name&#125;&quot;&#125;,concurrency = &quot;1&quot;)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">msgConsumer</span><span class="params">(String msg, Channel channel, Message message)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">		log.info(<span class="string">&quot;接收到消息&gt;&gt;&gt;&#123;&#125;&quot;</span>,msg);</span><br><span class="line">		<span class="keyword">int</span> temp = <span class="number">10</span>/<span class="number">0</span>;</span><br><span class="line">		log.info(<span class="string">&quot;消息&#123;&#125;消费成功&quot;</span>,msg);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此时启动程序，发送消息后可以看到控制台输出内容如下：</p>
+<p><img src="/2020/12/10/Spring-boot-amqp%E9%87%8D%E8%AF%95%E6%9C%BA%E5%88%B6/2159277-20200918142316393-1426680370.png" alt="img"></p>
+<p>可以看到重试次数是5次（包含自身消费的一次），重试时间依次是2s，4s，8s，10s（上一次间隔时间*间隔时间乘子），最后一次重试时间理论上是16s，但是由于设置了最大间隔时间是10s，因此最后一次间隔时间只能是10s，和配置相符合。</p>
+<blockquote>
+<p>注意：</p>
+<p>重试并不是RabbitMQ重新发送了消息，仅仅是消费者内部进行的重试，换句话说就是重试跟mq没有任何关系；</p>
+<p>因此上述消费者代码不能添加try{}catch(){}，一旦捕获了异常，在自动ack模式下，就相当于消息正确处理了，消息直接被确认掉了，不会触发重试的；</p>
+</blockquote>
+<h2 id="MessageRecoverer"><a href="#MessageRecoverer" class="headerlink" title="MessageRecoverer"></a>MessageRecoverer</h2><p>上面的例子在测试中我们还发现了一个问题，就是经过5次重试以后，控制台输出了一个异常的堆栈日志，然后队列中的数据也被ack掉了（自动ack模式），首先我们看一下这个异常日志是什么。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">org.springframework.amqp.rabbit.listener.exception.ListenerExecutionFailedException: Retry Policy Exhausted</span><br></pre></td></tr></table></figure>
+
+<p>出现消息被消费掉并且出现上述异常的原因是因为在构建SimpleRabbitListenerContainerFactoryConfigurer类时使用了MessageRecoverer接口，这个接口有一个cover方法，用来实现重试完成之后对消息的处理，源码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">ListenerRetry retryConfig = configuration.getRetry();</span><br><span class="line"><span class="keyword">if</span> (retryConfig.isEnabled()) &#123;</span><br><span class="line">	RetryInterceptorBuilder&lt;?, ?&gt; builder = (retryConfig.isStateless()) ? RetryInterceptorBuilder.stateless()</span><br><span class="line">			: RetryInterceptorBuilder.stateful();</span><br><span class="line">	RetryTemplate retryTemplate = <span class="keyword">new</span> RetryTemplateFactory(<span class="keyword">this</span>.retryTemplateCustomizers)</span><br><span class="line">			.createRetryTemplate(retryConfig, RabbitRetryTemplateCustomizer.Target.LISTENER);</span><br><span class="line">	builder.retryOperations(retryTemplate);</span><br><span class="line">	MessageRecoverer recoverer = (<span class="keyword">this</span>.messageRecoverer != <span class="keyword">null</span>) ? <span class="keyword">this</span>.messageRecoverer</span><br><span class="line">			: <span class="keyword">new</span> RejectAndDontRequeueRecoverer(); <span class="comment">//&lt;1&gt;</span></span><br><span class="line">	builder.recoverer(recoverer);</span><br><span class="line">	factory.setAdviceChain(builder.build());</span><br></pre></td></tr></table></figure>
+
+<p>注意看&lt;1&gt;处的代码，默认使用的是RejectAndDontRequeueRecoverer实现类，根据实现类的名字我们就可以看出来该实现类的作用就是拒绝并且不会将消息重新发回队列，我们可以看一下这个实现类的具体内容：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RejectAndDontRequeueRecoverer</span> <span class="keyword">implements</span> <span class="title">MessageRecoverer</span> </span>&#123;</span><br><span class="line">	<span class="keyword">protected</span> Log logger = LogFactory.getLog(RejectAndDontRequeueRecoverer.class); <span class="comment">// NOSONAR protected</span></span><br><span class="line">	<span class="meta">@Override</span></span><br><span class="line">	<span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">recover</span><span class="params">(Message message, Throwable cause)</span> </span>&#123;</span><br><span class="line">		<span class="keyword">if</span> (<span class="keyword">this</span>.logger.isWarnEnabled()) &#123;</span><br><span class="line">			<span class="keyword">this</span>.logger.warn(<span class="string">&quot;Retries exhausted for message &quot;</span> + message, cause);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> ListenerExecutionFailedException(<span class="string">&quot;Retry Policy Exhausted&quot;</span>,</span><br><span class="line">					<span class="keyword">new</span> AmqpRejectAndDontRequeueException(cause), message);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上述源码给出了异常的来源，但是未看到拒绝消息的代码，猜测应该是使用aop的方式实现的，此处不再继续深究。</p>
+<p>MessageRecoverer接口还有另外两个实现类，分别是<strong>RepublishMessageRecoverer</strong>和<strong>ImmediateRequeueMessageRecoverer</strong>，顾名思义就是重新发布消息和立即重新返回队列，下面我们分别测试一个这两个实现类：</p>
+<h3 id="RepublishMessageRecoverer"><a href="#RepublishMessageRecoverer" class="headerlink" title="RepublishMessageRecoverer"></a>RepublishMessageRecoverer</h3><p>先创建一个异常交换机和异常队列，并将两者进行绑定：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> DirectExchange <span class="title">errorExchange</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">new</span> DirectExchange(<span class="string">&quot;error-exchange&quot;</span>,<span class="keyword">true</span>,<span class="keyword">false</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Queue <span class="title">errorQueue</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">new</span> Queue(<span class="string">&quot;error-queue&quot;</span>, <span class="keyword">true</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Binding <span class="title">errorBinding</span><span class="params">(Queue errorQueue, DirectExchange errorExchange)</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> BindingBuilder.bind(errorQueue).to(errorExchange).with(<span class="string">&quot;error-routing-key&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>创建RepublishMessageRecoverer：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> MessageRecoverer <span class="title">messageRecoverer</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">new</span> RepublishMessageRecoverer(rabbitTemplate,<span class="string">&quot;error-exchange&quot;</span>,<span class="string">&quot;error-routing-key&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此时启动服务，查看处理结果：</p>
+<p><a target="_blank" rel="noopener" href="https://img2020.cnblogs.com/blog/2159277/202009/2159277-20200918142342030-85649685.png"><img src="https://img2020.cnblogs.com/blog/2159277/202009/2159277-20200918142342030-85649685.png" alt="img"></a></p>
+<p>通过控制台可以看到，消息重试5次以后直接以新的routingKey发送到了配置的交换机中，此时再查看监控页面，可以看原始队列中已经没有消息了，但是配置的异常队列中存在一条消息。</p>
+<p><img src="/2020/12/10/Spring-boot-amqp%E9%87%8D%E8%AF%95%E6%9C%BA%E5%88%B6/2159277-20200918142352326-326808881.png" alt="img"></p>
+<p>再测试一下ImmediateRequeueMessageRecoverer：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> MessageRecoverer <span class="title">messageRecoverer</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">new</span> ImmediateRequeueMessageRecoverer();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2020/12/10/Spring-boot-amqp%E9%87%8D%E8%AF%95%E6%9C%BA%E5%88%B6/2159277-20200918142500644-1269082311.png" alt="img"></p>
+<p>重试5次之后，返回队列，然后再重试5次，周而复始直到不抛出异常为止，这样还是会影响后续的消息消费。</p>
+<blockquote>
+<p>总结：</p>
+<p>通过上面的测试，对于重试之后仍然异常的消息，可以采用RepublishMessageRecoverer，将消息发送到其他的队列中，再专门针对新的队列进行处理。</p>
+</blockquote>
+<h2 id="死信队列"><a href="#死信队列" class="headerlink" title="死信队列"></a>死信队列</h2><p>除了可以采用上述RepublishMessageRecoverer，还可以采用死信队列的方式处理重试失败的消息。</p>
+<p>首先创建死信交换机、死信队列以及两者的绑定</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 死信交换机</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> DirectExchange <span class="title">dlxExchange</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">new</span> DirectExchange(dlxExchangeName);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 死信队列</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Queue <span class="title">dlxQueue</span><span class="params">()</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">new</span> Queue(dlxQueueName);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 死信队列绑定死信交换机</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> dlxQueue</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> dlxExchange</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Binding <span class="title">dlcBinding</span><span class="params">(Queue dlxQueue, DirectExchange dlxExchange)</span></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> BindingBuilder.bind(dlxQueue).to(dlxExchange).with(dlxRoutingKey);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>业务队列的创建需要做一些修改，添加死信交换机以及死信路由键的配置</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 业务队列</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Queue <span class="title">queue</span><span class="params">()</span></span>&#123;</span><br><span class="line">	Map&lt;String,Object&gt; params = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">	params.put(<span class="string">&quot;x-dead-letter-exchange&quot;</span>,dlxExchangeName);<span class="comment">//声明当前队列绑定的死信交换机</span></span><br><span class="line">	params.put(<span class="string">&quot;x-dead-letter-routing-key&quot;</span>,dlxRoutingKey);<span class="comment">//声明当前队列的死信路由键</span></span><br><span class="line">	<span class="keyword">return</span> QueueBuilder.durable(queueName).withArguments(params).build();</span><br><span class="line">    <span class="comment">//return new Queue(queueName,true);</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此时启动服务，可以看到同时创建了业务队列以及死信队列</p>
+<p><img src="/2020/12/10/Spring-boot-amqp%E9%87%8D%E8%AF%95%E6%9C%BA%E5%88%B6/2159277-20200918142520353-1806232438.png" alt="img"></p>
+<p>在业务队列上出现了DLX以及DLK的标识，标识已经绑定了死信交换机以及死信路由键，此时调用生产者发送消息，消费者在重试5次后，由于MessageCover默认的实现类是RejectAndDontRequeueRecoverer，也就是requeue=false，又因为业务队列绑定了死信队列，因此消息会从业务队列中删除，同时发送到死信队列中。</p>
+<blockquote>
+<p>注意：</p>
+<p>如果ack模式是手动ack，那么需要调用channe.nack方法，同时设置requeue=false才会将异常消息发送到死信队列中</p>
+</blockquote>
+<h2 id="retry使用场景"><a href="#retry使用场景" class="headerlink" title="retry使用场景"></a>retry使用场景</h2><p>上面说了什么是重试，以及如何解决重试造成的数据丢失，那么怎么来选择重试的使用场景呢？</p>
+<p>是否是消费者只要发生异常就要去重试呢？其实不然，假设下面的两个场景：</p>
+<ul>
+<li>http下载视频或者图片或者调用第三方接口</li>
+<li>空指针异常或者类型转换异常（其他的受检查的运行时异常）</li>
+</ul>
+<p>很显然，第一种情况有重试的意义，第二种没有。</p>
+<p>对于第一种情况，由于网络波动等原因造成请求失败，重试是有意义的；</p>
+<p>对于第二种情况，需要修改代码才能解决的问题，重试也没有意义，需要的是记录日志以及人工处理或者轮询任务的方式去处理。</p>
+<h2 id="retry最佳实践"><a href="#retry最佳实践" class="headerlink" title="retry最佳实践"></a>retry最佳实践</h2><p>对于消费端异常的消息，如果在有限次重试过程中消费成功是最好的，如果有限次重试之后仍然失败的消息，不管是采用RejectAndDontRequeueRecoverer还是使用私信队列都是可以的，同时也可以采用折中的方法，先将消息从业务队列中ack掉，再将消息发送到另外的一个队列中，后续再单独处理异常数据的队列。</p>
+<p>另外，看到有人说retry只能在自动ack模式下使用，经过测试在手动ack模式下retry也是生效的，只不过不能使用catch捕获异常，即使在自动ack模式下使用catch捕获异常也是会导致不触发重试的。当然，在手动ackm模式下要记得确认消息，不管是确认消费成功还是确认消费失败，不然消息会一直处于unack状态，直到消费者进程重启或者停止。</p>
+<p>如果一定要在手动ack模式下使用retry功能，最好还是确认在有限次重试过程中可以重试成功，否则超过重试次数，又没办法执行nack，就会出现消息一直处于unack的问题，我想这也就是所说的retry只能在自动ack模式下使用的原因，测试代码如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RabbitHandler</span></span><br><span class="line"><span class="meta">@RabbitListener(queues = &#123;&quot;$&#123;platform.queue-name&#125;&quot;&#125;,concurrency = &quot;1&quot;)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">msgConsumer</span><span class="params">(String msg, Channel channel, Message message)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">	log.info(<span class="string">&quot;接收到消息&gt;&gt;&gt;&#123;&#125;&quot;</span>,msg);</span><br><span class="line">	<span class="keyword">if</span>(msg.indexOf(<span class="string">&quot;0&quot;</span>)&gt;-<span class="number">1</span>)&#123;</span><br><span class="line">		<span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">&quot;抛出异常&quot;</span>);</span><br><span class="line">	&#125;</span><br><span class="line">	log.info(<span class="string">&quot;消息&#123;&#125;消费成功&quot;</span>,msg);</span><br><span class="line">	channel.basicAck(message.getMessageProperties().getDeliveryTag(), <span class="keyword">false</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/RabbitMQ/" rel="tag"># RabbitMQ</a>
+              <a href="/tags/MQ/" rel="tag"># MQ</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/12/09/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E4%B9%8B%E6%AD%BB%E4%BF%A1%E9%98%9F%E5%88%97/" rel="prev" title="RabbitMQ之死信队列">
+                  <i class="fa fa-chevron-left"></i> RabbitMQ之死信队列
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/12/10/%E5%AE%B9%E5%99%A8%E4%B9%8BOpenStack%E5%92%8CCloudFoundry/" rel="next" title="OpenStack和CloudFoundry">
+                  OpenStack和CloudFoundry <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

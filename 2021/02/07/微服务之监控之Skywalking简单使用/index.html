@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="分布式应用，会存在各种问题。解决这些难题，除了要应用自己做一些监控埋点外，还可以有一些外围的系统进行主动探测和主动发现。SkyWalking 是观察性分析平台和应用性能管理系统。提供分布式追踪、服务格遥测分析、度量聚合和可视化一体化解决方案。 大概原理：针对各种不同客户端实现不同的指标采集，统一通过grpc&#x2F;http发送到apm服务端，然后经过分析引擎后存储到es&#x2F;h2&#x2F;mysql等存储系统，最后">
+<meta property="og:type" content="article">
+<meta property="og:title" content="监控之Skywalking简单使用">
+<meta property="og:url" content="http://example.com/2021/02/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E7%9B%91%E6%8E%A7%E4%B9%8BSkywalking%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="分布式应用，会存在各种问题。解决这些难题，除了要应用自己做一些监控埋点外，还可以有一些外围的系统进行主动探测和主动发现。SkyWalking 是观察性分析平台和应用性能管理系统。提供分布式追踪、服务格遥测分析、度量聚合和可视化一体化解决方案。 大概原理：针对各种不同客户端实现不同的指标采集，统一通过grpc&#x2F;http发送到apm服务端，然后经过分析引擎后存储到es&#x2F;h2&#x2F;mysql等存储系统，最后">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-02-07T01:58:24.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.264Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="trace">
+<meta property="article:tag" content="APM">
+<meta property="article:tag" content="SkyWalking">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/02/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E7%9B%91%E6%8E%A7%E4%B9%8BSkywalking%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>监控之Skywalking简单使用 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%89%E8%A3%85"><span class="nav-number">1.</span> <span class="nav-text">安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%90%AF%E5%8A%A8%E5%8F%82%E6%95%B0"><span class="nav-number">2.</span> <span class="nav-text">启动参数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8F%92%E4%BB%B6"><span class="nav-number">3.</span> <span class="nav-text">插件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%95%E5%AF%BC%E6%8F%92%E4%BB%B6"><span class="nav-number">3.1.</span> <span class="nav-text">引导插件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E7%BD%AE%E6%8F%92%E4%BB%B6"><span class="nav-number">3.2.</span> <span class="nav-text">内置插件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%AF%E9%80%89%E6%8F%92%E4%BB%B6"><span class="nav-number">3.3.</span> <span class="nav-text">可选插件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%92%E4%BB%B6%E6%89%A9%E5%B1%95"><span class="nav-number">3.4.</span> <span class="nav-text">插件扩展</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%92%E4%BB%B6%E5%AE%9E%E4%BE%8B"><span class="nav-number">3.5.</span> <span class="nav-text">插件实例</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%A8%E5%B1%80%E6%97%A5%E5%BF%97%E8%BF%BD%E8%B8%AA-traceId-%E7%9A%84%E4%BD%BF%E7%94%A8"><span class="nav-number">4.</span> <span class="nav-text">全局日志追踪 traceId 的使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%A2%9D%E5%A4%96%E8%AE%B0%E5%BD%95%E8%AF%B7%E6%B1%82%E5%8F%82%E6%95%B0"><span class="nav-number">5.</span> <span class="nav-text">额外记录请求参数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81%E6%96%B9%E5%BC%8F"><span class="nav-number">5.1.</span> <span class="nav-text">代码方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%A8%E8%A7%A3%E6%96%B9%E5%BC%8F"><span class="nav-number">5.2.</span> <span class="nav-text">注解方式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BC%82%E6%AD%A5%E7%BA%BF%E7%A8%8B%E8%BF%BD%E8%B8%AA"><span class="nav-number">6.</span> <span class="nav-text">异步线程追踪</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E6%98%BE%E7%A4%BA%E6%9C%8D%E5%8A%A1%E5%AE%9E%E4%BE%8B"><span class="nav-number">7.</span> <span class="nav-text">自定义显示服务实例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%92%8C%E5%85%B6%E5%AE%83agent%E4%BD%BF%E7%94%A8%E6%97%B6%E5%80%99%E7%9A%84%E5%A4%84%E7%90%86"><span class="nav-number">8.</span> <span class="nav-text">和其它agent使用时候的处理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%96%87%E7%AB%A0"><span class="nav-number">9.</span> <span class="nav-text">文章</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/02/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E7%9B%91%E6%8E%A7%E4%B9%8BSkywalking%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          监控之Skywalking简单使用
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-02-07 09:58:24" itemprop="dateCreated datePublished" datetime="2021-02-07T09:58:24+08:00">2021-02-07</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/APM/" itemprop="url" rel="index"><span itemprop="name">APM</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/trace/" itemprop="url" rel="index"><span itemprop="name">trace</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>分布式应用，会存在各种问题。解决这些难题，除了要应用自己做一些监控埋点外，还可以有一些外围的系统进行主动探测和主动发现。SkyWalking 是观察性分析平台和应用性能管理系统。提供分布式追踪、服务格遥测分析、度量聚合和可视化一体化解决方案。</p>
+<p>大概原理：针对各种不同客户端实现不同的指标采集，统一通过grpc/http发送到apm服务端，然后经过分析引擎后存储到es/h2/mysql等存储系统，最后由前端通过查询引擎进行展现。 </p>
+<h2 id="安装"><a href="#安装" class="headerlink" title="安装"></a>安装</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line">docker network create skywalking-net</span><br><span class="line"><span class="meta">#</span><span class="bash">OAP</span></span><br><span class="line">docker pull apache/skywalking-oap-server:8.3.0-es7</span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment"># skywalking 单机</span></span></span><br><span class="line">docker run --name oap --network skywalking-net --restart always -p 11800:11800 -p 12800:12800 -d -e SW_STORAGE=elasticsearch7 -e SW_STORAGE_ES_CLUSTER_NODES=elasticsearch:9200 apache/skywalking-oap-server:latest-es7</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment"># skywalking kubernetes</span></span></span><br><span class="line">https://github.com/apache/skywalking-kubernetes#deploy-skywalking-backend-to-kubernetes-cluster</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment"># 集群版本</span></span></span><br><span class="line">https://github.com/SkyAPM/document-cn-translation-of-skywalking/blob/master/docs/zh/8.0.0/setup/backend/backend-cluster.md</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment"># skywalking操作文档</span></span></span><br><span class="line">https://github.com/SkyAPM/document-cn-translation-of-skywalking/blob/master/docs/zh/8.0.0/README.md</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment"># skywalking-ui</span></span></span><br><span class="line">docker run --name oap-ui -p8080:8080 --network skywalking-net --restart always -d -e SW_OAP_ADDRESS=oap:12800 apache/skywalking-ui</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment"># 使用外置elasticsearch.yml，容器化elasticsearch时把它挂载进来</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">##先把elasticsearch容器中的config/elasticsearch.yml拷贝可编辑的目录</span></span></span><br><span class="line">docker cp elasticsearch:/usr/share/elasticsearch/config/elasticsearch.yml /mydata/elasticsearch/elasticsearch.yml</span><br><span class="line">vim /mydata/elasticsearch/elasticsearch.yml</span><br><span class="line">docker run -p 9200:9200 -p 9300:9300 --name elasticsearch \</span><br><span class="line">  -e ES_JAVA_OPTS=&quot;-Xms256m -Xmx256m&quot; \</span><br><span class="line">  -e &quot;discovery.type=single-node&quot; \</span><br><span class="line">  -e &quot;cluster.name=elasticsearch&quot; \</span><br><span class="line">  -v /mydata/elasticsearch/plugins:/usr/share/elasticsearch/plugins \</span><br><span class="line">  -v /mydata/elasticsearch/data:/usr/share/elasticsearch/data \</span><br><span class="line">  -v /mydata/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml \</span><br><span class="line">  -d elasticsearch:7.9.1</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment"># 修改内置/config/elasticsearch.yml文件</span></span></span><br><span class="line">docker exec -it elasticsearch /bin/bash</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment"># 表示当前elasticsearch单节点模式，非集群，不配置的话，本版本elasticsearch启动30秒后就挂掉了</span></span></span><br><span class="line">docker run --name elasticsearch  -p 9200:9200 -p 9300:9300 -d --network skywalking-net -e &quot;discovery.type=single-node&quot; elasticsearch:7.9.1</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">#容器化镜像，注意--net skywalking-net代码看上面网络创建</span></span></span><br><span class="line">docker run -d --name kibana -e “I18N_LOCALE=zh-CN” --link=elasticsearch:elasticsearch --net skywalking-net -p 5601:5601 kibana:7.9.1</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment"># elasticsearch安装IK分词器</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash">进入elasticsearch容器</span></span><br><span class="line">docker exec -it elasticsearch /bin/bash</span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">#下载并安装ik分词器</span></span></span><br><span class="line">elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v7.9.1/elasticsearch-analysis-ik-7.9.1.zip</span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">#退出容器</span></span></span><br><span class="line">exit</span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="comment">#重启elasticsearch容器</span></span></span><br><span class="line">docker restart elasticsearch</span><br></pre></td></tr></table></figure>
+
+<h2 id="启动参数"><a href="#启动参数" class="headerlink" title="启动参数"></a>启动参数</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash">Environment variables</span></span><br><span class="line">SW_AGENT_COLLECTOR_BACKEND_SERVICES与skywalking.collector.backend_service含义相同。如SW_AGENT_COLLECTOR_BACKEND_SERVICES=localhost:11800</span><br><span class="line"></span><br><span class="line">SW_AGENT_NAME与skywalking.agent.service_name 含义相同。如SW_AGENT_NAME=order-service</span><br><span class="line"><span class="meta">#</span><span class="bash">VM options</span></span><br><span class="line">-javaagent:D:\资料\apache-skywalking-apm-es7-8.3.0\apache-skywalking-apm-bin-es7\agent\skywalking-agent.jar</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="插件"><a href="#插件" class="headerlink" title="插件"></a>插件</h2><p>Java Agent是插件化、可插拔的。Skywalking的插件分为三种：</p>
+<ul>
+<li>引导插件：在agent的 <code>bootstrap-plugins</code> 目录下</li>
+<li>内置插件：在agent的 <code>plugins</code> 目录下</li>
+<li>可选插件：在agent的 <code>optional-plugins</code> 目录下</li>
+</ul>
+<p>Java Agent只会启用 <code>plugins</code> 目录下的所有插件，<code>bootstrap-plugins</code> 目录以及 <code>optional-plugins</code> 目录下的插件不会启用。如需启用引导插件或可选插件，只需将JAR包移到 <code>plugins</code> 目录下，如需禁用某款插件，只需从 <code>plugins</code> 目录中移除即可。</p>
+<h3 id="引导插件"><a href="#引导插件" class="headerlink" title="引导插件"></a>引导插件</h3><p>目前只有两款引导插件：</p>
+<ul>
+<li><code>apm-jdk-http-plugin</code> 用来是监测HttpURLConnection；</li>
+<li><code>apm-jdk-threading-plugin</code> 用来监测Callable以及Runnable；</li>
+</ul>
+<p>有关引导插件的功能描述，可详见： <code>https://github.com/apache/skywalking/blob/v6.6.0/docs/en/setup/service-agent/java-agent/README.md#bootstrap-class-plugins</code> 。</p>
+<h3 id="内置插件"><a href="#内置插件" class="headerlink" title="内置插件"></a>内置插件</h3><p>内置插件主要用来为业界主流的技术与框架提供支持。所支持的技术&amp;框架，详见 <code>https://github.com/apache/skywalking/blob/v6.6.0/docs/en/setup/service-agent/java-agent/Supported-list.md</code> 。</p>
+<h3 id="可选插件"><a href="#可选插件" class="headerlink" title="可选插件"></a>可选插件</h3><p>关于可选插件的功能描述，可详见 <code>https://github.com/apache/skywalking/blob/v6.6.0/docs/en/setup/service-agent/java-agent/README.md</code> 。</p>
+<h3 id="插件扩展"><a href="#插件扩展" class="headerlink" title="插件扩展"></a>插件扩展</h3><p>Skywalking生态还有一些插件扩展，例如Oracle、Resin插件等。这部分插件主要是由于许可证不兼容/限制，Skywalking无法将这部分插件直接打包到Skywalking安装包内，于是托管在这个地址： <code>https://github.com/SkyAPM/java-plugin-extensions</code> ，使用方式：</p>
+<ul>
+<li>前往 <code>https://github.com/SkyAPM/java-plugin-extensions/releases</code> ，下载插件JAR包</li>
+<li>将JAR包挪到 <code>plugins</code> 目录即可启用。</li>
+</ul>
+<h3 id="插件实例"><a href="#插件实例" class="headerlink" title="插件实例"></a>插件实例</h3><p>忽略某些url不被追踪</p>
+<ol>
+<li><p>将apm-trace-ignore-plugin-8.0.1.jar 从optional-plugins 移动到 plugins 目录中</p>
+</li>
+<li><p>配置忽略url</p>
+<p>方法一： 在 agent/config 目录下创建 apm-trace-ignore-plugin.config文件</p>
+</li>
+</ol>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">trace.ignore_path&#x3D;$&#123;SW_AGENT_TRACE_IGNORE_PATH:需要忽略的url&#125;</span><br><span class="line">eg：trace.ignore_path&#x3D;$&#123;SW_AGENT_TRACE_IGNORE_PATH:&#x2F;xxx&#x2F;**&#125;</span><br></pre></td></tr></table></figure>
+
+<p>​    方法二： 直接使用环境变量 -Dskywalking.trace.ignore_path=需要忽略的url路径</p>
+<h2 id="全局日志追踪-traceId-的使用"><a href="#全局日志追踪-traceId-的使用" class="headerlink" title="全局日志追踪 traceId 的使用"></a>全局日志追踪 traceId 的使用</h2><ol>
+<li><p>依赖日志相关的jar</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line"> <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.skywalking<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line"> <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>apm-toolkit-logback-1.x<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"> <span class="tag">&lt;<span class="name">version</span>&gt;</span>8.0.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>修改logback配置信息</p>
+</li>
+</ol>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">   <span class="comment">&lt;!-- ConsoleAppender：把日志输出到控制台 --&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">appender</span> <span class="attr">name</span>=<span class="string">&quot;CONSOLE&quot;</span> <span class="attr">class</span>=<span class="string">&quot;ch.qos.logback.core.ConsoleAppender&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">encoder</span> <span class="attr">class</span>=<span class="string">&quot;ch.qos.logback.core.encoder.LayoutWrappingEncoder&quot;</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;<span class="name">layout</span> <span class="attr">class</span>=<span class="string">&quot;org.apache.skywalking.apm.toolkit.log.logback.v1.x.mdc.TraceIdMDCPatternLogbackLayout&quot;</span>&gt;</span></span><br><span class="line">              <span class="tag">&lt;<span class="name">Pattern</span>&gt;</span>&lt;![CDATA[</span><br><span class="line">      %clr(%d&#123;$&#123;LOG_DATEFORMAT_PATTERN:-yyyy-MM-dd HH:mm:ss.SSS&#125;&#125;)&#123;faint&#125; [%X&#123;tid&#125;] %clr($&#123;LOG_LEVEL_PATTERN:-%5p&#125;) %clr($&#123;PID:- &#125;)&#123;magenta&#125; %clr(---)&#123;faint&#125; %clr([%15.15t])&#123;faint&#125; %clr(%-40.40logger&#123;39&#125;)&#123;cyan&#125; %clr(:)&#123;faint&#125; %m%n$&#123;LOG_EXCEPTION_CONVERSION_WORD:-%wEx&#125;</span><br><span class="line">          ]]&gt;<span class="tag">&lt;/<span class="name">Pattern</span>&gt;</span></span><br><span class="line">      <span class="tag">&lt;/<span class="name">layout</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="name">encoder</span>&gt;</span></span><br><span class="line">   <span class="tag">&lt;/<span class="name">appender</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">appender</span> <span class="attr">name</span>=<span class="string">&quot;CONSOLE-LOG-ASYNC&quot;</span> <span class="attr">class</span>=<span class="string">&quot;ch.qos.logback.classic.AsyncAppender&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">discardingThreshold</span>&gt;</span>0<span class="tag">&lt;/<span class="name">discardingThreshold</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">queueSize</span>&gt;</span>2048<span class="tag">&lt;/<span class="name">queueSize</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">appender-ref</span> <span class="attr">ref</span>=<span class="string">&quot;CONSOLE&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">appender</span>&gt;</span>    </span><br><span class="line"><span class="tag">&lt;<span class="name">root</span> <span class="attr">level</span>=<span class="string">&quot;debug&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">appender-ref</span> <span class="attr">ref</span>=<span class="string">&quot;CONSOLE-LOG-ASYNC&quot;</span>/&gt;</span></span><br><span class="line"><span class="comment">&lt;!--        &lt;appender-ref ref=&quot;FILE-LOG-ASYNC&quot;/&gt;--&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">root</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="额外记录请求参数"><a href="#额外记录请求参数" class="headerlink" title="额外记录请求参数"></a>额外记录请求参数</h2><p>如果某个方法SkyWalking没有追踪，但是想追踪并输出一些额外的tag信息等。用此方法可以记录请求参数</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.skywalking<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>apm-toolkit-trace<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>8.0.1<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="代码方式"><a href="#代码方式" class="headerlink" title="代码方式"></a>代码方式</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Trace(operationName = &quot;requestWrapperFilter&quot;)</span> <span class="comment">//增加一个深度</span></span><br><span class="line">ActiveSpan.tag(<span class="string">&quot;request&quot;</span>, requestStr);  <span class="comment">//增加标签即页面上展示参数</span></span><br><span class="line">ActiveSpan.tag(<span class="string">&quot;response&quot;</span>, customHttpServletResponseWrapper.getContent()); <span class="comment">//增加标签显示返回值</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="注解方式"><a href="#注解方式" class="headerlink" title="注解方式"></a>注解方式</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Trace(operationName = &quot;添加自定义的方法&quot;)</span></span><br><span class="line"><span class="meta">@Tags(&#123;</span></span><br><span class="line"><span class="meta">        @Tag(key = &quot;从方法参数中获取值&quot;, value = &quot;arg[0]&quot;), //key为tag的名称，value为内容</span></span><br><span class="line"><span class="meta">        @Tag(key = &quot;从返回值中获取值&quot;, value = &quot;returnedObj.name&quot;)</span></span><br><span class="line"><span class="meta">&#125;)</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> User <span class="title">trace</span><span class="params">(String name)</span> </span>&#123;</span><br><span class="line">    log.info(<span class="string">&quot;如果此方法没有被SkyWalking收集，但是又需要被收集到，可以加上@Trace注解&quot;</span>);</span><br><span class="line">    User user = <span class="keyword">new</span> User();</span><br><span class="line">    user.setName(<span class="string">&quot;创建的名字&quot;</span>);</span><br><span class="line">    <span class="keyword">return</span> user;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="异步线程追踪"><a href="#异步线程追踪" class="headerlink" title="异步线程追踪"></a>异步线程追踪</h2><p>自定义线程</p>
+<ul>
+<li>使用注解：@TraceCrossThread</li>
+<li>使用类：SupplierWrapper/RunnableWrapper。如new Thread(RunnableWrapper.of(() -&gt; log.info(“子线程的信息”))).start();</li>
+</ul>
+<p>spring async异步线程</p>
+<ul>
+<li>不需要额外处理，已经支持透传。</li>
+</ul>
+<h2 id="自定义显示服务实例"><a href="#自定义显示服务实例" class="headerlink" title="自定义显示服务实例"></a>自定义显示服务实例</h2><p>默认服务实例的名字是 uuid@hostname，这个在某些时候不一定好区分，因为我们希望自定义一个 instanceName 名字,使用<br>-Dskywalking.agent.instance_name=自定义的服务名</p>
+<h2 id="和其它agent使用时候的处理"><a href="#和其它agent使用时候的处理" class="headerlink" title="和其它agent使用时候的处理"></a>和其它agent使用时候的处理</h2><p>当我们和其它的agent一起使用时，比如Arthas，其它的agent可能工作的不是那么好。添加参数: -Dskywalking.agent.is_cache_enhanced_class=true -Dskywalking.agent.class_cache_mode=MEMORY</p>
+<h2 id="文章"><a href="#文章" class="headerlink" title="文章"></a>文章</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/u010928589/article/details/106608864/">agent启动服务分析以及性能影响</a><br><a target="_blank" rel="noopener" href="https://www.imooc.com/article/306199"><strong>手把手教你编写Skywalking插件</strong></a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/snail_bi/article/details/102525736">skywalking-ui详解</a><br><a target="_blank" rel="noopener" href="http://cmsblogs.com/?p=3549">源码解析系列文章</a><br><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/125689524">SkyWalking-性能剖析</a><br><a target="_blank" rel="noopener" href="https://blog.51cto.com/zero01/2463976">SkyWalking - 实现微服务监控告警</a><br><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/929af3d64f7f">全链路追踪技术选型：pinpoint vs skywalking</a><br><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/45cb1cd5a1be">APM分布式性能管理监控工具调研</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/trace/" rel="tag"># trace</a>
+              <a href="/tags/APM/" rel="tag"># APM</a>
+              <a href="/tags/SkyWalking/" rel="tag"># SkyWalking</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/02/05/maven%E8%AF%A6%E8%A7%A3/" rel="prev" title="maven详解">
+                  <i class="fa fa-chevron-left"></i> maven详解
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/02/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E7%9B%91%E6%8E%A7%E4%B9%8B%E8%87%AA%E5%AE%9A%E4%B9%89trace%E6%8B%A6%E6%88%AA/" rel="next" title="监控之自定义trace拦截">
+                  监控之自定义trace拦截 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

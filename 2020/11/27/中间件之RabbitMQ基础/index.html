@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="消息队列可以实现流量削峰、降低系统耦合度、提高系统性能等。 RabbitMQ是一个实现了AMQP协议（Advanced Message Queue Protocol）的消息队列。 RabbitMQ中的概念 producer： producer 是一个发送消息的应用 exchange：producer并不会直接将消息发送到 queue 上，而是将消息发送给exchange，由exchange按照一定">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RabbitMQ基础">
+<meta property="og:url" content="http://example.com/2020/11/27/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="消息队列可以实现流量削峰、降低系统耦合度、提高系统性能等。 RabbitMQ是一个实现了AMQP协议（Advanced Message Queue Protocol）的消息队列。 RabbitMQ中的概念 producer： producer 是一个发送消息的应用 exchange：producer并不会直接将消息发送到 queue 上，而是将消息发送给exchange，由exchange按照一定">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/11/27/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80/1-1607999220900.gif">
+<meta property="og:image" content="http://example.com/2020/11/27/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80/2.gif">
+<meta property="og:image" content="http://example.com/2020/11/27/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80/1.gif">
+<meta property="og:image" content="http://example.com/2020/11/27/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80/640">
+<meta property="og:image" content="http://example.com/2020/11/27/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80/%E5%8E%9F%E7%90%86%E5%9B%BE.png">
+<meta property="article:published_time" content="2020-11-27T12:12:26.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.211Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="RabbitMQ">
+<meta property="article:tag" content="MQ">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/11/27/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80/1-1607999220900.gif">
+
+
+<link rel="canonical" href="http://example.com/2020/11/27/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>RabbitMQ基础 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#RabbitMQ%E4%B8%AD%E7%9A%84%E6%A6%82%E5%BF%B5"><span class="nav-number">1.</span> <span class="nav-text">RabbitMQ中的概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Exchanges%E4%BA%A4%E6%8D%A2%E6%9C%BA"><span class="nav-number">2.</span> <span class="nav-text">Exchanges交换机</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Queue%E9%98%9F%E5%88%97"><span class="nav-number">3.</span> <span class="nav-text">Queue队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%91%E9%80%81%E6%B6%88%E6%81%AF"><span class="nav-number">4.</span> <span class="nav-text">发送消息</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%9B%91%E5%90%AC%E6%B6%88%E6%81%AF"><span class="nav-number">5.</span> <span class="nav-text">监听消息</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E6%9C%89%E4%B8%A4%E7%A7%8D%E5%B7%A5%E4%BD%9C%E6%96%B9%E5%BC%8F"><span class="nav-number">5.1.</span> <span class="nav-text">消息队列有两种工作方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95"><span class="nav-number">5.2.</span> <span class="nav-text">测试</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8B%89%E5%8F%96%E6%B6%88%E6%81%AF"><span class="nav-number">6.</span> <span class="nav-text">拉取消息</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%ACAIPI"><span class="nav-number">7.</span> <span class="nav-text">基本AIPI</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B3%A8%E6%84%8F%E7%82%B9"><span class="nav-number">8.</span> <span class="nav-text">注意点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E7%90%86%E5%9B%BE"><span class="nav-number">9.</span> <span class="nav-text">原理图</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/27/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          RabbitMQ基础
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-11-27 20:12:26" itemprop="dateCreated datePublished" datetime="2020-11-27T20:12:26+08:00">2020-11-27</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/MQ/" itemprop="url" rel="index"><span itemprop="name">MQ</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>消息队列可以实现流量削峰、降低系统耦合度、提高系统性能等。</p>
+<p><strong>RabbitMQ</strong>是一个实现了AMQP协议（Advanced Message Queue Protocol）的消息队列。</p>
+<h2 id="RabbitMQ中的概念"><a href="#RabbitMQ中的概念" class="headerlink" title="RabbitMQ中的概念"></a><strong>RabbitMQ中的概念</strong></h2><ul>
+<li><strong>producer</strong>： producer 是一个发送消息的应用</li>
+<li><strong>exchange</strong>：producer并不会直接将消息发送到 queue 上，而是将消息发送给exchange，由exchange按照一定规则转发给指定queue</li>
+<li><strong>queue</strong>： queue 用来存储 producer 发送的消息</li>
+<li><strong>consumer</strong>： consumer是接收并处理消息的应用</li>
+<li><strong>routing key</strong>：发送消息时绑定的路由key</li>
+<li><strong>binding key</strong>：队列与交换机绑定的key</li>
+<li><strong>consumerTag</strong>: 消费者标签，同一个会话， consumerTag 是固定的 可以做此会话的名字。</li>
+<li><strong>consumer</strong>：消费者，extends DefaultConsumer。一个channel上可以配置多个consumer，真正的接收消息类，有处理消息的方法</li>
+<li><strong>Envelope</strong>：可以获取交换机及routingKey信息和deliveryTag</li>
+<li><strong>deliveryTag</strong>： deliveryTag 每次接收消息+1，可以做此消息处理通道的名字。用来回传告诉 rabbitmq 这个消息处理成功 清除此消息</li>
+<li><strong>BasicProperties</strong>：基本属性，如Header中的信息。</li>
+<li><strong>Delivery</strong>：封装了Envelope，BasicProperties及字节数组消息</li>
+</ul>
+<h2 id="Exchanges交换机"><a href="#Exchanges交换机" class="headerlink" title="Exchanges交换机"></a>Exchanges交换机</h2><p><strong>默认Exchange(RabbitMQ自带的Direct交换机，没有名称，与所有队列相连)**：比较Message的routing key和Queue的名字，完全匹配时，Message才会发送到该Queue<br><img src="/2020/11/27/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80/1-1607999220900.gif" style="zoom:80%;"><br>**Direct Exchange</strong>：比较Message的routing key和Queue的binding key，完全匹配时，Message才会发送到该Queue<br><img src="/2020/11/27/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80/2.gif" style="zoom:80%;"><br><strong>Fanout Exchange</strong>：忽略key对比，发送Message到Exchange下游绑定的所有Queue<br><img src="/2020/11/27/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80/1.gif" style="zoom: 80%;"><br><strong>Topic Exchange</strong>：比较Message的routing key和Queue的binding key，按规则匹配成功时，Message才会发送到该Queue</p>
+<ul>
+<li><strong>routing key命名规则</strong>：用”.”分割的字母或数字</li>
+<li><strong>匹配规则</strong>：<ul>
+<li>*：匹配单个字母或数字</li>
+<li>#：匹配0~多个字母或数字</li>
+<li>比如：*.stock.#与usd.stock、eur.stock.db匹配；但与stock.nasdaq不匹配<br><img src="/2020/11/27/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80/640" alt="img"></li>
+</ul>
+</li>
+</ul>
+<p><strong>Headers Exchange</strong>：比较队列上带有的Headers的键值对是否和发送的消息Message对象带的message是否匹配，通过Headers上的键值对判断是使用全匹配还是包含匹配。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">headerMap.put(<span class="string">&quot;x-match&quot;</span>, (matchAll ? <span class="string">&quot;all&quot;</span> : <span class="string">&quot;any&quot;</span>));</span><br></pre></td></tr></table></figure>
+
+<h2 id="Queue队列"><a href="#Queue队列" class="headerlink" title="Queue队列"></a>Queue队列</h2><ul>
+<li>存放消息</li>
+<li>消息消费监听，监听的是队列，和其它如交换机没有关联</li>
+</ul>
+<h2 id="发送消息"><a href="#发送消息" class="headerlink" title="发送消息"></a>发送消息</h2><ul>
+<li>生产者指定Message的routing key，并指定Message发送到哪个Exchange</li>
+<li>Queue会通过binding key绑定到指定的Exchange</li>
+<li>Exchange根据对比Message的routing key和Queue的binding key，然后按一定的分发路由规则，决定Message发送到哪个Queue</li>
+</ul>
+<h2 id="监听消息"><a href="#监听消息" class="headerlink" title="监听消息"></a>监听消息</h2><p>​    监听指定队列，消息push到消费者端。spring的监听注解会自动创建不存在的交换机，队列，及绑定key。</p>
+<h3 id="消息队列有两种工作方式"><a href="#消息队列有两种工作方式" class="headerlink" title="消息队列有两种工作方式"></a>消息队列有两种工作方式</h3><ul>
+<li><p>轮询分发(默认)默认Spring是获取250个数据，RabbitMQ官方建议是30</p>
+</li>
+<li><p>公平分发即当某个消费者没有消费完成之前不用再分发消息。当执行时间增长的时候验证是否正确</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 消费者每次从队列获取的消息数量。此属性当不设置时为：轮询分发，设置为1为：公平分发</span></span><br><span class="line"><span class="meta">spring.rabbitmq.listener.simple.prefetch</span>=<span class="string">1</span></span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RabbitListener(bindings = &#123;@QueueBinding(value = @Queue(value = &quot;direct.queue&quot;), exchange = @Exchange(value = &quot;direct.exchange&quot;), key = &quot;HelloWorld&quot;)&#125;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">getDirectMessage</span><span class="params">(User user, Channel channel, Message message)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 模拟执行任务</span></span><br><span class="line">            Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">            <span class="comment">// 模拟异常</span></span><br><span class="line">            String is = <span class="keyword">null</span>;</span><br><span class="line">            is.toString();</span><br><span class="line">            <span class="comment">// 确认收到消息，false只确认当前consumer一个消息收到，true确认所有consumer获得的消息</span></span><br><span class="line">            channel.basicAck(message.getMessageProperties().getDeliveryTag(), <span class="keyword">false</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="keyword">if</span> (message.getMessageProperties().getRedelivered()) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;消息已重复处理失败,拒绝再次接收&quot;</span> + user.getName());</span><br><span class="line">                <span class="comment">// 拒绝消息，requeue=false 表示不再重新入队，如果配置了死信队列则进入死信队列</span></span><br><span class="line">                channel.basicReject(message.getMessageProperties().getDeliveryTag(), <span class="keyword">false</span>);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;消息即将再次返回队列处理&quot;</span> + user.getName());</span><br><span class="line">                <span class="comment">// requeue为是否重新回到队列，true重新入队</span></span><br><span class="line">                channel.basicNack(message.getMessageProperties().getDeliveryTag(), <span class="keyword">false</span>, <span class="keyword">true</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">//e.printStackTrace();</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@RabbitListener(queues = &quot;direct.queue&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">getDirectMessageCopy</span><span class="params">(User user, Channel channel, Message message)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="comment">// 模拟执行任务</span></span><br><span class="line">            Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">            System.out.println(<span class="string">&quot;--jxb--MQConsumer--getDirectMessageCopy：&quot;</span> + user.toString());</span><br><span class="line">            <span class="comment">// 确认收到消息，false只确认当前consumer一个消息收到，true确认所有consumer获得的消息</span></span><br><span class="line">            channel.basicAck(message.getMessageProperties().getDeliveryTag(), <span class="keyword">false</span>);</span><br><span class="line">        &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            <span class="keyword">if</span> (message.getMessageProperties().getRedelivered()) &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;消息已重复处理失败,拒绝再次接收！&quot;</span>);</span><br><span class="line">                <span class="comment">// 拒绝消息，requeue=false 表示不再重新入队，如果配置了死信队列则进入死信队列</span></span><br><span class="line">                channel.basicReject(message.getMessageProperties().getDeliveryTag(), <span class="keyword">false</span>);</span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                System.out.println(<span class="string">&quot;消息即将再次返回队列处理！&quot;</span>);</span><br><span class="line">                <span class="comment">// requeue为是否重新回到队列，true重新入队</span></span><br><span class="line">                channel.basicNack(message.getMessageProperties().getDeliveryTag(), <span class="keyword">false</span>, <span class="keyword">true</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="拉取消息"><a href="#拉取消息" class="headerlink" title="拉取消息"></a>拉取消息</h2><p>​    主动拉取队列里的消息</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">GetResponse response = channel.basicGet(ConnectionUtils.QUEUE_NAME, <span class="keyword">false</span>);</span><br><span class="line">System.out.println(<span class="keyword">new</span> String(response.getBody()));</span><br><span class="line">channel.basicAck(response.getEnvelope().getDeliveryTag(), <span class="keyword">false</span>);</span><br></pre></td></tr></table></figure>
+
+<h2 id="基本AIPI"><a href="#基本AIPI" class="headerlink" title="基本AIPI"></a>基本AIPI</h2><p><strong>channel.exchangeDeclare()</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">type：有direct、fanout、topic三种</span><br><span class="line">durable：true：服务器重启会保留下来Exchange。警告：仅设置此选项，不代表消息持久化。即不保证重启后消息还在。</span><br><span class="line">autoDelete: true:当已经没有消费者时，服务器是否可以删除该Exchange。</span><br></pre></td></tr></table></figure>
+
+<p><strong>chanel.exchangeBind()</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">channel.queueBind(queueName, EXCHANGE_NAME, bindingKey);</span><br><span class="line">用于通过绑定bindingKey将queue到Exchange，之后便可以进行消息接收</span><br></pre></td></tr></table></figure>
+
+<p><strong>channel.queueDeclare(QUEUE_NAME, false, false, false, null);</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">durable：true：在服务器重启时，能够存活</span><br><span class="line">exclusive ：是否为当前连接的专用队列，在连接断开后，会自动删除该队列，生产环境中应该很少用到吧。</span><br><span class="line">autodelete：当没有任何消费者使用时，自动删除该队列。this means that the queue will be deleted when there are no more processes consuming messages from it.</span><br></pre></td></tr></table></figure>
+<p><strong>chanel.basicQos()</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">prefetchSize：0 目前好像没有作用，至少rabbitmq3.8.5不能使用，报错</span><br><span class="line">prefetchCount：会告诉RabbitMQ不要同时给一个消费者推送多于N个消息，即一旦有N个消息还没有ack，则该consumer将block掉，直到有消息ack。是服务端属性，通过rpc方法调用，存在服务端，客户端不需要使用</span><br><span class="line">global：true\false 是否将上面设置应用于channel，简单点说，就是上面限制是channel级别的还是consumer级别。如果true并且prefetchCount为4，有二个消费者，此时每个消费者可以读取到二条。如果为fasle，每个消费者获取到4条数据</span><br></pre></td></tr></table></figure>
+<p><strong>channel.basicPublish()</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">routingKey：路由键，#匹配0个或多个单词，*匹配一个单词，在topic exchange做消息转发用</span><br><span class="line">mandatory：true：如果exchange根据自身类型和消息routeKey无法找到一个符合条件的queue，那么会调用basic.return方法将消息返还给生产者。false：出现上述情形broker会直接将消息扔掉</span><br><span class="line">immediate：true：如果exchange在将消息route到queue(s)时发现对应的queue上没有消费者，那么这条消息不会放入队列中。当与消息routeKey关联的所有queue(一个或多个)都没有消费者时，该消息会通过basic.return方法返还给生产者。</span><br><span class="line">BasicProperties ：需要注意的是BasicProperties.deliveryMode，0:不持久化 1：持久化 这里指的是消息的持久化，配合channel(durable&#x3D;true),queue(durable)可以实现，即使服务器宕机，消息仍然保留</span><br><span class="line">简单来说：mandatory标志告诉服务器至少将该消息route到一个队列中，否则将消息返还给生产者；immediate标志告诉服务器如果该消息关联的queue上有消费者，则马上将消息投递给它，如果所有queue都没有消费者，直接把消息返还给生产者，不用将消息入队列等待消费者了。</span><br></pre></td></tr></table></figure>
+
+<p><strong>channel.basicAck();</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">deliveryTag:该消息的index</span><br><span class="line">multiple：是否批量.true:将一次性ack所有小于deliveryTag的消息。</span><br></pre></td></tr></table></figure>
+
+<p><strong>channel.basicNack(delivery.getEnvelope().getDeliveryTag(), false, true);</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">deliveryTag:该消息的index</span><br><span class="line">multiple：是否批量.true:将一次性拒绝所有小于deliveryTag的消息。</span><br><span class="line">requeue：被拒绝的是否重新入队列</span><br></pre></td></tr></table></figure>
+
+<p><strong>channel.basicReject(delivery.getEnvelope().getDeliveryTag(), false);</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">deliveryTag:该消息的index</span><br><span class="line">requeue：被拒绝的是否重新入队列</span><br><span class="line">channel.basicNack 与 channel.basicReject 的区别在于basicNack可以拒绝多条消息，而basicReject一次只能拒绝一条消息</span><br></pre></td></tr></table></figure>
+<p><strong>channel.basicConsume(QUEUE_NAME, true, consumer);</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">autoAck：是否自动ack，如果不自动ack，需要使用channel.ack、channel.nack、channel.basicReject 进行消息应答</span><br></pre></td></tr></table></figure>
+
+<p><strong>channel.basicGet(ConnectionUtils.QUEUE_NAME, false);</strong></p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">autoAck：是否自动ack，如果不自动ack，需要使用channel.ack、channel.nack、channel.basicReject 进行消息应答</span><br></pre></td></tr></table></figure>
+
+<h2 id="注意点"><a href="#注意点" class="headerlink" title="注意点"></a>注意点</h2><p><strong>Connection与Channel</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Channel channel = connection.createChannel();</span><br></pre></td></tr></table></figure>
+
+<p>一个连接可以创建多个Channel</p>
+<p><strong>Channel与消费者Consume</strong></p>
+<p>一个Channel上可以设置多个Consume,因此可以设置最大值，Spring中通过设置concurrency和max-concurrency配置消费者个数</p>
+<p><strong>prefetchSize、prefetchCount、Global</strong></p>
+<p>spring中有prefetch即prefetchCount，batch-size。取最大值设置为prefetchCount</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">LinkedBlockingQueue</span><br><span class="line"><span class="keyword">this</span>.channel.basicQos(<span class="keyword">this</span>.prefetchCount);</span><br><span class="line">InternalConsumer consumer = <span class="keyword">new</span> InternalConsumer(<span class="keyword">this</span>.channel, queue);</span><br><span class="line">String consumerTag = <span class="keyword">this</span>.channel.basicConsume(queue, <span class="keyword">this</span>.acknowledgeMode.isAutoAck(),</span><br><span class="line">                                               (<span class="keyword">this</span>.tagStrategy != <span class="keyword">null</span> ? <span class="keyword">this</span>.tagStrategy.createConsumerTag(queue) : <span class="string">&quot;&quot;</span>), <span class="keyword">this</span>.noLocal,</span><br><span class="line">                                               <span class="keyword">this</span>.exclusive, <span class="keyword">this</span>.consumerArgs,</span><br><span class="line">                                               consumer);</span><br></pre></td></tr></table></figure>
+
+<h2 id="原理图"><a href="#原理图" class="headerlink" title="原理图"></a>原理图</h2><p><img src="/2020/11/27/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80/%E5%8E%9F%E7%90%86%E5%9B%BE.png"></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/RabbitMQ/" rel="tag"># RabbitMQ</a>
+              <a href="/tags/MQ/" rel="tag"># MQ</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/11/25/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%89%EF%BC%89%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%AB%A0/" rel="prev" title="算法（三）之数据结构总章">
+                  <i class="fa fa-chevron-left"></i> 算法（三）之数据结构总章
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E5%9F%BA%E7%A1%80/" rel="next" title="docker基础">
+                  docker基础 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

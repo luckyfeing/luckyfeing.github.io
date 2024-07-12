@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="作者：Happy老师 出处：[https:&#x2F;&#x2F;blog.51cto.com&#x2F;happylab&#x2F;2496756]( kubernetes-dashboard简介kubernetes中管理集群中资源的方式通常有四种：命令行、YAML、API和图形界面，四种不同的方式适用于不同的人群和场景，对比如下：  命令行kubectl，kubectl提供了命令行管理kubernetes资源 优点：使用方便、便捷、">
+<meta property="og:type" content="article">
+<meta property="og:title" content="k8s控制台Dashboard">
+<meta property="og:url" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="作者：Happy老师 出处：[https:&#x2F;&#x2F;blog.51cto.com&#x2F;happylab&#x2F;2496756]( kubernetes-dashboard简介kubernetes中管理集群中资源的方式通常有四种：命令行、YAML、API和图形界面，四种不同的方式适用于不同的人群和场景，对比如下：  命令行kubectl，kubectl提供了命令行管理kubernetes资源 优点：使用方便、便捷、">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/1.gif">
+<meta property="og:image" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/2.gif">
+<meta property="og:image" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/3.gif">
+<meta property="og:image" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/4.gif">
+<meta property="og:image" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/5.gif">
+<meta property="og:image" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/6.gif">
+<meta property="og:image" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/7.gif">
+<meta property="og:image" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/8.gif">
+<meta property="og:image" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/9.gif">
+<meta property="article:published_time" content="2020-11-30T05:15:52.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.245Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="docker">
+<meta property="article:tag" content="k8s">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/1.gif">
+
+
+<link rel="canonical" href="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>k8s控制台Dashboard | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#kubernetes-dashboard%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">kubernetes-dashboard简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#kubernetes-dashboard%E5%AE%89%E8%A3%85"><span class="nav-number">2.</span> <span class="nav-text">**kubernetes-**dashboard安装</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8E%A2%E7%B4%A2kubernetes-dashboard"><span class="nav-number">3.</span> <span class="nav-text">探索kubernetes-dashboard</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99%E5%9C%A8%E6%9C%80%E5%90%8E"><span class="nav-number">4.</span> <span class="nav-text">写在最后</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="nav-number">5.</span> <span class="nav-text">参考文献</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          k8s控制台Dashboard
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-11-30 13:15:52" itemprop="dateCreated datePublished" datetime="2020-11-30T13:15:52+08:00">2020-11-30</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%BF%90%E7%BB%B4%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">运维技术</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>作者：<a target="_blank" rel="noopener" href="https://blog.51cto.com/happylab">Happy老师</a></p>
+<p>出处：[<a target="_blank" rel="noopener" href="https://blog.51cto.com/happylab/2496756]">https://blog.51cto.com/happylab/2496756]</a>(</p>
+<h2 id="kubernetes-dashboard简介"><a href="#kubernetes-dashboard简介" class="headerlink" title="kubernetes-dashboard简介"></a>kubernetes-dashboard简介</h2><p>kubernetes中管理集群中资源的方式通常有四种：命令行、YAML、API和图形界面，四种不同的方式适用于不同的人群和场景，对比如下：</p>
+<ul>
+<li>命令行kubectl，kubectl提供了命令行管理kubernetes资源<ul>
+<li>优点：使用方便、便捷、快速管理集群资源</li>
+<li>缺点：功能相对有限，部分操作无法支持，有一定的门槛</li>
+</ul>
+</li>
+<li>YAML资源定义，kubernetes中最终转换形式，推荐使用方式<ul>
+<li>优点：功能齐备，能够定义kubernetes的所有对象和资源</li>
+<li>缺点：门槛较高，需要具备专业技术能力，使用排障难度大</li>
+</ul>
+</li>
+<li>API管理接入，提供各种编程语言SDK接口，方便各种编程语言应用程序接入<ul>
+<li>优点：适配各种编程语言，如Java，Go，Python，C等，方便开发kubernetes</li>
+<li>缺点：门槛较高，适用于开发人员</li>
+</ul>
+</li>
+<li>图形kubernetes-dashboard，提供图形化管理界面，能够利用metric-server实现node和pod的监控<ul>
+<li>优点：使用简单，便捷，适合大众。</li>
+<li>缺点：功能相对简单，功能原生，适用于demo</li>
+</ul>
+</li>
+</ul>
+<h2 id="kubernetes-dashboard安装"><a href="#kubernetes-dashboard安装" class="headerlink" title="**kubernetes-**dashboard安装"></a>**kubernetes-**dashboard安装</h2><p>社区提供了kubernetes-dashbaord的YAML资源定义文件，直接下载YAML文件安装即可实现dashboard的安装接入，需要准备条件如下：</p>
+<ul>
+<li>已安装好的kubernetes集群，本文环境为1.15.3</li>
+<li>metric-server监控，node监控和pod监控视图需依赖于监控系统</li>
+<li>RBAC认证授权，设置好账户并授予访问权限</li>
+</ul>
+<p>1、下载kubernetes-dashboard安装文件并应用YAML资源定义</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">[root@node-1 ~]# kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.0-beta8/aio/deploy/recommended.yaml</span><br><span class="line">namespace/kubernetes-dashboard created</span><br><span class="line">serviceaccount/kubernetes-dashboard created</span><br><span class="line">service/kubernetes-dashboard created</span><br><span class="line">secret/kubernetes-dashboard-certs created</span><br><span class="line">secret/kubernetes-dashboard-csrf created</span><br><span class="line">secret/kubernetes-dashboard-key-holder created</span><br><span class="line">configmap/kubernetes-dashboard-settings created</span><br><span class="line">role.rbac.authorization.k8s.io/kubernetes-dashboard created</span><br><span class="line">clusterrole.rbac.authorization.k8s.io/kubernetes-dashboard configured</span><br><span class="line">rolebinding.rbac.authorization.k8s.io/kubernetes-dashboard created</span><br><span class="line">clusterrolebinding.rbac.authorization.k8s.io/kubernetes-dashboard unchanged</span><br><span class="line">deployment.apps/kubernetes-dashboard created</span><br><span class="line">service/dashboard-metrics-scraper created</span><br><span class="line">deployment.apps/dashboard-metrics-scraper created</span><br></pre></td></tr></table></figure>
+
+<p>安装文件中定义了dashboard相关的资源，可以查阅YAML文件，资源包含有：</p>
+<ul>
+<li>kubernetes-dashboard命名空间</li>
+<li>ServiceAccount访问用户</li>
+<li>Service服务访问应用，默认为ClusterIP</li>
+<li>Secrets，存放有kubernetes-dashboard-certs，kubernetes-dashboard-csrf，kubernetes-dashboard-key-holder证书</li>
+<li>ConfigMap配置文件</li>
+<li>RBAC认证授权，包含有Role，ClusterRole，RoleBinding，ClusterRoleBinding</li>
+<li>Deployments应用，kubernetes-dashboard核心镜像，还有一个和监控集成的dashboard-metrics-scraper</li>
+</ul>
+<p>2、校验资源的安装情况，kubernetes-dashbaord的资源都安装在kubernetes-dashboard命名空间下,包含有Deployments，Services，Secrets，ConfigMap等</p>
+<p><img src="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/1.gif"></p>
+<p>3、kubernetes-dashbaord安装完毕后，kubernetes-dashboard默认service的类型为ClusterIP，为了从外部访问控制面板，开放为NodePort类型</p>
+<p><img src="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/2.gif"></p>
+<p>4、此时通过https协议访问30433端口即可打开dashboard的控制台，为了保护数据安全性，集群默认开启了RBAC认证授权，需要授予权限的用户才可以访问到kubernetes集群，因此需要授权用户访问集群，集群中已定有了cluster-admin的角色和相关的Role，ClusterRole和ClusterRoleBinding角色，定义ServiceAccount将其关联即可，如下:</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">[root@node-1 ~]# cat dashboard-rbac.yaml </span><br><span class="line">---</span><br><span class="line">apiVersion: v1</span><br><span class="line">kind: ServiceAccount</span><br><span class="line">metadata:</span><br><span class="line">  name: happycloudlab </span><br><span class="line">  namespace: kubernetes-dashboard</span><br><span class="line">---</span><br><span class="line">apiVersion: rbac.authorization.k8s.io/v1</span><br><span class="line">kind: ClusterRoleBinding</span><br><span class="line">metadata:</span><br><span class="line">  name: happycloudlab</span><br><span class="line">roleRef:</span><br><span class="line">  apiGroup: rbac.authorization.k8s.io</span><br><span class="line">  kind: ClusterRole</span><br><span class="line">  name: cluster-admin</span><br><span class="line">subjects:</span><br><span class="line">- kind: ServiceAccount</span><br><span class="line">  name: happycloudlab</span><br><span class="line">  namespace: kubernetes-dashboard</span><br></pre></td></tr></table></figure>
+
+<p>5、应用RBAC规则，创建一个happycloudlab的用户，并和cluster-admin的角色关联</p>
+<figure class="highlight js"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">[root@node-1 ~]# kubectl apply -f dashboard-rbac.yaml </span><br><span class="line">serviceaccount/happycloudlab created</span><br><span class="line">clusterrolebinding.rbac.authorization.k8s.io/happylau created</span><br><span class="line">[root@node-1 ~]# kubectl get serviceaccounts -n kubernetes-dashboard </span><br><span class="line">NAME                   SECRETS   AGE</span><br><span class="line"><span class="keyword">default</span>                <span class="number">1</span>         <span class="number">114</span>m</span><br><span class="line">happycloudlab   <span class="number">1</span>         <span class="number">8</span>s</span><br><span class="line">kubernetes-dashboard   <span class="number">1</span>         <span class="number">114</span>m</span><br></pre></td></tr></table></figure>
+
+<p>6、此时通过kubernetes-dashboard-csrf服务会自动创建一个和用户名关联的Secrets，通过token字段来登陆，token通过base64加密，解密后即可登录，如下演示登录的过程<img src="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/3.gif"></p>
+<p>自此，kubernetes-dashboard安装完毕，通过RBAC认证授权特定用户访问集群权限，接下来一起探索dashboard带来的魔力吧。</p>
+<h2 id="探索kubernetes-dashboard"><a href="#探索kubernetes-dashboard" class="headerlink" title="探索kubernetes-dashboard"></a>探索<strong>kubernetes-dashboard</strong></h2><p>kubernetes-dashboard图形工具能提供以下功能：</p>
+<ul>
+<li>查看kubernetes中的资源对象，包含kubernetes中各种资源<ul>
+<li>Cluster 集群级别的资源，如命名空间，节点，PV，StorageClass，ClusterRole等</li>
+<li>Workloads，不同类型的工作负载，包含Deployments，StatefulSets，DaemonSets，Jobs等</li>
+<li>Discovery and LoadBalancing，服务发现和负载均衡，包含service和ingress</li>
+<li>ConfigMap and Storage，包含ConfigMap，Secrets和PVC</li>
+<li>Costom Resource Definition，自定义资源定义</li>
+</ul>
+</li>
+<li>kubernetes资源监控，调用metric-server监控系统，实现Cluster集群，Workloads应用负载，存储等资源的监控</li>
+<li>管理资源对象，包含创建，编辑yaml，删除负载等，主要是以Deployments等应用为主的管理</li>
+</ul>
+<p>1、查看集群整体概览资源，可以看到整体集群，应用负载，Pod资源的资源使用情况</p>
+<p><img src="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/4.gif" alt="资源概览"></p>
+<p>2、Cluster集群资源管理，包含还有Nodes，Namespace，StorageClass等，提供在线编辑yaml方式</p>
+<p><img src="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/5.gif" alt="集群资源"></p>
+<p>3、查看应用工作负载Workloads，包含各种不同的工作负载如Deployments，StatefulSets，Jobs等</p>
+<p><img src="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/6.gif" alt="工作负载"></p>
+<p>4、部署Deployments工作负载，支持从YAML文件输入，YAML文件加载和图形界面部署应用</p>
+<p><img src="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/7.gif" alt="部署工作负载"></p>
+<p>5、工作负载管理，扩展工作负载副本数目，滚动更新等</p>
+<p><img src="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/8.gif" alt="扩展副本+滚动更新"></p>
+<p>6、远程登录容器和查看容器日志</p>
+<p><img src="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0Dashboard/9.gif" alt="登录容器和查看日志"></p>
+<h2 id="写在最后"><a href="#写在最后" class="headerlink" title="写在最后"></a>写在最后</h2><p>kubernetes-dashboard提供了原生的k8s管理工具，提供一个便捷的可视化界面，方便使用控制台管理k8s资源，dashboard提供的功能相对原生，企业可以根据公司的需求通过api进行二次开发，以满足需求。对于k8s管理员而言，一般以使用命令行或yaml文件为主。</p>
+<h2 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h2><p>dashboard安装手册：<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/">https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/</a></p>
+<p>RBAC认证授权：<a target="_blank" rel="noopener" href="https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/">https://kubernetes.io/docs/tasks/access-application-cluster/web-ui-dashboard/</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/40c0405811ee">k8s Dashboard部署</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/docker/" rel="tag"># docker</a>
+              <a href="/tags/k8s/" rel="tag"># k8s</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E7%BD%91%E7%BB%9C/" rel="prev" title="k8s网络">
+                  <i class="fa fa-chevron-left"></i> k8s网络
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E6%8E%A7%E5%88%B6%E5%8F%B0rancher/" rel="next" title="k8s控制台rancher">
+                  k8s控制台rancher <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

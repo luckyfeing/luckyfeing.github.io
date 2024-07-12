@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="RabbitMQ自动装配类：RabbitAutoConfiguration1、@EnableConfigurationProperties启动配置文件RabbitProperties2、@Import导入RabbitAnnotationDrivenConfiguration RabbitConnectionFactoryCreator静态内部类：1、RabbitConnectionFactoryB">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring-boot-amqp自动配置详解">
+<meta property="og:url" content="http://example.com/2020/12/15/Spring-boot-amqp%E8%87%AA%E5%8A%A8%E9%85%8D%E7%BD%AE%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="RabbitMQ自动装配类：RabbitAutoConfiguration1、@EnableConfigurationProperties启动配置文件RabbitProperties2、@Import导入RabbitAnnotationDrivenConfiguration RabbitConnectionFactoryCreator静态内部类：1、RabbitConnectionFactoryB">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/12/15/Spring-boot-amqp%E8%87%AA%E5%8A%A8%E9%85%8D%E7%BD%AE%E8%AF%A6%E8%A7%A3/MessageListenerContainer.png">
+<meta property="og:image" content="http://example.com/2020/12/15/Spring-boot-amqp%E8%87%AA%E5%8A%A8%E9%85%8D%E7%BD%AE%E8%AF%A6%E8%A7%A3/image-20201216160611728.png">
+<meta property="article:published_time" content="2020-12-15T05:37:28.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:26.893Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="RabbitMQ">
+<meta property="article:tag" content="springboot">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/12/15/Spring-boot-amqp%E8%87%AA%E5%8A%A8%E9%85%8D%E7%BD%AE%E8%AF%A6%E8%A7%A3/MessageListenerContainer.png">
+
+
+<link rel="canonical" href="http://example.com/2020/12/15/Spring-boot-amqp%E8%87%AA%E5%8A%A8%E9%85%8D%E7%BD%AE%E8%AF%A6%E8%A7%A3/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Spring-boot-amqp自动配置详解 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#RabbitMQ%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D%E7%B1%BB%EF%BC%9ARabbitAutoConfiguration"><span class="nav-number">1.</span> <span class="nav-text">RabbitMQ自动装配类：RabbitAutoConfiguration</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#RabbitConnectionFactoryCreator%E9%9D%99%E6%80%81%E5%86%85%E9%83%A8%E7%B1%BB%EF%BC%9A"><span class="nav-number">1.1.</span> <span class="nav-text">RabbitConnectionFactoryCreator静态内部类：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#RabbitTemplateConfiguration%E9%9D%99%E6%80%81%E5%86%85%E9%83%A8%E7%B1%BB%EF%BC%9A"><span class="nav-number">1.2.</span> <span class="nav-text">RabbitTemplateConfiguration静态内部类：</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#MessagingTemplateConfiguration%E9%9D%99%E6%80%81%E5%86%85%E9%83%A8%E7%B1%BB%EF%BC%9A"><span class="nav-number">1.3.</span> <span class="nav-text">MessagingTemplateConfiguration静态内部类：</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RabbitAnnotationDrivenConfiguration%E6%B3%A8%E8%A7%A3%E9%A9%B1%E5%8A%A8%E9%85%8D%E7%BD%AE%E7%B1%BB"><span class="nav-number">2.</span> <span class="nav-text">RabbitAnnotationDrivenConfiguration注解驱动配置类</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#EnableRabbit%E6%B3%A8%E8%A7%A3%E7%B1%BB"><span class="nav-number">3.</span> <span class="nav-text">EnableRabbit注解类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Import-RabbitListenerConfigurationSelector-class"><span class="nav-number">3.1.</span> <span class="nav-text">@Import(RabbitListenerConfigurationSelector.class)</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RabbitBootstrapConfiguration"><span class="nav-number">4.</span> <span class="nav-text">RabbitBootstrapConfiguration</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RabbitListenerAnnotationBeanPostProcessor%E5%90%8E%E7%BD%AE%E5%A4%84%E7%90%86%E5%99%A8"><span class="nav-number">5.</span> <span class="nav-text">RabbitListenerAnnotationBeanPostProcessor后置处理器</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#afterSingletonsInstantiated%E6%96%B9%E6%B3%95"><span class="nav-number">5.0.1.</span> <span class="nav-text">afterSingletonsInstantiated方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#postProcessAfterInitialization%E6%96%B9%E6%B3%95"><span class="nav-number">5.0.2.</span> <span class="nav-text">postProcessAfterInitialization方法</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#RabbitListenerEndpointRegistry"><span class="nav-number">6.</span> <span class="nav-text">RabbitListenerEndpointRegistry</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MessageListenerContainer"><span class="nav-number">7.</span> <span class="nav-text">MessageListenerContainer</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#AbstractMessageListenerContainer"><span class="nav-number">7.1.</span> <span class="nav-text">AbstractMessageListenerContainer</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SimpleMessageListenerContainer"><span class="nav-number">7.2.</span> <span class="nav-text">SimpleMessageListenerContainer</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#BlockingQueueConsumer"><span class="nav-number">7.2.1.</span> <span class="nav-text">BlockingQueueConsumer</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#AsyncMessageProcessingConsumer"><span class="nav-number">7.2.2.</span> <span class="nav-text">AsyncMessageProcessingConsumer</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#InternalConsumer"><span class="nav-number">7.2.3.</span> <span class="nav-text">InternalConsumer</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E4%B8%AA%E6%B6%88%E8%B4%B9%E8%80%85%E5%AE%B9%E5%99%A8%E5%8C%BA%E5%88%AB"><span class="nav-number">8.</span> <span class="nav-text">二个消费者容器区别</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/15/Spring-boot-amqp%E8%87%AA%E5%8A%A8%E9%85%8D%E7%BD%AE%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring-boot-amqp自动配置详解
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-12-15 13:37:28" itemprop="dateCreated datePublished" datetime="2020-12-15T13:37:28+08:00">2020-12-15</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:26" itemprop="dateModified" datetime="2024-07-12T10:34:26+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/springboot/" itemprop="url" rel="index"><span itemprop="name">springboot</span></a>
+        </span>
+          , 
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/MQ/" itemprop="url" rel="index"><span itemprop="name">MQ</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="RabbitMQ自动装配类：RabbitAutoConfiguration"><a href="#RabbitMQ自动装配类：RabbitAutoConfiguration" class="headerlink" title="RabbitMQ自动装配类：RabbitAutoConfiguration"></a>RabbitMQ自动装配类：RabbitAutoConfiguration</h2><p>1、@EnableConfigurationProperties启动配置文件RabbitProperties<br>2、@Import导入RabbitAnnotationDrivenConfiguration</p>
+<h3 id="RabbitConnectionFactoryCreator静态内部类："><a href="#RabbitConnectionFactoryCreator静态内部类：" class="headerlink" title="RabbitConnectionFactoryCreator静态内部类："></a>RabbitConnectionFactoryCreator静态内部类：</h3><p>1、RabbitConnectionFactoryBean配置，创建ConnectionFactory对象，内部单例是<strong>com.rabbitmq.client.ConnectionFactory</strong><br>2、使用spring-rabbitmq的<strong>CachingConnectionFactory</strong>包装ConnectionFactory</p>
+<h3 id="RabbitTemplateConfiguration静态内部类："><a href="#RabbitTemplateConfiguration静态内部类：" class="headerlink" title="RabbitTemplateConfiguration静态内部类："></a>RabbitTemplateConfiguration静态内部类：</h3><p>1、@Import(RabbitConnectionFactoryCreator.class)<br>2、RabbitTemplate(操作spring-amqp中的Message对象)<br>3、AmqpAdmin</p>
+<h3 id="MessagingTemplateConfiguration静态内部类："><a href="#MessagingTemplateConfiguration静态内部类：" class="headerlink" title="MessagingTemplateConfiguration静态内部类："></a>MessagingTemplateConfiguration静态内部类：</h3><p>1、(@Import(RabbitTemplateConfiguration.class))<br>2、RabbitMessagingTemplate（操作spring-message中的Message对象，底层也是使用RabbitTemplate）</p>
+<h2 id="RabbitAnnotationDrivenConfiguration注解驱动配置类"><a href="#RabbitAnnotationDrivenConfiguration注解驱动配置类" class="headerlink" title="RabbitAnnotationDrivenConfiguration注解驱动配置类"></a>RabbitAnnotationDrivenConfiguration注解驱动配置类</h2><p>1、<strong>EnableRabbitConfiguration</strong>静态内部类（**@EnableRabbit**）<br>2、SimpleRabbitListenerContainerFactoryConfigurer配置，创建SimpleRabbitListenerContainerFactoryConfigurer<br>3、SimpleRabbitListenerContainerFactory（默认，spring.rabbitmq.listener.type=simple）通过configure方法配置SimpleRabbitListenerContainerFactory工厂对象的属性<br>4、DirectRabbitListenerContainerFactoryConfigurer配置，创建DirectRabbitListenerContainerFactoryConfigurer<br>5、DirectRabbitListenerContainerFactory(spring.rabbitmq.listener.type=direct,只能存在一个)通过configure方法配置DirectRabbitListenerContainerFactory工厂对象的属性</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Bean</span></span><br><span class="line"><span class="meta">@ConditionalOnMissingBean</span></span><br><span class="line"><span class="function">DirectRabbitListenerContainerFactoryConfigurer <span class="title">directRabbitListenerContainerFactoryConfigurer</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    DirectRabbitListenerContainerFactoryConfigurer configurer = <span class="keyword">new</span> DirectRabbitListenerContainerFactoryConfigurer();</span><br><span class="line">    configurer.setMessageConverter(<span class="keyword">this</span>.messageConverter.getIfUnique());</span><br><span class="line">    configurer.setMessageRecoverer(<span class="keyword">this</span>.messageRecoverer.getIfUnique());</span><br><span class="line">    configurer.setRetryTemplateCustomizers(</span><br><span class="line">        <span class="keyword">this</span>.retryTemplateCustomizers.orderedStream().collect(Collectors.toList()));</span><br><span class="line">    configurer.setRabbitProperties(<span class="keyword">this</span>.properties);</span><br><span class="line">    <span class="keyword">return</span> configurer;</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@Bean(name = &quot;rabbitListenerContainerFactory&quot;)</span></span><br><span class="line"><span class="meta">@ConditionalOnMissingBean(name = &quot;rabbitListenerContainerFactory&quot;)</span></span><br><span class="line"><span class="meta">@ConditionalOnProperty(prefix = &quot;spring.rabbitmq.listener&quot;, name = &quot;type&quot;, havingValue = &quot;direct&quot;)</span></span><br><span class="line"><span class="function">DirectRabbitListenerContainerFactory <span class="title">directRabbitListenerContainerFactory</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    DirectRabbitListenerContainerFactoryConfigurer configurer, ConnectionFactory connectionFactory)</span> </span>&#123;</span><br><span class="line">    DirectRabbitListenerContainerFactory factory = <span class="keyword">new</span> DirectRabbitListenerContainerFactory();</span><br><span class="line">    <span class="comment">//为ListenerContainerFactory配置属性</span></span><br><span class="line">    configurer.configure(factory, connectionFactory);</span><br><span class="line">    <span class="keyword">return</span> factory;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//抽象的RabbitListenerContainerFactory 公用参数使用</span></span><br><span class="line">AbstractRabbitListenerContainerFactory&lt;C extends AbstractMessageListenerContainer&gt;</span><br><span class="line">  implements RabbitListenerContainerFactory&lt;C&gt;, ApplicationContextAware, ApplicationEventPublisherAware</span><br><span class="line"><span class="comment">//使用模板方法创建ListenerContainer  -》注册的时候使用-&gt;创建ListenerContainer    </span></span><br><span class="line"><span class="function"><span class="keyword">public</span> C <span class="title">createListenerContainer</span><span class="params">(RabbitListenerEndpoint endpoint)</span> </span>&#123;</span><br><span class="line">    C instance = createContainerInstance();</span><br><span class="line">    <span class="comment">//... 设置公用参数</span></span><br><span class="line">    <span class="comment">//初始化实例，设置不同容器的不同配置参数</span></span><br><span class="line">    initializeContainer(instance, endpoint);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="EnableRabbit注解类"><a href="#EnableRabbit注解类" class="headerlink" title="EnableRabbit注解类"></a>EnableRabbit注解类</h2><h3 id="Import-RabbitListenerConfigurationSelector-class"><a href="#Import-RabbitListenerConfigurationSelector-class" class="headerlink" title="@Import(RabbitListenerConfigurationSelector.class)"></a>@Import(RabbitListenerConfigurationSelector.class)</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RabbitListenerConfigurationSelector</span> <span class="keyword">implements</span> <span class="title">DeferredImportSelector</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="keyword">public</span> String[] selectImports(AnnotationMetadata importingClassMetadata) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> String[] &#123; RabbitBootstrapConfiguration.class.getName() &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>selectImports方法，导入RabbitBootstrapConfiguration</p>
+<h2 id="RabbitBootstrapConfiguration"><a href="#RabbitBootstrapConfiguration" class="headerlink" title="RabbitBootstrapConfiguration"></a>RabbitBootstrapConfiguration</h2><p>RabbitBootstrapConfiguration implements <strong>ImportBeanDefinitionRegistrar</strong>，用于注册BeanDefinition。</p>
+<p>registerBeanDefinitions方法注册BeanDefinition<br>1、RabbitListenerAnnotationBeanPostProcessor<br>2、RabbitListenerEndpointRegistry</p>
+<h2 id="RabbitListenerAnnotationBeanPostProcessor后置处理器"><a href="#RabbitListenerAnnotationBeanPostProcessor后置处理器" class="headerlink" title="RabbitListenerAnnotationBeanPostProcessor后置处理器"></a>RabbitListenerAnnotationBeanPostProcessor后置处理器</h2><p>主要实现了SmartInitializingSingleton，BeanPostProcessor接口，创建<strong>RabbitListenerEndpointRegistrar</strong> <strong>registrar</strong>成员变量，设置setBeanFactory</p>
+<h4 id="afterSingletonsInstantiated方法"><a href="#afterSingletonsInstantiated方法" class="headerlink" title="afterSingletonsInstantiated方法"></a>afterSingletonsInstantiated方法</h4><p>1、**<font color="red">RabbitListenerConfigurer</font><strong>接口可以扩展，configurer.configureRabbitListeners(this.registrar);<br>2、this.registrar.setEndpointRegistry(this.endpointRegistry); 从容器中获取</strong>RabbitListenerEndpointRegistry<strong>对象<br>3、MessageHandlerMethodFactory handlerMethodFactory = this.registrar.getMessageHandlerMethodFactory();<br>4、</strong>this.registrar.afterPropertiesSet()**; //此时注册所有的Endpoints，</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">registerAllEndpoints</span><span class="params">()</span> </span>&#123;   <span class="comment">//每个endpoint创建一个容器</span></span><br><span class="line">    <span class="comment">//通过endpoint注册监听容器</span></span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>.endpointDescriptors) &#123;</span><br><span class="line">        <span class="keyword">for</span> (AmqpListenerEndpointDescriptor descriptor : <span class="keyword">this</span>.endpointDescriptors) &#123;</span><br><span class="line">            <span class="keyword">this</span>.endpointRegistry.registerListenerContainer(<span class="comment">// NOSONAR never null</span></span><br><span class="line">                descriptor.endpoint, resolveContainerFactory(descriptor));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">this</span>.startImmediately = <span class="keyword">true</span>;  <span class="comment">// trigger immediate startup</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="postProcessAfterInitialization方法"><a href="#postProcessAfterInitialization方法" class="headerlink" title="postProcessAfterInitialization方法"></a>postProcessAfterInitialization方法</h4><p>1、Bean处理器，获取类、方法上的@RabbitListener，@RabbitHandler[处理不同content_type的消息]注解的元数据(方法上可使用@Payload String body, @Headers Map&lt;String,Object&gt; headers,@Header String token,Message message,String message)<br>2、processAmqpListener（）——&gt;处理RabbitListener的监听——&gt;MethodRabbitListenerEndpoint<br>3、processMultiMethodListeners==》处理RabbitHandler的监听——&gt;MultiMethodRabbitListenerEndpoint<br>4、生成MethodRabbitListenerEndpoint或者MultiMethodRabbitListenerEndpoint的实例Endpoint对象，Endpoint包含监听的相关信息（group，id,queue,exchange,相关执行方法）<br>5、最终：<strong>this.registrar.registerEndpoint(endpoint, factory);</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">AmqpListenerEndpointDescriptor descriptor = <span class="keyword">new</span> AmqpListenerEndpointDescriptor(endpoint, factory);</span><br><span class="line"><span class="keyword">synchronized</span> (<span class="keyword">this</span>.endpointDescriptors) &#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.startImmediately) &#123; <span class="comment">// Register and start immediately  </span></span><br><span class="line">        <span class="keyword">this</span>.endpointRegistry.registerListenerContainer(descriptor.endpoint, <span class="comment">// NOSONAR never null</span></span><br><span class="line">                                                        resolveContainerFactory(descriptor), <span class="keyword">true</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">this</span>.endpointDescriptors.add(descriptor);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="RabbitListenerEndpointRegistry"><a href="#RabbitListenerEndpointRegistry" class="headerlink" title="RabbitListenerEndpointRegistry"></a>RabbitListenerEndpointRegistry</h2><p>主要实现了DisposableBean, SmartLifecycle接口，SmartLifecycle具有生命周期，负责创建MessageListenerContainer实例，并管理所有监听容器的启动与停止等。</p>
+<p>RabbitListenerEndpointRegistry实例创建的MessageListenerContainer实例在其整个生命周期都是有状态的。<br>SimpleMessageListenerContainer的start()方法，负责创建消费者并启动对消息队列的监听。<br>SimpleMessageListenerContainer的stop()方法，负责销毁消费者并停止对消息队列的监听。</p>
+<p><strong>registerListenerContainer</strong>方法， 注册监听的容器即创建监听容器<br>1、MessageListenerContainer container = createListenerContainer(endpoint, factory);<br>2、this.listenerContainers.put(id, container);<br>3、containerGroup.add(container);<br>4、startIfNecessary(MessageListenerContainer listenerContainer)——》<strong>listenerContainer.start();</strong></p>
+<h2 id="MessageListenerContainer"><a href="#MessageListenerContainer" class="headerlink" title="MessageListenerContainer"></a>MessageListenerContainer</h2><img src="/2020/12/15/Spring-boot-amqp%E8%87%AA%E5%8A%A8%E9%85%8D%E7%BD%AE%E8%AF%A6%E8%A7%A3/MessageListenerContainer.png" style="zoom: 67%;">
+
+<h3 id="AbstractMessageListenerContainer"><a href="#AbstractMessageListenerContainer" class="headerlink" title="AbstractMessageListenerContainer"></a>AbstractMessageListenerContainer</h3><p><strong>listenerContainer.start();</strong><br>1、configureAdminIfNeeded();<br>2、checkMismatchedQueues();<br>3、最后doStart();</p>
+<p><strong>doStart();</strong><br>1、DirectMessageListenerContainer#doStart();<br>2、SimpleMessageListenerContainer#doStart();</p>
+<h3 id="SimpleMessageListenerContainer"><a href="#SimpleMessageListenerContainer" class="headerlink" title="SimpleMessageListenerContainer"></a>SimpleMessageListenerContainer</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Executor taskExecutor = <span class="keyword">new</span> SimpleAsyncTaskExecutor();</span><br><span class="line"><span class="comment">//容器开始</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">doStart</span><span class="params">()</span> </span>&#123;</span><br><span class="line">	<span class="keyword">int</span> newConsumers = initializeConsumers();</span><br><span class="line">    Set&lt;AsyncMessageProcessingConsumer&gt; processors = <span class="keyword">new</span> HashSet&lt;AsyncMessageProcessingConsumer&gt;();</span><br><span class="line">    <span class="keyword">for</span> (BlockingQueueConsumer consumer : <span class="keyword">this</span>.consumers) &#123;</span><br><span class="line">        AsyncMessageProcessingConsumer processor = <span class="keyword">new</span> AsyncMessageProcessingConsumer(consumer);</span><br><span class="line">        processors.add(processor);</span><br><span class="line">        getTaskExecutor().execute(processor);</span><br><span class="line">        <span class="keyword">if</span> (getApplicationEventPublisher() != <span class="keyword">null</span>) &#123;</span><br><span class="line">            getApplicationEventPublisher().publishEvent(<span class="keyword">new</span> AsyncConsumerStartedEvent(<span class="keyword">this</span>, consumer));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    waitForConsumersToStart(processors);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//执行方法</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">receiveAndExecute</span><span class="params">(<span class="keyword">final</span> BlockingQueueConsumer consumer)</span> <span class="keyword">throws</span> Exception </span>&#123; <span class="comment">// NOSONAR</span></span><br><span class="line">    PlatformTransactionManager transactionManager = getTransactionManager();</span><br><span class="line">    <span class="keyword">if</span> (transactionManager != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (<span class="keyword">this</span>.transactionTemplate == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">this</span>.transactionTemplate =</span><br><span class="line">                    <span class="keyword">new</span> TransactionTemplate(transactionManager, getTransactionAttribute());</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">this</span>.transactionTemplate</span><br><span class="line">                .execute(status -&gt; &#123; <span class="comment">// NOSONAR null never returned</span></span><br><span class="line">                    RabbitResourceHolder resourceHolder = ConnectionFactoryUtils.bindResourceToTransaction(</span><br><span class="line">                        <span class="keyword">new</span> RabbitResourceHolder(consumer.getChannel(), <span class="keyword">false</span>),</span><br><span class="line">                        getConnectionFactory(), <span class="keyword">true</span>);</span><br><span class="line">                    <span class="comment">// unbound in ResourceHolderSynchronization.beforeCompletion()</span></span><br><span class="line">                    <span class="keyword">try</span> &#123;</span><br><span class="line">                        <span class="keyword">return</span> doReceiveAndExecute(consumer);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">catch</span> (RuntimeException e1) &#123;</span><br><span class="line">                        prepareHolderForRollback(resourceHolder, e1);</span><br><span class="line">                        <span class="keyword">throw</span> e1;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">catch</span> (Exception e2) &#123;</span><br><span class="line">                        <span class="keyword">throw</span> <span class="keyword">new</span> WrappedTransactionException(e2);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">catch</span> (WrappedTransactionException e) &#123; <span class="comment">// NOSONAR exception flow control</span></span><br><span class="line">            <span class="keyword">throw</span> (Exception) e.getCause();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">doReceiveAndExecute</span><span class="params">(BlockingQueueConsumer consumer)</span> <span class="keyword">throws</span> Exception </span>&#123; <span class="comment">//NOSONAR</span></span><br><span class="line">        Channel channel = consumer.getChannel();</span><br><span class="line">        List&lt;Message&gt; messages = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">long</span> deliveryTag = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="keyword">this</span>.batchSize; i++) &#123;</span><br><span class="line">            logger.trace(<span class="string">&quot;Waiting for message from consumer.&quot;</span>);</span><br><span class="line">            Message message = consumer.nextMessage(<span class="keyword">this</span>.receiveTimeout);</span><br><span class="line">            <span class="keyword">if</span> (message == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (<span class="keyword">this</span>.consumerBatchEnabled) &#123;</span><br><span class="line">                Collection&lt;MessagePostProcessor&gt; afterReceivePostProcessors = getAfterReceivePostProcessors();</span><br><span class="line">                <span class="keyword">if</span> (afterReceivePostProcessors != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    Message original = message;</span><br><span class="line">                    deliveryTag = message.getMessageProperties().getDeliveryTag();</span><br><span class="line">                    <span class="keyword">for</span> (MessagePostProcessor processor : getAfterReceivePostProcessors()) &#123;</span><br><span class="line">                        message = processor.postProcessMessage(message);</span><br><span class="line">                        <span class="keyword">if</span> (message == <span class="keyword">null</span>) &#123;</span><br><span class="line">                            channel.basicAck(deliveryTag, <span class="keyword">false</span>);</span><br><span class="line">                            <span class="keyword">if</span> (<span class="keyword">this</span>.logger.isDebugEnabled()) &#123;</span><br><span class="line">                                <span class="keyword">this</span>.logger.debug(</span><br><span class="line">                                    <span class="string">&quot;Message Post Processor returned &#x27;null&#x27;, discarding message &quot;</span> + original);</span><br><span class="line">                            &#125;</span><br><span class="line">                            <span class="keyword">break</span>;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">if</span> (message != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (messages == <span class="keyword">null</span>) &#123;</span><br><span class="line">                        messages = <span class="keyword">new</span> ArrayList&lt;&gt;(<span class="keyword">this</span>.batchSize);</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (isDeBatchingEnabled() &amp;&amp; getBatchingStrategy().canDebatch(message.getMessageProperties())) &#123;</span><br><span class="line">                        <span class="keyword">final</span> List&lt;Message&gt; messageList = messages;</span><br><span class="line">                        getBatchingStrategy().deBatch(message, fragment -&gt; messageList.add(fragment));</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">else</span> &#123;</span><br><span class="line">                        messages.add(message);</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span> &#123;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    executeListener(channel, message);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">catch</span> (ImmediateAcknowledgeAmqpException e) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (<span class="keyword">this</span>.logger.isDebugEnabled()) &#123;</span><br><span class="line">                        <span class="keyword">this</span>.logger.debug(<span class="string">&quot;User requested ack for failed delivery &#x27;&quot;</span></span><br><span class="line">                                          + e.getMessage() + <span class="string">&quot;&#x27;: &quot;</span></span><br><span class="line">                                          + message.getMessageProperties().getDeliveryTag());</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">break</span>;</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">catch</span> (Exception ex) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (causeChainHasImmediateAcknowledgeAmqpException(ex)) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (<span class="keyword">this</span>.logger.isDebugEnabled()) &#123;</span><br><span class="line">                            <span class="keyword">this</span>.logger.debug(<span class="string">&quot;User requested ack for failed delivery: &quot;</span></span><br><span class="line">                                              + message.getMessageProperties().getDeliveryTag());</span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">break</span>;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">if</span> (getTransactionManager() != <span class="keyword">null</span>) &#123;</span><br><span class="line">                        <span class="keyword">if</span> (getTransactionAttribute().rollbackOn(ex)) &#123;</span><br><span class="line">                            RabbitResourceHolder resourceHolder = (RabbitResourceHolder) TransactionSynchronizationManager</span><br><span class="line">                                .getResource(getConnectionFactory());</span><br><span class="line">                            <span class="keyword">if</span> (resourceHolder != <span class="keyword">null</span>) &#123;</span><br><span class="line">                                consumer.clearDeliveryTags();</span><br><span class="line">                            &#125;</span><br><span class="line">                            <span class="keyword">else</span> &#123;</span><br><span class="line">                                <span class="comment">/*</span></span><br><span class="line"><span class="comment">								 * If we don&#x27;t actually have a transaction, we have to roll back</span></span><br><span class="line"><span class="comment">								 * manually. See prepareHolderForRollback().</span></span><br><span class="line"><span class="comment">								 */</span></span><br><span class="line">                                consumer.rollbackOnExceptionIfNecessary(ex);</span><br><span class="line">                            &#125;</span><br><span class="line">                            <span class="keyword">throw</span> ex; <span class="comment">// encompassing transaction will handle the rollback.</span></span><br><span class="line">                        &#125;</span><br><span class="line">                        <span class="keyword">else</span> &#123;</span><br><span class="line">                            <span class="keyword">if</span> (<span class="keyword">this</span>.logger.isDebugEnabled()) &#123;</span><br><span class="line">                                <span class="keyword">this</span>.logger.debug(<span class="string">&quot;No rollback for &quot;</span> + ex);</span><br><span class="line">                            &#125;</span><br><span class="line">                            <span class="keyword">break</span>;</span><br><span class="line">                        &#125;</span><br><span class="line">                    &#125;</span><br><span class="line">                    <span class="keyword">else</span> &#123;</span><br><span class="line">                        consumer.rollbackOnExceptionIfNecessary(ex);</span><br><span class="line">                        <span class="keyword">throw</span> ex;</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">this</span>.consumerBatchEnabled &amp;&amp; messages != <span class="keyword">null</span>) &#123;</span><br><span class="line">            executeWithList(channel, messages, deliveryTag, consumer);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> consumer.commitIfNecessary(isChannelLocallyTransacted());</span><br><span class="line"></span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>1、this.consumers = new HashSet<BlockingQueueConsumer>(this.concurrentConsumers);当前消费者数量<br>2、<strong>BlockingQueueConsumer</strong> consumer = createBlockingQueueConsumer();每个消费者处理预处理条数（prefetchCount，batchSize谁大选谁）<br>3、private final BlockingQueue<Delivery> queue =new <strong>LinkedBlockingQueue</strong><Delivery>(prefetchCount，batchSize谁大选谁); BlockingQueueConsumer 里的成员变量<br>3、循环生成<strong>AsyncMessageProcessingConsumer</strong> processor = new AsyncMessageProcessingConsumer(consumer); 私有线程内部类，实现<strong>Runnable</strong><br>4、getTaskExecutor().execute(processor); 线程池执行器执行线程</Delivery></Delivery></BlockingQueueConsumer></p>
+<h4 id="BlockingQueueConsumer"><a href="#BlockingQueueConsumer" class="headerlink" title="BlockingQueueConsumer"></a>BlockingQueueConsumer</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> ConcurrentMap&lt;String, InternalConsumer&gt; consumers = <span class="keyword">new</span> ConcurrentHashMap&lt;&gt;();</span><br><span class="line"><span class="keyword">private</span> <span class="keyword">final</span> String[] queues; <span class="comment">//队列名称-》一个监听容器可以监听多个队列，会创建多个Consumer</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">setQosAndreateConsumers</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!<span class="keyword">this</span>.acknowledgeMode.isAutoAck() &amp;&amp; !cancelled()) &#123;</span><br><span class="line">        <span class="comment">// Set basicQos before calling basicConsume (otherwise if we are not acking the broker</span></span><br><span class="line">        <span class="comment">// will send blocks of 100 messages)</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">this</span>.channel.basicQos(<span class="keyword">this</span>.prefetchCount);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            <span class="keyword">this</span>.activeObjectCounter.release(<span class="keyword">this</span>);</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> AmqpIOException(e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (!cancelled()) &#123;</span><br><span class="line">            <span class="keyword">for</span> (String queueName : <span class="keyword">this</span>.queues) &#123;</span><br><span class="line">                <span class="keyword">if</span> (!<span class="keyword">this</span>.missingQueues.contains(queueName)) &#123;</span><br><span class="line">                    consumeFromQueue(queueName);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> RabbitExceptionTranslator.convertRabbitAccessException(e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">consumeFromQueue</span><span class="params">(String queue)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    InternalConsumer consumer = <span class="keyword">new</span> InternalConsumer(<span class="keyword">this</span>.channel, queue);</span><br><span class="line">    String consumerTag = <span class="keyword">this</span>.channel.basicConsume(queue, <span class="keyword">this</span>.acknowledgeMode.isAutoAck(),</span><br><span class="line">                                                   (<span class="keyword">this</span>.tagStrategy != <span class="keyword">null</span> ?                        <span class="keyword">this</span>.tagStrategy.createConsumerTag(queue) : <span class="string">&quot;&quot;</span>), <span class="keyword">this</span>.noLocal,</span><br><span class="line">                                                   <span class="keyword">this</span>.exclusive, <span class="keyword">this</span>.consumerArgs,</span><br><span class="line">                                                   consumer);</span><br><span class="line">    <span class="keyword">if</span> (consumerTag != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">this</span>.consumers.put(queue, consumer);</span><br><span class="line">        <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">            logger.debug(<span class="string">&quot;Started on queue &#x27;&quot;</span> + queue + <span class="string">&quot;&#x27; with tag &quot;</span> + consumerTag + <span class="string">&quot;: &quot;</span> + <span class="keyword">this</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> &#123;</span><br><span class="line">        logger.error(<span class="string">&quot;Null consumer tag received for queue &quot;</span> + queue);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="AsyncMessageProcessingConsumer"><a href="#AsyncMessageProcessingConsumer" class="headerlink" title="AsyncMessageProcessingConsumer"></a>AsyncMessageProcessingConsumer</h4><p>SimpleMessageListenerContainer内部类，实现了Runnable接口</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">AsyncMessageProcessingConsumer(BlockingQueueConsumer consumer) &#123;</span><br><span class="line"><span class="keyword">this</span>.consumer = consumer;</span><br><span class="line"><span class="keyword">this</span>.start = <span class="keyword">new</span> CountDownLatch(<span class="number">1</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">@Override</span> <span class="comment">// NOSONAR - complexity - many catch blocks</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">//1、redeclareElementsIfNecessary();根据容器中的Queue、Exchange、Binding,在broker中创建</span></span><br><span class="line">    <span class="comment">//2、this.consumer.start();  调用BlockingQueueConsumer中start()。</span></span><br><span class="line">    <span class="comment">//passiveDeclarations();setQosAndreateConsumers();设置Qos</span></span><br><span class="line">    initialize(); </span><br><span class="line">    <span class="comment">//boolean receivedOk = receiveAndExecute(this.consumer);处理堵塞队列message</span></span><br><span class="line">    mainLoop();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="InternalConsumer"><a href="#InternalConsumer" class="headerlink" title="InternalConsumer"></a>InternalConsumer</h4><p>InternalConsumer 是BlockingQueueConsumer的私有内部类，继承com.rabbitmq.client.<strong>DefaultConsumer</strong>。handleDelivery方法会向BlockingQueueConsumer实例的成员变量queue中添加数据，等待消费</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handleDelivery</span><span class="params">(String consumerTag, Envelope envelope, AMQP.BasicProperties properties,</span></span></span><br><span class="line"><span class="function"><span class="params">                           <span class="keyword">byte</span>[] body)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (logger.isDebugEnabled()) &#123;</span><br><span class="line">        logger.debug(<span class="string">&quot;Storing delivery for consumerTag: &#x27;&quot;</span></span><br><span class="line">                     + consumerTag + <span class="string">&quot;&#x27; with deliveryTag: &#x27;&quot;</span> + envelope.getDeliveryTag() + <span class="string">&quot;&#x27; in &quot;</span></span><br><span class="line">                     + BlockingQueueConsumer.<span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (BlockingQueueConsumer.<span class="keyword">this</span>.abortStarted &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!BlockingQueueConsumer.<span class="keyword">this</span>.queue.offer(</span><br><span class="line">                <span class="keyword">new</span> Delivery(consumerTag, envelope, properties, body, <span class="keyword">this</span>.queueName),</span><br><span class="line">                BlockingQueueConsumer.<span class="keyword">this</span>.shutdownTimeout, TimeUnit.MILLISECONDS)) &#123;</span><br><span class="line"></span><br><span class="line">                Channel channelToClose = <span class="keyword">super</span>.getChannel();</span><br><span class="line">                RabbitUtils.setPhysicalCloseRequired(channelToClose, <span class="keyword">true</span>);</span><br><span class="line">                <span class="comment">// Defensive - should never happen</span></span><br><span class="line">                BlockingQueueConsumer.<span class="keyword">this</span>.queue.clear();</span><br><span class="line">                <span class="keyword">if</span> (!<span class="keyword">this</span>.canceled) &#123;</span><br><span class="line">                    RabbitUtils.cancel(channelToClose, consumerTag);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    channelToClose.close();</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="keyword">catch</span> (<span class="meta">@SuppressWarnings(&quot;unused&quot;)</span> TimeoutException e) &#123;</span><br><span class="line">                    <span class="comment">// no-op</span></span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">//核心</span></span><br><span class="line">            BlockingQueueConsumer.<span class="keyword">this</span>.queue</span><br><span class="line">                .put(<span class="keyword">new</span> Delivery(consumerTag, envelope, properties, body, <span class="keyword">this</span>.queueName));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (<span class="meta">@SuppressWarnings(&quot;unused&quot;)</span> InterruptedException e) &#123;</span><br><span class="line">        Thread.currentThread().interrupt();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        BlockingQueueConsumer.logger.warn(<span class="string">&quot;Unexpected exception during delivery&quot;</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>DerictMessaeListenerContainer</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> Executor taskExecutor = <span class="keyword">new</span> SimpleAsyncTaskExecutor();</span><br><span class="line"><span class="comment">//容器开始</span></span><br><span class="line">doStart()&#123;</span><br><span class="line">    actualStart();</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//真的开始，一个异步线程开始创建监听的Consumer</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">actualStart</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (queueNames.length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        doRedeclareElementsIfNecessary();</span><br><span class="line">        getTaskExecutor().execute(() -&gt; &#123; <span class="comment">// NOSONAR never null here</span></span><br><span class="line">            startConsumers(queueNames);</span><br><span class="line">        &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//通过监听的队列名称创建Consumer</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">startConsumers</span><span class="params">(<span class="keyword">final</span> String[] queueNames)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (String queue : queueNames) &#123;</span><br><span class="line">        consumeFromQueue(queue);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//更加配置的consumersPerQueue为每个队列创建对应数量的Consumer</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">consumeFromQueue</span><span class="params">(String queue)</span> </span>&#123;</span><br><span class="line">    List&lt;SimpleConsumer&gt; list = <span class="keyword">this</span>.consumersByQueue.get(queue);</span><br><span class="line">    <span class="comment">// Possible race with setConsumersPerQueue and the task launched by start()</span></span><br><span class="line">    <span class="keyword">if</span> (CollectionUtils.isEmpty(list)) &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="keyword">this</span>.consumersPerQueue; i++) &#123;</span><br><span class="line">            doConsumeFromQueue(queue);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//创建Consuemer</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">doConsumeFromQueue</span><span class="params">(String queue)</span> </span>&#123;</span><br><span class="line">    SimpleConsumer consumer = consume(queue, connection);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> SimpleConsumer <span class="title">consume</span><span class="params">(String queue, Connection connection)</span> </span>&#123;</span><br><span class="line">    Channel channel = <span class="keyword">null</span>;</span><br><span class="line">    SimpleConsumer consumer = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        channel = connection.createChannel(isChannelTransacted());</span><br><span class="line">        channel.basicQos(getPrefetchCount());</span><br><span class="line">        consumer = <span class="keyword">new</span> SimpleConsumer(connection, channel, queue);</span><br><span class="line">        channel.queueDeclarePassive(queue);</span><br><span class="line">        consumer.consumerTag = channel.basicConsume(queue, getAcknowledgeMode().isAutoAck(),</span><br><span class="line">                                                    (getConsumerTagStrategy() != <span class="keyword">null</span></span><br><span class="line">                                                     ? getConsumerTagStrategy().createConsumerTag(queue) : <span class="string">&quot;&quot;</span>), <span class="comment">// NOSONAR never null</span></span><br><span class="line">                                                    isNoLocal(), isExclusive(), getConsumerArguments(), consumer);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (AmqpApplicationContextClosedException e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> AmqpConnectException(e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        RabbitUtils.closeChannel(channel);</span><br><span class="line">        RabbitUtils.closeConnection(connection);</span><br><span class="line"></span><br><span class="line">        consumer = handleConsumeException(queue, consumer, e);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> consumer;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="二个消费者容器区别"><a href="#二个消费者容器区别" class="headerlink" title="二个消费者容器区别"></a>二个消费者容器区别</h2><p><img src="/2020/12/15/Spring-boot-amqp%E8%87%AA%E5%8A%A8%E9%85%8D%E7%BD%AE%E8%AF%A6%E8%A7%A3/image-20201216160611728.png" alt="image-20201216160611728"></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/RabbitMQ/" rel="tag"># RabbitMQ</a>
+              <a href="/tags/springboot/" rel="tag"># springboot</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/12/14/Spring-boot-amqp%E9%85%8D%E7%BD%AE%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90/" rel="prev" title="Spring-boot-amqp配置原理解析">
+                  <i class="fa fa-chevron-left"></i> Spring-boot-amqp配置原理解析
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/12/16/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E7%9B%91%E6%8E%A7admin%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/" rel="next" title="Spring-boot-admin简单使用">
+                  Spring-boot-admin简单使用 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

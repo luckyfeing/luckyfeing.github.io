@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="Caffeine Caffeine提供了灵活的构造来创建具有以下功能组合的缓存：  自动将条目自动加载到缓存中，可以选择异步加载 基于频率和新近度超过最大值时基于大小的逐出 自上次访问或上次写入以来测得的基于时间的条目到期 发生第一个陈旧的条目请求时，异步刷新 键自动包装在弱引用中 值自动包装在弱引用或软引用中 逐出（或以其他方式删除）条目的通知 写入传播到外部资源 缓存访问统计信息的累积  简介">
+<meta property="og:type" content="article">
+<meta property="og:title" content="缓存之Caffeine">
+<meta property="og:url" content="http://example.com/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="Caffeine Caffeine提供了灵活的构造来创建具有以下功能组合的缓存：  自动将条目自动加载到缓存中，可以选择异步加载 基于频率和新近度超过最大值时基于大小的逐出 自上次访问或上次写入以来测得的基于时间的条目到期 发生第一个陈旧的条目请求时，异步刷新 键自动包装在弱引用中 值自动包装在弱引用或软引用中 逐出（或以其他方式删除）条目的通知 写入传播到外部资源 缓存访问统计信息的累积  简介">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine/up-e3834f3657dfc4f839a56428067a1e346ba.png">
+<meta property="article:published_time" content="2021-04-22T02:35:07.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.349Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="Caffeine">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine/up-e3834f3657dfc4f839a56428067a1e346ba.png">
+
+
+<link rel="canonical" href="http://example.com/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>缓存之Caffeine | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E4%BB%8B"><span class="nav-number">1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Caffine-Cache"><span class="nav-number">2.</span> <span class="nav-text">Caffine Cache</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E7%BC%93%E5%AD%98%E5%A1%AB%E5%85%85%E7%AD%96%E7%95%A5"><span class="nav-number">3.</span> <span class="nav-text">1. 缓存填充策略</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%89%8B%E5%8A%A8%E5%8A%A0%E8%BD%BD"><span class="nav-number">3.1.</span> <span class="nav-text">手动加载</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%8C%E6%AD%A5%E5%8A%A0%E8%BD%BD"><span class="nav-number">3.2.</span> <span class="nav-text">同步加载</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%82%E6%AD%A5%E5%8A%A0%E8%BD%BD"><span class="nav-number">3.3.</span> <span class="nav-text">异步加载</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%9B%9E%E6%94%B6%E7%AD%96%E7%95%A5"><span class="nav-number">4.</span> <span class="nav-text">2. 回收策略</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E5%A4%A7%E5%B0%8F%E7%9A%84%E8%BF%87%E6%9C%9F%E6%96%B9%E5%BC%8F"><span class="nav-number">4.1.</span> <span class="nav-text">基于大小的过期方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E6%97%B6%E9%97%B4%E7%9A%84%E8%BF%87%E6%9C%9F%E6%96%B9%E5%BC%8F"><span class="nav-number">4.2.</span> <span class="nav-text">基于时间的过期方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E4%BA%8E%E5%BC%95%E7%94%A8%E7%9A%84%E8%BF%87%E6%9C%9F%E6%96%B9%E5%BC%8F"><span class="nav-number">4.3.</span> <span class="nav-text">基于引用的过期方式</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-%E7%A7%BB%E9%99%A4%E4%BA%8B%E4%BB%B6%E7%9B%91%E5%90%AC"><span class="nav-number">5.</span> <span class="nav-text">3. 移除事件监听</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-%E5%86%99%E5%85%A5%E5%A4%96%E9%83%A8%E5%AD%98%E5%82%A8"><span class="nav-number">6.</span> <span class="nav-text">4. 写入外部存储</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-%E7%BB%9F%E8%AE%A1"><span class="nav-number">7.</span> <span class="nav-text">5. 统计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-%E5%88%B7%E6%96%B0%E6%9C%BA%E5%88%B6"><span class="nav-number">8.</span> <span class="nav-text">6.刷新机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%9E%E4%BE%8B%E5%88%86%E4%BA%AB"><span class="nav-number">9.</span> <span class="nav-text">实例分享</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-%E7%9B%B4%E6%8E%A5%E5%BC%95%E5%85%A5-Caffeine-%E4%BE%9D%E8%B5%96"><span class="nav-number">10.</span> <span class="nav-text">1. 直接引入 Caffeine 依赖</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Pom"><span class="nav-number">10.1.</span> <span class="nav-text">Pom</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Conf"><span class="nav-number">10.2.</span> <span class="nav-text">Conf</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bean"><span class="nav-number">10.3.</span> <span class="nav-text">Bean</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Service"><span class="nav-number">10.4.</span> <span class="nav-text">Service</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Impl"><span class="nav-number">10.5.</span> <span class="nav-text">Impl</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Controller"><span class="nav-number">10.6.</span> <span class="nav-text">Controller</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-%E5%BC%95%E5%85%A5-Caffeine-%E5%92%8C-Spring-Cache-%E4%BE%9D%E8%B5%96"><span class="nav-number">11.</span> <span class="nav-text">2. 引入 Caffeine 和 Spring Cache 依赖</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Pom-1"><span class="nav-number">11.1.</span> <span class="nav-text">Pom</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Conf-1"><span class="nav-number">11.2.</span> <span class="nav-text">Conf</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bean-1"><span class="nav-number">11.3.</span> <span class="nav-text">Bean</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Service-1"><span class="nav-number">11.4.</span> <span class="nav-text">Service</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Impl-1"><span class="nav-number">11.5.</span> <span class="nav-text">Impl</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Controller-1"><span class="nav-number">11.6.</span> <span class="nav-text">Controller</span></a></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          缓存之Caffeine
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-04-22 10:35:07" itemprop="dateCreated datePublished" datetime="2021-04-22T10:35:07+08:00">2021-04-22</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/Caffeine/" itemprop="url" rel="index"><span itemprop="name">Caffeine</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/crazymakercircle/p/14385641.html">Caffeine</a></p>
+<p>Caffeine提供了灵活的构造来创建具有以下功能组合的缓存：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://github.com/ben-manes/caffeine/wiki/Population">自动将条目自动加载</a>到缓存中，可以选择异步<a target="_blank" rel="noopener" href="https://github.com/ben-manes/caffeine/wiki/Population">加载</a></li>
+<li>基于<a target="_blank" rel="noopener" href="https://github.com/ben-manes/caffeine/wiki/Efficiency">频率和新近度</a>超过最大值时<a target="_blank" rel="noopener" href="https://github.com/ben-manes/caffeine/wiki/Eviction#size-based">基于大小的逐出</a></li>
+<li>自上次访问或上次写入以来测得<a target="_blank" rel="noopener" href="https://github.com/ben-manes/caffeine/wiki/Eviction#time-based">的基于时间</a>的条目<a target="_blank" rel="noopener" href="https://github.com/ben-manes/caffeine/wiki/Eviction#time-based">到期</a></li>
+<li>发生第一个陈旧的条目请求时，<a target="_blank" rel="noopener" href="https://github.com/ben-manes/caffeine/wiki/Refresh">异步刷新</a></li>
+<li>键自动包装在<a target="_blank" rel="noopener" href="https://github.com/ben-manes/caffeine/wiki/Eviction#reference-based">弱引用中</a></li>
+<li>值自动包装在<a target="_blank" rel="noopener" href="https://github.com/ben-manes/caffeine/wiki/Eviction#reference-based">弱引用或软引用中</a></li>
+<li>逐出（或以其他方式删除）条目的<a target="_blank" rel="noopener" href="https://github.com/ben-manes/caffeine/wiki/Removal">通知</a></li>
+<li><a target="_blank" rel="noopener" href="https://github.com/ben-manes/caffeine/wiki/Compute">写入传播</a>到外部资源</li>
+<li>缓存访问<a target="_blank" rel="noopener" href="https://github.com/ben-manes/caffeine/wiki/Statistics">统计信息的</a>累积</li>
+</ul>
+<h2 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h2><p>前面刚说到Guava Cache，他的优点是封装了get，put操作；提供线程安全的缓存操作；提供过期策略；提供回收策略；缓存监控。当缓存的数据超过最大值时，使用LRU算法替换。这一篇我们将要谈到一个新的本地缓存框架：Caffeine Cache。它也是站在巨人的肩膀上-Guava Cache，借着他的思想优化了算法发展而来。</p>
+<p>按 Caffeine Github 文档描述，Caffeine 是基于 JAVA 8 的高性能缓存库。并且在 spring5 (springboot 2.x) 后，spring 官方放弃了 Guava，而使用了性能更优秀的 Caffeine 作为默认缓存组件。</p>
+<h2 id="Caffine-Cache"><a href="#Caffine-Cache" class="headerlink" title="Caffine Cache"></a>Caffine Cache</h2><p>Caffeine Cache：<a target="_blank" rel="noopener" href="https://github.com/ben-manes/caffeine">https://github.com/ben-manes/caffeine</a></p>
+<h2 id="1-缓存填充策略"><a href="#1-缓存填充策略" class="headerlink" title="1. 缓存填充策略"></a>1. 缓存填充策略</h2><p>Caffeine Cache提供了三种缓存填充策略：手动、同步加载和异步加载。</p>
+<h3 id="手动加载"><a href="#手动加载" class="headerlink" title="手动加载"></a>手动加载</h3><p>在每次get key的时候指定一个同步的函数，如果key不存在就调用这个函数生成一个值。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 手动加载</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> key</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">manulOperator</span><span class="params">(String key)</span> </span>&#123;</span><br><span class="line">    Cache&lt;String, Object&gt; cache = Caffeine.newBuilder()</span><br><span class="line">        .expireAfterWrite(<span class="number">1</span>, TimeUnit.SECONDS)</span><br><span class="line">        .expireAfterAccess(<span class="number">1</span>, TimeUnit.SECONDS)</span><br><span class="line">        .maximumSize(<span class="number">10</span>)</span><br><span class="line">        .build();</span><br><span class="line">    <span class="comment">//如果一个key不存在，那么会进入指定的函数生成value</span></span><br><span class="line">    Object value = cache.get(key, t -&gt; setValue(key).apply(key));</span><br><span class="line">    cache.put(<span class="string">&quot;hello&quot;</span>,value);</span><br><span class="line">    <span class="comment">//判断是否存在如果不存返回null</span></span><br><span class="line">    Object ifPresent = cache.getIfPresent(key);</span><br><span class="line">    <span class="comment">//移除一个key</span></span><br><span class="line">    cache.invalidate(key);</span><br><span class="line">    <span class="keyword">return</span> value;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> Function&lt;String, Object&gt; <span class="title">setValue</span><span class="params">(String key)</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> t -&gt; key + <span class="string">&quot;value&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="同步加载"><a href="#同步加载" class="headerlink" title="同步加载"></a>同步加载</h3><p>构造Cache时候，build方法传入一个CacheLoader实现类。实现load方法，通过key加载value。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 同步加载</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> key</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">syncOperator</span><span class="params">(String key)</span></span>&#123;</span><br><span class="line">    LoadingCache&lt;String, Object&gt; cache = Caffeine.newBuilder()</span><br><span class="line">        .maximumSize(<span class="number">100</span>)</span><br><span class="line">        .expireAfterWrite(<span class="number">1</span>, TimeUnit.MINUTES)</span><br><span class="line">        .build(k -&gt; setValue(key).apply(key));</span><br><span class="line">    <span class="keyword">return</span> cache.get(key);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> Function&lt;String, Object&gt; <span class="title">setValue</span><span class="params">(String key)</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> t -&gt; key + <span class="string">&quot;value&quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="异步加载"><a href="#异步加载" class="headerlink" title="异步加载"></a>异步加载</h3><p>AsyncLoadingCache是继承自LoadingCache类的，异步加载使用Executor去调用方法并返回一个CompletableFuture。异步加载缓存使用了响应式编程模型。</p>
+<p>如果要以同步方式调用时，应提供CacheLoader。要以异步表示时，应该提供一个AsyncCacheLoader，并返回一个CompletableFuture。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 异步加载</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> key</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span></span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Object <span class="title">asyncOperator</span><span class="params">(String key)</span></span>&#123;</span><br><span class="line">    AsyncLoadingCache&lt;String, Object&gt; cache = Caffeine.newBuilder()</span><br><span class="line">        .maximumSize(<span class="number">100</span>)</span><br><span class="line">        .expireAfterWrite(<span class="number">1</span>, TimeUnit.MINUTES)</span><br><span class="line">        .buildAsync(k -&gt; setAsyncValue(key).get());</span><br><span class="line">    <span class="keyword">return</span> cache.get(key);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> CompletableFuture&lt;Object&gt; <span class="title">setAsyncValue</span><span class="params">(String key)</span></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> CompletableFuture.supplyAsync(() -&gt; &#123;</span><br><span class="line">        <span class="keyword">return</span> key + <span class="string">&quot;value&quot;</span>;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-回收策略"><a href="#2-回收策略" class="headerlink" title="2. 回收策略"></a>2. 回收策略</h2><p>Caffeine提供了3种回收策略：基于大小回收，基于时间回收，基于引用回收。</p>
+<h3 id="基于大小的过期方式"><a href="#基于大小的过期方式" class="headerlink" title="基于大小的过期方式"></a>基于大小的过期方式</h3><p>基于大小的回收策略有两种方式：一种是基于缓存大小，一种是基于权重。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 根据缓存的计数进行驱逐</span></span><br><span class="line">LoadingCache&lt;String, Object&gt; cache = Caffeine.newBuilder()</span><br><span class="line">    .maximumSize(<span class="number">10000</span>)</span><br><span class="line">    .build(key -&gt; function(key));</span><br><span class="line"></span><br><span class="line"><span class="comment">// 根据缓存的权重来进行驱逐（权重只是用于确定缓存大小，不会用于决定该缓存是否被驱逐）</span></span><br><span class="line">LoadingCache&lt;String, Object&gt; cache1 = Caffeine.newBuilder()</span><br><span class="line">    .maximumWeight(<span class="number">10000</span>)</span><br><span class="line">    .weigher(key -&gt; function1(key))</span><br><span class="line">    .build(key -&gt; function(key));</span><br><span class="line"><span class="comment">//maximumWeight与maximumSize不可以同时使用。</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="基于时间的过期方式"><a href="#基于时间的过期方式" class="headerlink" title="基于时间的过期方式"></a>基于时间的过期方式</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 基于固定的到期策略进行退出</span></span><br><span class="line">LoadingCache&lt;String, Object&gt; cache = Caffeine.newBuilder()</span><br><span class="line">    .expireAfterAccess(<span class="number">5</span>, TimeUnit.MINUTES)</span><br><span class="line">    .build(key -&gt; function(key));</span><br><span class="line">LoadingCache&lt;String, Object&gt; cache1 = Caffeine.newBuilder()</span><br><span class="line">    .expireAfterWrite(<span class="number">10</span>, TimeUnit.MINUTES)</span><br><span class="line">    .build(key -&gt; function(key));</span><br><span class="line"></span><br><span class="line"><span class="comment">// 基于不同的到期策略进行退出</span></span><br><span class="line">LoadingCache&lt;String, Object&gt; cache2 = Caffeine.newBuilder()</span><br><span class="line">    .expireAfter(<span class="keyword">new</span> Expiry&lt;String, Object&gt;() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">expireAfterCreate</span><span class="params">(String key, Object value, <span class="keyword">long</span> currentTime)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> TimeUnit.SECONDS.toNanos(seconds);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">expireAfterUpdate</span><span class="params">(<span class="meta">@Nonnull</span> String s, <span class="meta">@Nonnull</span> Object o, <span class="keyword">long</span> l, <span class="keyword">long</span> l1)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">expireAfterRead</span><span class="params">(<span class="meta">@Nonnull</span> String s, <span class="meta">@Nonnull</span> Object o, <span class="keyword">long</span> l, <span class="keyword">long</span> l1)</span> </span>&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;).build(key -&gt; function(key));</span><br></pre></td></tr></table></figure>
+
+<p>Caffeine提供了三种定时驱逐策略：</p>
+<ul>
+<li>expireAfterAccess(long, TimeUnit)：在最后一次访问或者写入后开始计时，在指定的时间后过期。假如一直有请求访问该key，那么这个缓存将一直不会过期。</li>
+<li>expireAfterWrite(long, TimeUnit)：在最后一次写入缓存后开始计时，在指定的时间后过期。</li>
+<li>expireAfter(Expiry)：自定义策略，过期时间由Expiry实现独自计算。</li>
+</ul>
+<p>缓存的删除策略使用的是惰性删除和定时删除。这两个删除策略的时间复杂度都是O(1)。</p>
+<h3 id="基于引用的过期方式"><a href="#基于引用的过期方式" class="headerlink" title="基于引用的过期方式"></a>基于引用的过期方式</h3><p><img src="/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine/up-e3834f3657dfc4f839a56428067a1e346ba.png" alt="img"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 当key和value都没有引用时驱逐缓存</span></span><br><span class="line">LoadingCache&lt;String, Object&gt; cache = Caffeine.newBuilder()</span><br><span class="line">    .weakKeys()</span><br><span class="line">    .weakValues()</span><br><span class="line">    .build(key -&gt; function(key));</span><br><span class="line"></span><br><span class="line"><span class="comment">// 当垃圾收集器需要释放内存时驱逐</span></span><br><span class="line">LoadingCache&lt;String, Object&gt; cache1 = Caffeine.newBuilder()</span><br><span class="line">    .softValues()</span><br><span class="line">    .build(key -&gt; function(key));</span><br><span class="line"></span><br><span class="line"><span class="comment">//注意：AsyncLoadingCache不支持弱引用和软引用。</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>Caffeine.weakKeys()： 使用弱引用存储key。如果没有其他地方对该key有强引用，那么该缓存就会被垃圾回收器回收。由于垃圾回收器只依赖于身份(identity)相等，因此这会导致整个缓存使用身份 (==) 相等来比较 key，而不是使用 equals()。</p>
+<p>Caffeine.weakValues() ：使用弱引用存储value。如果没有其他地方对该value有强引用，那么该缓存就会被垃圾回收器回收。由于垃圾回收器只依赖于身份(identity)相等，因此这会导致整个缓存使用身份 (==) 相等来比较 key，而不是使用 equals()。</p>
+<p>Caffeine.softValues() ：使用软引用存储value。当内存满了过后，软引用的对象以将使用最近最少使用(least-recently-used ) 的方式进行垃圾回收。由于使用软引用是需要等到内存满了才进行回收，所以我们通常建议给缓存配置一个使用内存的最大值。 softValues() 将使用身份相等(identity) (==) 而不是equals() 来比较值。</p>
+<p>Caffeine.weakValues()和Caffeine.softValues()不可以一起使用。</p>
+</blockquote>
+<h2 id="3-移除事件监听"><a href="#3-移除事件监听" class="headerlink" title="3. 移除事件监听"></a>3. 移除事件监听</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Cache&lt;String, Object&gt; cache = Caffeine.newBuilder()</span><br><span class="line">    .removalListener((String key, Object value, RemovalCause cause) -&gt;</span><br><span class="line">                     System.out.printf(<span class="string">&quot;Key %s was removed (%s)%n&quot;</span>, key, cause))</span><br><span class="line">    .build();</span><br></pre></td></tr></table></figure>
+
+<p>RemovalCause枚举值:</p>
+<ul>
+<li><strong>「EXPLICIT」</strong>：调用方法（例如：cache.invalidate(key)、cache.invalidateAll）显示剔除数据；</li>
+<li><strong>「REPLACED」</strong>：不是真正被剔除，而是用户调用一些方法（例如：put()，putAll()等）盖了之前的值；</li>
+<li><strong>「COLLECTED」</strong>：表示缓存中的Key或者Value被垃圾回收掉了；</li>
+<li><strong>「EXPIRED」</strong>: expireAfterWrite/expireAfterAccess约定时间内没有任何访问导致被剔除；</li>
+<li><strong>「SIZE」</strong>：超过maximumSize限制的元素个数被剔除的原因；</li>
+</ul>
+<h2 id="4-写入外部存储"><a href="#4-写入外部存储" class="headerlink" title="4. 写入外部存储"></a>4. 写入外部存储</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//CacheWriter 方法可以将缓存中所有的数据写入到第三方。</span></span><br><span class="line">LoadingCache&lt;String, Object&gt; cache2 = Caffeine.newBuilder()</span><br><span class="line">    .writer(<span class="keyword">new</span> CacheWriter&lt;String, Object&gt;() &#123;</span><br><span class="line">        <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">write</span><span class="params">(String key, Object value)</span> </span>&#123;</span><br><span class="line">            <span class="comment">// 写入到外部存储</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span> <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">delete</span><span class="params">(String key, Object value, RemovalCause cause)</span> </span>&#123;</span><br><span class="line">            <span class="comment">// 删除外部存储</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;)</span><br><span class="line">    .build(key -&gt; function(key));</span><br><span class="line"><span class="comment">//如果你有多级缓存的情况下，这个方法还是很实用。</span></span><br><span class="line"><span class="comment">//注意：CacheWriter不能与弱键或AsyncLoadingCache一起使用。</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="5-统计"><a href="#5-统计" class="headerlink" title="5. 统计"></a>5. 统计</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//与Guava Cache的统计一样。</span></span><br><span class="line">Cache&lt;String, Object&gt; cache = Caffeine.newBuilder()</span><br><span class="line">    .maximumSize(<span class="number">10_000</span>)</span><br><span class="line">    .recordStats()</span><br><span class="line">    .build();</span><br><span class="line"><span class="comment">//通过使用Caffeine.recordStats(), 可以转化成一个统计的集合. 通过 Cache.stats() 返回一个CacheStats。CacheStats提供以下统计方法：</span></span><br><span class="line"><span class="comment">//hitRate(): 返回缓存命中率</span></span><br><span class="line"><span class="comment">//evictionCount(): 缓存回收数量</span></span><br><span class="line"><span class="comment">//averageLoadPenalty(): 加载新值的平均时间</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="6-刷新机制"><a href="#6-刷新机制" class="headerlink" title="6.刷新机制"></a>6.刷新机制</h2><p>在构造Cache时通过refreshAfterWrite方法指定刷新周期，例如refreshAfterWrite(10, TimeUnit.SECONDS)表示10秒钟刷新一次：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">.build(<span class="keyword">new</span> CacheLoader&lt;String, String&gt;() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">load</span><span class="params">(String k)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 这里我们就可以从数据库或者其他地方查询最新的数据</span></span><br><span class="line">        <span class="keyword">return</span> getValue(k);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>需要注意的是，Caffeine的刷新机制是<strong>「被动」</strong>的。举个例子，假如我们申明了10秒刷新一次。我们在时间T访问并获取到值v1，在T+5秒的时候，数据库中这个值已经更新为v2。但是在T+12秒，即已经过了10秒我们通过Caffeine从本地缓存中获取到的<strong>「还是v1」</strong>，并不是v2。在这个获取过程中，Caffeine发现时间已经过了10秒，然后会将v2加载到本地缓存中，下一次获取时才能拿到v2。即它的实现原理是在get方法中，调用afterRead的时候，调用refreshIfNeeded方法判断是否需要刷新数据。这就意味着，如果不读取本地缓存中的数据的话，无论刷新时间间隔是多少，本地缓存中的数据永远是旧的数据！</p>
+<h2 id="实例分享"><a href="#实例分享" class="headerlink" title="实例分享"></a>实例分享</h2><p>SpringBoot 1.x版本中的默认本地cache是Guava Cache。在2.x（Spring Boot 2.0(spring 5) ）版本中已经用Caffine Cache取代了Guava Cache。毕竟有了更优的缓存淘汰策略。</p>
+<p>下面我们来说在SpringBoot2.x版本中如何使用cache。</p>
+<blockquote>
+<p>Caffeine常用配置说明：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">initialCapacity&#x3D;[integer]: 初始的缓存空间大小</span><br><span class="line">maximumSize&#x3D;[long]: 缓存的最大条数</span><br><span class="line">maximumWeight&#x3D;[long]: 缓存的最大权重</span><br><span class="line">expireAfterAccess&#x3D;[duration]: 最后一次写入或访问后经过固定时间过期</span><br><span class="line">expireAfterWrite&#x3D;[duration]: 最后一次写入后经过固定时间过期</span><br><span class="line">refreshAfterWrite&#x3D;[duration]: 创建缓存或者最近一次更新缓存后经过固定的时间间隔，刷新缓存</span><br><span class="line">weakKeys: 打开key的弱引用</span><br><span class="line">weakValues：打开value的弱引用</span><br><span class="line">softValues：打开value的软引用</span><br><span class="line">recordStats：开发统计功能</span><br><span class="line"></span><br><span class="line">注意：</span><br><span class="line">expireAfterWrite和expireAfterAccess同时存在时，以expireAfterWrite为准。</span><br><span class="line">maximumSize和maximumWeight不可以同时使用</span><br><span class="line">weakValues和softValues不可以同时使用</span><br></pre></td></tr></table></figure>
+
+<p>需要说明的是，使用配置文件的方式来进行缓存项配置，一般情况能满足使用需求，但是灵活性不是很高，如果我们有很多缓存项的情况下写起来会导致配置文件很长。所以一般情况下你也可以选择使用bean的方式来初始化Cache实例。</p>
+</blockquote>
+<p>SpringBoot 有俩种使用 Caffeine 作为缓存的方式：</p>
+<ul>
+<li>直接引入 Caffeine 依赖，然后使用 Caffeine 方法实现缓存。</li>
+<li>引入 Caffeine 和 Spring Cache 依赖，使用 SpringCache 注解方法实现缓存。</li>
+</ul>
+<h2 id="1-直接引入-Caffeine-依赖"><a href="#1-直接引入-Caffeine-依赖" class="headerlink" title="1. 直接引入 Caffeine 依赖"></a>1. 直接引入 Caffeine 依赖</h2><h3 id="Pom"><a href="#Pom" class="headerlink" title="Pom"></a>Pom</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- caffeine cache --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.github.ben-manes.caffeine<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>caffeine<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">version</span>&gt;</span>2.5.5<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Conf"><a href="#Conf" class="headerlink" title="Conf"></a>Conf</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.spring.master.spring.caffeine.conf;</span><br><span class="line"><span class="keyword">import</span> com.github.benmanes.caffeine.cache.Cache;</span><br><span class="line"><span class="keyword">import</span> com.github.benmanes.caffeine.cache.Caffeine;</span><br><span class="line"><span class="keyword">import</span> org.springframework.context.annotation.Bean;</span><br><span class="line"><span class="keyword">import</span> org.springframework.context.annotation.Configuration;</span><br><span class="line"><span class="keyword">import</span> java.util.concurrent.TimeUnit;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CaffeineCacheConfig</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Cache&lt;String, Object&gt; <span class="title">caffeineCache</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> Caffeine.newBuilder()</span><br><span class="line">            <span class="comment">// 设置最后一次写入或访问后经过固定时间过期</span></span><br><span class="line">            .expireAfterWrite(<span class="number">60</span>, TimeUnit.SECONDS)</span><br><span class="line">            <span class="comment">// 初始的缓存空间大小</span></span><br><span class="line">            .initialCapacity(<span class="number">100</span>)</span><br><span class="line">            <span class="comment">// 缓存的最大条数</span></span><br><span class="line">            .maximumSize(<span class="number">1000</span>)</span><br><span class="line">            .build();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Bean"><a href="#Bean" class="headerlink" title="Bean"></a>Bean</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.spring.master.spring.caffeine.bean;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> lombok.Data;</span><br><span class="line"><span class="keyword">import</span> lombok.ToString;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="meta">@ToString</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserInfo</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Integer id;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Service"><a href="#Service" class="headerlink" title="Service"></a>Service</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.spring.master.spring.caffeine.service;</span><br><span class="line"><span class="keyword">import</span> com.spring.master.spring.caffeine.bean.UserInfo;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">UserInfoService</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 增加用户信息</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> userInfo 用户信息</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">addUserInfo</span><span class="params">(UserInfo userInfo)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 获取用户信息</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> id 用户ID</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 用户信息</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function">UserInfo <span class="title">getByName</span><span class="params">(Integer id)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 删除用户信息</span></span><br><span class="line"><span class="comment">     *</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> id 用户ID</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">deleteById</span><span class="params">(Integer id)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Impl"><a href="#Impl" class="headerlink" title="Impl"></a>Impl</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.spring.master.spring.caffeine.impl;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.github.benmanes.caffeine.cache.Cache;</span><br><span class="line"><span class="keyword">import</span> com.spring.master.spring.caffeine.bean.UserInfo;</span><br><span class="line"><span class="keyword">import</span> com.spring.master.spring.caffeine.service.UserInfoService;</span><br><span class="line"><span class="keyword">import</span> lombok.extern.slf4j.Slf4j;</span><br><span class="line"><span class="keyword">import</span> org.springframework.beans.factory.annotation.Autowired;</span><br><span class="line"><span class="keyword">import</span> org.springframework.stereotype.Service;</span><br><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="meta">@Slf4j</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserInfoServiceImpl</span> <span class="keyword">implements</span> <span class="title">UserInfoService</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 模拟数据库存储数据</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> HashMap&lt;Integer, UserInfo&gt; userInfoMap = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    Cache&lt;String, Object&gt; caffeineCache;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addUserInfo</span><span class="params">(UserInfo userInfo)</span> </span>&#123;</span><br><span class="line">        userInfoMap.put(userInfo.getId(), userInfo);</span><br><span class="line">        <span class="comment">// 加入缓存</span></span><br><span class="line">        caffeineCache.put(String.valueOf(userInfo.getId()),userInfo);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> UserInfo <span class="title">getByName</span><span class="params">(Integer id)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// 先从缓存读取</span></span><br><span class="line">        caffeineCache.getIfPresent(id);</span><br><span class="line">        UserInfo userInfo = (UserInfo) caffeineCache.asMap().get(String.valueOf(id));</span><br><span class="line">        <span class="keyword">if</span> (userInfo != <span class="keyword">null</span>)&#123;</span><br><span class="line">            System.out.println(<span class="string">&quot;Hello, 我来自Caffeine Cache&quot;</span>);</span><br><span class="line">            <span class="keyword">return</span> userInfo;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 如果缓存中不存在，则从库中查找</span></span><br><span class="line">        userInfo = userInfoMap.get(id);</span><br><span class="line">        System.out.println(<span class="string">&quot;Hello, 我来自DataBase&quot;</span>);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 如果用户信息不为空，则加入缓存</span></span><br><span class="line">        <span class="keyword">if</span> (userInfo != <span class="keyword">null</span>)&#123;</span><br><span class="line">            caffeineCache.put(String.valueOf(userInfo.getId()),userInfo);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> userInfo;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">deleteById</span><span class="params">(Integer id)</span> </span>&#123;</span><br><span class="line">        userInfoMap.remove(id);</span><br><span class="line">        <span class="comment">// 从缓存中删除</span></span><br><span class="line">        caffeineCache.asMap().remove(String.valueOf(id));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Controller"><a href="#Controller" class="headerlink" title="Controller"></a>Controller</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.spring.master.spring.caffeine.controller;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> com.spring.master.spring.caffeine.bean.UserInfo;</span><br><span class="line"><span class="keyword">import</span> com.spring.master.spring.caffeine.service.UserInfoService;</span><br><span class="line"><span class="keyword">import</span> org.springframework.beans.factory.annotation.Autowired;</span><br><span class="line"><span class="keyword">import</span> org.springframework.http.MediaType;</span><br><span class="line"><span class="keyword">import</span> org.springframework.web.bind.annotation.*;</span><br><span class="line"></span><br><span class="line"><span class="meta">@RequestMapping(value = &quot;/caffeine&quot;)</span></span><br><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CaffeineCacheController</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> UserInfoService userInfoService;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@GetMapping(&quot;/userInfo/&#123;id&#125;&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">getUserInfo</span><span class="params">(<span class="meta">@PathVariable</span> Integer id)</span> </span>&#123;</span><br><span class="line">        UserInfo userInfo = userInfoService.getByName(id);</span><br><span class="line">        <span class="keyword">if</span> (userInfo == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="string">&quot;没有该用户&quot;</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> userInfo;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@RequestMapping(value = &quot;/userInfo&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">createUserInfo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        UserInfo userInfo = <span class="keyword">new</span> UserInfo();</span><br><span class="line">        userInfo.setId(<span class="number">1</span>);</span><br><span class="line">        userInfo.setName(<span class="string">&quot;HLee&quot;</span>);</span><br><span class="line">        userInfoService.addUserInfo(userInfo);</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;SUCCESS&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@GetMapping(value = &quot;/delete/&#123;id&#125;&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">deleteUserInfo</span><span class="params">(<span class="meta">@PathVariable</span> Integer id)</span> </span>&#123;</span><br><span class="line">        userInfoService.deleteById(id);</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;SUCCESS&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//启动服务：</span></span><br><span class="line"><span class="comment">//localhost:2000/spring-master/caffeine/userInfo</span></span><br><span class="line"><span class="comment">//localhost:2000/spring-master/caffeine/userInfo/1</span></span><br><span class="line"><span class="comment">//localhost:2000/spring-master/caffeine/delete/1</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="2-引入-Caffeine-和-Spring-Cache-依赖"><a href="#2-引入-Caffeine-和-Spring-Cache-依赖" class="headerlink" title="2. 引入 Caffeine 和 Spring Cache 依赖"></a>2. 引入 Caffeine 和 Spring Cache 依赖</h2><h3 id="Pom-1"><a href="#Pom-1" class="headerlink" title="Pom"></a>Pom</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-cache<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.github.ben-manes.caffeine<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>caffeine<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="Conf-1"><a href="#Conf-1" class="headerlink" title="Conf"></a>Conf</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CacheConfig</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 配置缓存管理器</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 缓存管理器</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Bean(&quot;caffeineCacheManager&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> CacheManager <span class="title">cacheManager</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        CaffeineCacheManager cacheManager = <span class="keyword">new</span> CaffeineCacheManager();</span><br><span class="line">        cacheManager.setCaffeine(Caffeine.newBuilder()</span><br><span class="line">                <span class="comment">// 设置最后一次写入或访问后经过固定时间过期</span></span><br><span class="line">                .expireAfterAccess(<span class="number">60</span>, TimeUnit.SECONDS)</span><br><span class="line">                <span class="comment">// 初始的缓存空间大小</span></span><br><span class="line">                .initialCapacity(<span class="number">100</span>)</span><br><span class="line">                <span class="comment">// 缓存的最大条数</span></span><br><span class="line">                .maximumSize(<span class="number">1000</span>));</span><br><span class="line">        <span class="keyword">return</span> cacheManager;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Bean-1"><a href="#Bean-1" class="headerlink" title="Bean"></a>Bean</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.spring.master.spring.caffeine.bean;</span><br><span class="line"></span><br><span class="line"><span class="keyword">import</span> lombok.Data;</span><br><span class="line"><span class="keyword">import</span> lombok.ToString;</span><br><span class="line"><span class="meta">@Data</span></span><br><span class="line"><span class="meta">@ToString</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserInfo</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Integer id;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Service-1"><a href="#Service-1" class="headerlink" title="Service"></a>Service</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">package</span> com.spring.master.spring.caffeine.service;</span><br><span class="line"><span class="keyword">import</span> com.spring.master.spring.caffeine.bean.UserInfo;</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">UserInfoService</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 增加用户信息</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> userInfo 用户信息</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">addUserInfo</span><span class="params">(UserInfo userInfo)</span></span>;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 获取用户信息</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> id 用户ID</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@return</span> 用户信息</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function">UserInfo <span class="title">getByName</span><span class="params">(Integer id)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 删除用户信息</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> id 用户ID</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">deleteById</span><span class="params">(Integer id)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Impl-1"><a href="#Impl-1" class="headerlink" title="Impl"></a>Impl</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> lombok.extern.slf4j.Slf4j;</span><br><span class="line"><span class="keyword">import</span> mydlq.club.example.entity.UserInfo;</span><br><span class="line"><span class="keyword">import</span> mydlq.club.example.service.UserInfoService;</span><br><span class="line"><span class="keyword">import</span> org.springframework.cache.annotation.CacheConfig;</span><br><span class="line"><span class="keyword">import</span> org.springframework.cache.annotation.CacheEvict;</span><br><span class="line"><span class="keyword">import</span> org.springframework.cache.annotation.CachePut;</span><br><span class="line"><span class="keyword">import</span> org.springframework.cache.annotation.Cacheable;</span><br><span class="line"><span class="keyword">import</span> org.springframework.stereotype.Service;</span><br><span class="line"><span class="keyword">import</span> org.springframework.util.StringUtils;</span><br><span class="line"><span class="keyword">import</span> java.util.HashMap;</span><br><span class="line"><span class="meta">@Slf4j</span></span><br><span class="line"><span class="meta">@Service</span></span><br><span class="line"><span class="meta">@CacheConfig(cacheNames = &quot;caffeineCacheManager&quot;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserInfoServiceImpl</span> <span class="keyword">implements</span> <span class="title">UserInfoService</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 模拟数据库存储数据</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">private</span> HashMap&lt;Integer, UserInfo&gt; userInfoMap = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="meta">@CachePut(key = &quot;#userInfo.id&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addUserInfo</span><span class="params">(UserInfo userInfo)</span> </span>&#123;</span><br><span class="line">        userInfoMap.put(userInfo.getId(), userInfo);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="meta">@Cacheable(key = &quot;#id&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> UserInfo <span class="title">getByName</span><span class="params">(Integer id)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> userInfoMap.get(id);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="meta">@CachePut(key = &quot;#userInfo.id&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> UserInfo <span class="title">updateUserInfo</span><span class="params">(UserInfo userInfo)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (!userInfoMap.containsKey(userInfo.getId())) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 取旧的值</span></span><br><span class="line">        UserInfo oldUserInfo = userInfoMap.get(userInfo.getId());</span><br><span class="line">        <span class="comment">// 替换内容</span></span><br><span class="line">        <span class="keyword">if</span> (!StringUtils.isEmpty(oldUserInfo.getAge())) &#123;</span><br><span class="line">            oldUserInfo.setAge(userInfo.getAge());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (!StringUtils.isEmpty(oldUserInfo.getName())) &#123;</span><br><span class="line">            oldUserInfo.setName(userInfo.getName());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (!StringUtils.isEmpty(oldUserInfo.getSex())) &#123;</span><br><span class="line">            oldUserInfo.setSex(userInfo.getSex());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 将新的对象存储，更新旧对象信息</span></span><br><span class="line">        userInfoMap.put(oldUserInfo.getId(), oldUserInfo);</span><br><span class="line">        <span class="comment">// 返回新对象信息</span></span><br><span class="line">        <span class="keyword">return</span> oldUserInfo;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="meta">@CacheEvict(key = &quot;#id&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">deleteById</span><span class="params">(Integer id)</span> </span>&#123;</span><br><span class="line">        userInfoMap.remove(id);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Controller-1"><a href="#Controller-1" class="headerlink" title="Controller"></a>Controller</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="meta">@RequestMapping</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserInfoController</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Autowired</span></span><br><span class="line">    <span class="keyword">private</span> UserInfoService userInfoService;</span><br><span class="line">    <span class="meta">@GetMapping(&quot;/userInfo/&#123;id&#125;&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">getUserInfo</span><span class="params">(<span class="meta">@PathVariable</span> Integer id)</span> </span>&#123;</span><br><span class="line">        UserInfo userInfo = userInfoService.getByName(id);</span><br><span class="line">        <span class="keyword">if</span> (userInfo == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="string">&quot;没有该用户&quot;</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> userInfo;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@PostMapping(&quot;/userInfo&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">createUserInfo</span><span class="params">(<span class="meta">@RequestBody</span> UserInfo userInfo)</span> </span>&#123;</span><br><span class="line">        userInfoService.addUserInfo(userInfo);</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;SUCCESS&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@PostMapping(&quot;/updateInfo&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">updateUserInfo</span><span class="params">(<span class="meta">@RequestBody</span> UserInfo userInfo)</span> </span>&#123;</span><br><span class="line">        UserInfo newUserInfo = userInfoService.updateUserInfo(userInfo);</span><br><span class="line">        <span class="keyword">if</span> (newUserInfo == <span class="keyword">null</span>)&#123;</span><br><span class="line">            <span class="keyword">return</span> <span class="string">&quot;不存在该用户&quot;</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> newUserInfo;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@GetMapping(&quot;/delete/&#123;id&#125;&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">deleteUserInfo</span><span class="params">(<span class="meta">@PathVariable</span> Integer id)</span> </span>&#123;</span><br><span class="line">        userInfoService.deleteById(id);</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;SUCCESS&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Caffeine/" rel="tag"># Caffeine</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/04/21/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%8E%9F%E5%88%99/" rel="prev" title="设计模式之原则">
+                  <i class="fa fa-chevron-left"></i> 设计模式之原则
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine%E4%B8%8EGuava%E5%AF%B9%E6%AF%94/" rel="next" title="缓存之Caffeine与Guava对比">
+                  缓存之Caffeine与Guava对比 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

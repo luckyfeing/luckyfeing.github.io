@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="原则（可读性、可维护性、可扩展性、复杂性、风险）单一职责原则(降低复杂性)事例：设计一个视频播放系统，要求：如果是VIP用户就播放完整影片，否则只允许试看5分钟。简单的实现是，播放方法中检验是否有权限，这样会有一个问题就是，当权限判断变更时，需要调整权限方法的代码，修改了播放类。 单一职责的优点：  类的复杂性降低，实现什么职责都有清晰明确的定义。 可读性提高。 可维护性提高。 变更引起的风险降低">
+<meta property="og:type" content="article">
+<meta property="og:title" content="设计模式之原则">
+<meta property="og:url" content="http://example.com/2021/04/21/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%8E%9F%E5%88%99/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="原则（可读性、可维护性、可扩展性、复杂性、风险）单一职责原则(降低复杂性)事例：设计一个视频播放系统，要求：如果是VIP用户就播放完整影片，否则只允许试看5分钟。简单的实现是，播放方法中检验是否有权限，这样会有一个问题就是，当权限判断变更时，需要调整权限方法的代码，修改了播放类。 单一职责的优点：  类的复杂性降低，实现什么职责都有清晰明确的定义。 可读性提高。 可维护性提高。 变更引起的风险降低">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-04-21T07:25:42.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.377Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="设计">
+<meta property="article:tag" content="代码设计">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/04/21/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%8E%9F%E5%88%99/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>设计模式之原则 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E5%88%99%EF%BC%88%E5%8F%AF%E8%AF%BB%E6%80%A7%E3%80%81%E5%8F%AF%E7%BB%B4%E6%8A%A4%E6%80%A7%E3%80%81%E5%8F%AF%E6%89%A9%E5%B1%95%E6%80%A7%E3%80%81%E5%A4%8D%E6%9D%82%E6%80%A7%E3%80%81%E9%A3%8E%E9%99%A9%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">原则（可读性、可维护性、可扩展性、复杂性、风险）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8D%95%E4%B8%80%E8%81%8C%E8%B4%A3%E5%8E%9F%E5%88%99-%E9%99%8D%E4%BD%8E%E5%A4%8D%E6%9D%82%E6%80%A7"><span class="nav-number">1.1.</span> <span class="nav-text">单一职责原则(降低复杂性)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%8C%E6%B0%8F%E6%9B%BF%E6%8D%A2%E5%8E%9F%E5%88%99%EF%BC%88%E5%AD%90%E7%B1%BB%E7%BB%A7%E6%89%BF%E6%8A%BD%E8%B1%A1%E7%B1%BB%EF%BC%89"><span class="nav-number">1.2.</span> <span class="nav-text">里氏替换原则（子类继承抽象类）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%9D%E8%B5%96%E5%80%92%E7%BD%AE%E5%8E%9F%E5%88%99%EF%BC%88%E9%9D%A2%E5%90%91%E6%8E%A5%E5%8F%A3%E7%BC%96%E7%A8%8B%EF%BC%89"><span class="nav-number">1.3.</span> <span class="nav-text">依赖倒置原则（面向接口编程）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8E%A5%E5%8F%A3%E9%9A%94%E7%A6%BB%E5%8E%9F%E5%88%99%EF%BC%88%E9%99%8D%E4%BD%8E%E5%A4%8D%E6%9D%82%E6%80%A7%EF%BC%89"><span class="nav-number">1.4.</span> <span class="nav-text">接口隔离原则（降低复杂性）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%AA%E7%B1%B3%E7%89%B9%E6%B3%95%E5%88%99%EF%BC%88%E6%9C%80%E5%B0%91%E7%9F%A5%E9%81%93%E5%8E%9F%E5%88%99%EF%BC%89"><span class="nav-number">1.5.</span> <span class="nav-text">迪米特法则（最少知道原则）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%90%88%E6%88%90%E5%A4%8D%E7%94%A8%E5%8E%9F%E5%88%99"><span class="nav-number">1.6.</span> <span class="nav-text">合成复用原则</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BC%80%E9%97%AD%E5%8E%9F%E5%88%99"><span class="nav-number">1.7.</span> <span class="nav-text">开闭原则</span></a></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/21/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%8E%9F%E5%88%99/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          设计模式之原则
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-04-21 15:25:42" itemprop="dateCreated datePublished" datetime="2021-04-21T15:25:42+08:00">2021-04-21</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1/" itemprop="url" rel="index"><span itemprop="name">设计</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="原则（可读性、可维护性、可扩展性、复杂性、风险）"><a href="#原则（可读性、可维护性、可扩展性、复杂性、风险）" class="headerlink" title="原则（可读性、可维护性、可扩展性、复杂性、风险）"></a>原则（可读性、可维护性、可扩展性、复杂性、风险）</h2><h3 id="单一职责原则-降低复杂性"><a href="#单一职责原则-降低复杂性" class="headerlink" title="单一职责原则(降低复杂性)"></a>单一职责原则(降低复杂性)</h3><p>事例：设计一个视频播放系统，要求：如果是VIP用户就播放完整影片，否则只允许试看5分钟。简单的实现是，播放方法中检验是否有权限，这样会有一个问题就是，当权限判断变更时，需要调整权限方法的代码，修改了播放类。</p>
+<p><font color="red">单一职责的优点</font>：</p>
+<ul>
+<li>类的复杂性降低，实现什么职责都有清晰明确的定义。</li>
+<li>可读性提高。</li>
+<li>可维护性提高。</li>
+<li>变更引起的风险降低。</li>
+</ul>
+<p><font color="red">单一职责的核心就是拆分</font>，职责的拆分，它不仅适用于类，也适用于方法，每一个方法的功能都应该是相互独立，职责清晰的，这不仅提高了程序的可读性和可维护性，方法的复用性也会提高。一个功能过于“丰富”的方法，通常很难被复用。</p>
+<h3 id="里氏替换原则（子类继承抽象类）"><a href="#里氏替换原则（子类继承抽象类）" class="headerlink" title="里氏替换原则（子类继承抽象类）"></a>里氏替换原则（子类继承抽象类）</h3><p><strong>所有引用基类的地方必须能透明地使用其子类的对象。</strong>子类可以扩展父类的功能，但不能改变父类原有的功能。</p>
+<p>事例：系统在发送短信时，需要将发送记录保存到数据库中，如果子类重写了父类的方法，修改了业务逻辑，日志记录功能将会丢失，这是非常危险的。</p>
+<p><font color="red">继承的优点</font>：</p>
+<ol>
+<li>代码共享。</li>
+<li>提高代码的复用性。</li>
+<li>提高类的开放性，可以被子类增强。</li>
+</ol>
+<p><font color="red">继承的缺点</font>：</p>
+<ol>
+<li>较强的侵入性，子类必须拥有父类的所有方法和属性。</li>
+<li>增加了耦合，父类的特性改变，子类也必须跟着改变。</li>
+</ol>
+<p>继承有它的优点，自然也有它的缺点，如果子类不能完整的实现父类的方法，或者父类的方法在子类的实现中“变味儿”了，则建议断开继承关系，采用依赖、组合等关系来代替。</p>
+<h3 id="依赖倒置原则（面向接口编程）"><a href="#依赖倒置原则（面向接口编程）" class="headerlink" title="依赖倒置原则（面向接口编程）"></a>依赖倒置原则（面向接口编程）</h3><ol>
+<li><strong>高层模块不依赖低层模块，而是互相依赖其抽象。</strong></li>
+<li><strong>抽象不依赖细节，细节依赖于抽象。</strong></li>
+</ol>
+<p>通常一个业务逻辑会由N个原子逻辑组成，原子逻辑是不可分割的，也就是低层模块，由N个原子逻辑组成的业务逻辑就是高层模块。</p>
+<p>事例：用户下订单是一个高层模块，下单需要发起支付，扣减库存等操作就是低层模块，订单服务应该依赖支付、库存服务的接口，而不是实现细节。当支付服务的规则有变更时，修改接口，所有的实现类都必须做相应的调整，否则编译会不通过，这就是<strong>实现依赖于抽象</strong>，低层依赖于高层，依赖倒置了。</p>
+<p>为了满足依赖倒置原则，开发的时候尽量遵循如下规则：</p>
+<ol>
+<li>类尽量有抽象父类或接口。</li>
+<li>变量、形参尽量是抽象类或接口。</li>
+<li>尽量不要从具体类再派生出子类。</li>
+<li>尽量不要重写基类方法，会影响依赖的稳定性。</li>
+<li>结合里氏替换原则使用，可以用子类对象透明的代替基类对象。</li>
+</ol>
+<h3 id="接口隔离原则（降低复杂性）"><a href="#接口隔离原则（降低复杂性）" class="headerlink" title="接口隔离原则（降低复杂性）"></a>接口隔离原则（降低复杂性）</h3><ol>
+<li><strong>客户端不应该依赖它不需要的接口。</strong></li>
+<li><strong>类间的依赖关系应该建立在最小的接口上。</strong></li>
+</ol>
+<p>事例：博客系统中，普通用户只能查看博客，管理员可以增删改查，因此博客服务要分别为普通用户和管理员用户配置实现类，实现最小的接口。普通用户的博客服务类只有查询方法。</p>
+<p>接口尽量细化，建立单一接口，避免定义过度“臃肿而庞大”的接口。要做到极致的接口隔离原则，就是一个接口只有一个方法，但是开发中我们绝不会这么去做，粒度太小了，导致接口数量剧增，难以开发。但是接口粒度太大灵活性会降低，所以如何定义好一个接口的粒度需要开发人员长期的实践和经验积累。</p>
+<h3 id="迪米特法则（最少知道原则）"><a href="#迪米特法则（最少知道原则）" class="headerlink" title="迪米特法则（最少知道原则）"></a>迪米特法则（最少知道原则）</h3><p><strong>一个类应该对它<font color="red">依赖的类</font>了解的越少越好。</strong></p>
+<p>迪米特法则的核心是：只与朋友交流。它的<font color="red">目的是减少类间的依赖，提高内聚，降低耦合</font>。 朋友类的定义：成员变量，方法的入参、出参属于朋友类，出现在方法体内部的则不是朋友类。一个类应该对其所依赖的类知道的越少越好，你的内部实现不管多复杂我并不关心，我只管调用你的<code>public</code>方法。</p>
+<p>事例：简单工厂，通过不同的枚举类型，创建不同的产品。需要知道工厂类和枚举类，不符合最少知道原则。可使用多方法工厂模式解决，但是当需要添加新的产品的时候，需要修改工厂类，添加新的方法，因此违反了开闭原则</p>
+<h3 id="合成复用原则"><a href="#合成复用原则" class="headerlink" title="合成复用原则"></a>合成复用原则</h3><p>使用合成替换继承</p>
+<h3 id="开闭原则"><a href="#开闭原则" class="headerlink" title="开闭原则"></a>开闭原则</h3><p><strong>一个软件实体如类、模块和函数应该对扩展开放，对修改关闭。</strong>大白话就是：对于一个程序而言，应该通过扩展来实现需求变化，而不是修改现有的代码。</p>
+<p>开闭原则的核心是：封装程序中变与不变的地方。用接口或抽象来封装规则，描述契约，这是基本稳定不变的，通过派生子类来实现细节，扩展功能，这是易变的，尽量依赖抽象，避免依赖实现。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E8%AE%BE%E8%AE%A1/" rel="tag"># 设计</a>
+              <a href="/tags/%E4%BB%A3%E7%A0%81%E8%AE%BE%E8%AE%A1/" rel="tag"># 代码设计</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/04/21/web%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/" rel="prev" title="web基础知识">
+                  <i class="fa fa-chevron-left"></i> web基础知识
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/04/22/%E7%BC%93%E5%AD%98%E4%B9%8BCaffeine/" rel="next" title="缓存之Caffeine">
+                  缓存之Caffeine <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

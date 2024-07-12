@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="业务你不能瞎编，场景和规模、技术架构，你可以做一下战术美化，然后将我的单体ssm改成spring cloud 一套，引入各种分布式技术栈 7-9月培训高峰期，吃饭期间会集中做问卷调查，服务器压力非常大，然后将我的单体ssm改成spring cloud 一套，引入各种分布式技术栈了，不过你最好自己先做好业务分析，找个你认为比较合理的爆发点，去想技术方案 首先要先将自己的项目拆分成微服务，需要画架构图">
+<meta property="og:type" content="article">
+<meta property="og:title" content="资料文档整理">
+<meta property="og:url" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="业务你不能瞎编，场景和规模、技术架构，你可以做一下战术美化，然后将我的单体ssm改成spring cloud 一套，引入各种分布式技术栈 7-9月培训高峰期，吃饭期间会集中做问卷调查，服务器压力非常大，然后将我的单体ssm改成spring cloud 一套，引入各种分布式技术栈了，不过你最好自己先做好业务分析，找个你认为比较合理的爆发点，去想技术方案 首先要先将自己的项目拆分成微服务，需要画架构图">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210803161445625.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210803161603524.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210803160430802.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806163835364.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210802173727433.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806161707243.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806155610943.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806154846154.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210802163613614.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210802172944621.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210802173050027.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210802164216792.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806151612513.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804102939532.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804102903400.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804095858230.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804104558272.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804114632365.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806135818842.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806135913812.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/1383122-20200425144254261-1102259668.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804153258435.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210805133711749.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806100935989.png">
+<meta property="og:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806103936840.png">
+<meta property="article:published_time" content="2021-07-30T05:23:28.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.378Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210803161445625.png">
+
+
+<link rel="canonical" href="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>资料文档整理 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Redis"><span class="nav-number">1.</span> <span class="nav-text">Redis</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Zookeeper"><span class="nav-number">2.</span> <span class="nav-text">Zookeeper</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E5%B9%BF%E6%92%AD"><span class="nav-number">2.1.</span> <span class="nav-text">消息广播</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#ES"><span class="nav-number">3.</span> <span class="nav-text">ES</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MySQL"><span class="nav-number">4.</span> <span class="nav-text">MySQL</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#bin-log%E5%88%B7%E7%9B%98%E6%9C%BA%E5%88%B6"><span class="nav-number">4.1.</span> <span class="nav-text">bin log刷盘机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BA%8B%E5%8A%A1%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B"><span class="nav-number">4.2.</span> <span class="nav-text">事务执行过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%AB%98%E5%8F%AF%E7%94%A8"><span class="nav-number">4.3.</span> <span class="nav-text">高可用</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E5%B9%82%E7%AD%89%E6%80%A7%EF%BC%88%E6%80%8E%E4%B9%88%E5%87%BA%E7%8E%B0%E9%87%8D%E5%A4%8D%E6%B6%88%E8%B4%B9%E7%9A%84%E6%83%85%E5%86%B5%EF%BC%89"><span class="nav-number">4.4.</span> <span class="nav-text">消息幂等性（怎么出现重复消费的情况）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%9B%B6%E4%B8%A2%E5%A4%B1%EF%BC%88%E5%8F%AF%E9%9D%A0%E6%80%A7%E4%BC%A0%E8%BE%93%EF%BC%89"><span class="nav-number">4.5.</span> <span class="nav-text">零丢失（可靠性传输）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A7%AF%E5%8E%8B"><span class="nav-number">4.6.</span> <span class="nav-text">积压</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#rabbitmq%E6%B6%88%E6%81%AF%E8%BF%87%E6%9C%9F%EF%BC%88%E6%89%8B%E5%8A%A8%E8%A1%A5%E6%B6%88%E6%81%AF%EF%BC%89"><span class="nav-number">4.7.</span> <span class="nav-text">rabbitmq消息过期（手动补消息）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kafka%E4%B8%BA%E5%95%A5%E5%BF%AB"><span class="nav-number">4.8.</span> <span class="nav-text">Kafka为啥快</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kafka%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%BC%93%E5%86%B2%E6%B1%A0%E6%9C%BA%E5%88%B6"><span class="nav-number">4.9.</span> <span class="nav-text">Kafka客户端缓冲池机制</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Offset%E5%8E%9F%E7%90%86"><span class="nav-number">4.10.</span> <span class="nav-text">Offset原理</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Dubbo"><span class="nav-number">5.</span> <span class="nav-text">Dubbo</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%93%8D%E5%BA%94%E5%BC%8F%E7%BC%96%E7%A8%8B%E5%85%A5%E9%97%A8"><span class="nav-number">6.</span> <span class="nav-text">响应式编程入门</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Flux"><span class="nav-number">6.1.</span> <span class="nav-text">Flux</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Sentinel%E6%B5%81%E6%8E%A7"><span class="nav-number">7.</span> <span class="nav-text">Sentinel流控</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SkyWalking"><span class="nav-number">8.</span> <span class="nav-text">SkyWalking</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Gateway%E6%A0%B8%E5%BF%83%E6%9E%B6%E6%9E%84"><span class="nav-number">9.</span> <span class="nav-text">Gateway核心架构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9D%87%E6%91%8A%E7%AE%97%E6%B3%95%EF%BC%9A"><span class="nav-number">10.</span> <span class="nav-text">均摊算法：</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          资料文档整理
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-07-30 13:23:28" itemprop="dateCreated datePublished" datetime="2021-07-30T13:23:28+08:00">2021-07-30</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>业务你不能瞎编，场景和规模、技术架构，你可以做一下战术美化，然后将我的单体ssm改成spring cloud 一套，引入各种分布式技术栈</p>
+<p>7-9月培训高峰期，吃饭期间会集中做问卷调查，服务器压力非常大，然后将我的单体ssm改成spring cloud 一套，引入各种分布式技术栈了，不过你最好自己先做好业务分析，找个你认为比较合理的爆发点，去想技术方案</p>
+<p>首先要先将自己的项目拆分成微服务，需要画架构图、物理图、做概要设计、详细设计、核心业务时序图等等，需要先自我深挖一波业务，做一下分析。这些可以去百度看看别人怎样画的，自己仿照来画，这样自己对整个项目能拆成多少个微服务，一个核心业务会调用多少个微服务已经很清晰了。不要看做这一步要很多时间，但是能不能顶住面试官的炮火这一步的分析是很重要的，也是自己对业务的提炼。</p>
+<p>我说我们测试组会跟产品先出一份测试用例方案的，会对着来测试，基本大部分业务场景都覆盖了</p>
+<p>我们融入业务之前需要先定好业务指标例如qps多少、tps多少、每个服务需要部署多少个实例来抗请求。<br>融入什么技术之前都需要先划定一个业务场景、设备数量，这样你聊的时候自己就中心有数了，无论面试官聊什么，你都要先定好业务边界，再聊技术方案，这样面试官会感觉你自己是有思考过，有“实干”过的。</p>
+<p>1、你平时是如何设计项目的？<br>使用uml进行业务流程的建模，映射系统用例，对系统用例进行领域分析出类图。<br>对系统用例，进行功能的分析序列图设计，完整阐释领域类之间如何协作完成功能。<br>然后是db的设计，接口契约的设计，工时的预估。</p>
+<p>2、设计一个类似于微博消息系统，能提示消息未读，对已读未读做统计，不要用redis，原始数据结构的设计。<br>当时我给了几张表，发布主题的消息表，个人维度的消息读取数量的统计表，已读消息序号增长表。</p>
+<p>3、设计一个千万级别的分库分表，多维度如何处理？复杂查询如何处理？扩容如何处理？<br>当时我的回答是，用shardingjdbc分库分表，多维度也按不同的维度字段分。复杂查询数据canal监听binlog导入es<br>（1）幂等你们是怎么做的<br>（2）说一说你们现在分布式id的实现方案，有什么缺点</p>
+<p>1、你觉的你是一个什么样的人？<br>自我驱动，用于担当，主动沟通和推进项目，能和团队成员良好协作，完成部门内和跨部门协作任务。</p>
+<p>2、你觉的你能胜任我们提供的这个职位吗？<br>完全可以，工作态度认真积极，自我驱动力强，勇于挑战。</p>
+<p>6.1、如果一个接口慢，造成这个接口慢的原因都有哪些？<br>1、网络IO （说下数据库优化、redis优化）<br>2、磁盘IO （可以用异步优化）<br>3、锁竞争-》优化思路 （分段加锁、锁粒度）<br>4、jvm优化（如果前面没问jvm的话，这时候也可以说一下jvm专栏里的优化方案）</p>
+<p>6.2、如果让你来实现一个注册的功能，要考虑哪些点？<br>1、项目初期没什么数据量，单库单表就可以<br>2、数据量大了以后要考虑分库分表<br>3、超时重试<br>4、接口幂等性<br>5、注册功能属于核心功能，不能降级</p>
+<p>6.3、怎么实现直播间送礼排行榜的功能？(使用redis，只展示前100名)<br>分两种情况考虑<br>1、访问量很小的直播间<br>（1）使用redis sorted set数据结构存储用户id，分数就是送礼金额<br>（2）查询的的时候直接获取前100个</p>
+<p>2、访问量很大的直播间 （在这种情况下，使用上述设计方案，会有两个问题：一个问题是单台redis是扛不住那么高的并发;<br>另一个问题是送礼的人很多，展示的话只需要前100个，多个机器都存全量的key会浪费资源）<br>（1）同一个排行榜放在多个redis实例上，客户端读的时候做个轮询<br>（2）一个redis实例存全量的排行榜，只负责写数据；其他redis存前100名的数据，负责读。写数据时，如果前100名发生变化，就把最新的数据同步到其他节点。</p>
+<p>6.4、一个很大的文件里存的都是些id，怎么统计出重复id的次数？(内存不能一次性加载所有数据)<br>1、把大文件拆分成内存可以放下的小文件比如10个小文件。<br>2、大文件中的id通过一个hash函数计算出hash值，寻址算法找到小文件<br>3、把小文件加载到内存中用HashMap就可以统计了</p>
+<p>6.5、一个文件里都是电话号码，重复的号码需要记录重复次数，你会怎么设计存储？<br>1、电话号码可以分成三段，前面3位、中间4位、后面4位<br>2、仿照Mysql索引树设计，叶子节点挂的是重复次数<br>3、面试官说可以使用混合树（我不了解什么是混合树）</p>
+<p>6.6、 mysql里一个字段的值需要存几百万个id怎么设计？<br>1、这些id先计算出一个base（所有id减去这个base就是个int类型的值）<br>2、搞一个bitmap，通过一个特殊的hash函数计算出（id-base）在bitmap中的位置（这个是唯一的）<br>3、核心思想就是使用bitmap存数据</p>
+<p>6.7、 怎么设计一个接口的降级方案？<br>降级方案要分两种情况<br>1、核心链路的接口不能随便降级，有的接口慢，就得在那等着（同步接口）<br>2、非核心链路参照面试突击里使用Hystrix降级（后置校验；有损降级，提示用户可能失败，异步处理；缓存的本地缓存）</p>
+<p>架构设计</p>
+<p>需求分析阶段: 主要梳理所有用例（Use case）和场景，并抽象出面向系统的用户与角色，梳理出需求提供哪些功能与非功能的需求给这些用户。</p>
+<p>概要设计阶段：根据需求分析的产物：核心需求，对整个系统进行模块划分，并定义好模块之间的交互关系。<br>详细设计阶段：通过多个视图来描述系统的架构，包括但不局限于：逻辑系统、物理视图、数据视图、物理视图</p>
+<p>非功能需求:非功能的需求主要体现在高性能、高可用、可伸缩、可扩展、安全性等维度。<br>非功能需求对应不同系统指标主要分为 4 部分：应用服务器  数据库 缓存  消息队列</p>
+<p>为什么零拷贝更快，具体原理<br>mysql事务acid是如何实现的<br>mysql幻读是如何解决的<br>mysql rr模式的原理<br>redis锁和zk锁的实现原理</p>
+<p>谈谈你对锁优化的理解<br>谈谈你对JMM的理解<br>谈谈你对AQS的理解<br>谈谈你对读写锁的理解<br>谈谈有哪些保证原子性的手段<br>说一说你对ddd 战术部分的理解，代码如何分层<br>聊聊spring cloud各个组件的原理<br>hystrix限流是怎么做的，原理<br>谈一谈你对CompletableFuture的理解，为什么要用这个，超时机制怎么实现的<br>rocketmq中间件里面有哪些组件，说一说都有什么作用<br>mq事务消息的实现原理<br>如何解决缓存热key问题</p>
+<p>Mysql只有在Read-Commit和Repeated-read两种隔离级别下实现MVCC机制</p>
+<p>1、在Repeated-read隔离级别中，对MYSQL MVCC机制的理解：<br>1）mysql执行修改与新增操作SQL语句时，会对修改的数据以及新增的和删除数据记录到undo回滚日志文件中形成一个版本链，<br>并且记录当前操作的表中这一行记录中隐藏的列trx_id（当前事务Id）和roll_pointer（当前事务在undo日志文件中的磁盘地址）<br>2）当开启mysql事务执行SQL查询语句时会生成当前事务的一致性视图（read view），<br>该视图是由当前数据库中未提交事务id的数组（其中最小的事务id为min_trxId）和已经创建事务最大的trx_id(max_trxid)组成的</p>
+<p>3）根据上面查询语句获取到表记录中隐藏的trx_id值与read view视图中的事务id进行对比，<br>如果trx_id&lt;min_trxid，则直接返回当前min_trxid对应的数据；<br>如果min_trxid &lt;= trx_id &lt;=max_trxid ，如果该trxid正好在read view视图中，则返回当前视图中trx_id对应的数据，<br>如果不在read view视图中则会根据roll_pinter指针在版本链中找到为当前记录对应trx_id的数据并且返回；<br>如果trx_id&gt;max_trxId则直接返回sql语句查询到的trx_id对应的数据</p>
+<p>4）对于删除的情况可以认为是update的特殊情况，会将版本链上最新的数据复制一份，然后将trx_id修改成删除操作的 trx_id，<br>同时在该条记录的头信息（record header）里的（deleted_flag）标记位写上true，来表示当前记录已经被删除，<br>在查询时按照上面的规则查到对应的记录如果delete_flag标记位为true，意味着记录已被删除，则不返回数据。</p>
+<p>2 在Read-commint隔离级别中，对MYSQL MVCC机制的理解：实际跟上述差不太多，唯独是在每次执行查询sql时都会重新生成read view视图</p>
+<p>Archery MySQL监控平台</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/sinat_36748650/article/details/88033383">https://blog.csdn.net/sinat_36748650/article/details/88033383</a></p>
+<p><a target="_blank" rel="noopener" href="https://my.oschina.net/u/4397001/blog/3421494">https://my.oschina.net/u/4397001/blog/3421494</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.suoniao.com/article/5ea23be9e2fbc11f0a0517da">http://www.suoniao.com/article/5ea23be9e2fbc11f0a0517da</a>  </p>
+<p><a target="_blank" rel="noopener" href="https://gitee.com/shishan100/projects">https://gitee.com/shishan100/projects</a>   </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Heap</span><br><span class="line"> PSYoungGen      total 552448K, used 67990K [0x000000076b780000, 0x0000000797500000, 0x00000007c0000000)</span><br><span class="line">  eden space 537600K, 9% used [0x000000076b780000,0x000000076eb6e7e8,0x000000078c480000)</span><br><span class="line">  from space 14848K, 99% used [0x0000000796680000,0x00000007974f7028,0x0000000797500000)</span><br><span class="line">  to   space 23040K, 0% used [0x0000000794800000,0x0000000794800000,0x0000000795e80000)</span><br><span class="line"> ParOldGen       total 222208K, used 41930K [0x00000006c2600000, 0x00000006cff00000, 0x000000076b780000)</span><br><span class="line">  object space 222208K, 18% used [0x00000006c2600000,0x00000006c4ef2b88,0x00000006cff00000)</span><br><span class="line"> Metaspace       used 62761K, capacity 66234K, committed 66328K, reserved 1105920K</span><br><span class="line">  class space    used 8381K, capacity 8993K, committed 9008K, reserved 1048576K</span><br><span class="line"></span><br><span class="line">2021-07-01T15:03:11.502+0800: 34.466: [GC (Metadata GC Threshold) [PSYoungGen: 236338K-&gt;7762K(513536K)] 273443K-&gt;53629K(667136K), 0.0148958 secs]</span><br><span class="line"> [Times: user&#x3D;0.01 sys&#x3D;0.00, real&#x3D;0.01 secs] </span><br><span class="line"> </span><br><span class="line">2021-07-01T15:03:11.517+0800: 34.481: [Full GC (Metadata GC Threshold) [PSYoungGen: 7762K-&gt;0K(513536K)] [ParOldGen: 45867K-&gt;41922K(222208K)] 53629K-&gt;41922K(735744K),</span><br><span class="line"> [Metaspace: 56313K-&gt;56313K(1099776K)], 0.2781880 secs] [Times: user&#x3D;1.19 sys&#x3D;0.09, real&#x3D;0.28 secs] </span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;String, Object&gt; params = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">params.put(<span class="string">&quot;x-dead-letter-exchange&quot;</span>, sdlExchange);</span><br><span class="line">params.put(<span class="string">&quot;x-dead-letter-routing-key&quot;</span>, sdlKey);</span><br><span class="line"><span class="keyword">return</span> <span class="keyword">new</span> Queue(queue, <span class="keyword">true</span>, <span class="keyword">false</span>, <span class="keyword">false</span>, params);</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210803161445625.png" alt="image-20210803161445625"></p>
+<p><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210803161603524.png" alt="image-20210803161603524"></p>
+<p><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210803160430802.png" alt="image-20210803160430802"></p>
+<p>Lifecycle 生命周期  -》SmartLifecycle</p>
+<p>BeanDefinitionRegistryPostProcessor    void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException;</p>
+<p>BeanFactoryPostProcessor   void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException;</p>
+<p>储物柜设备上/下线webhook： <a target="_blank" rel="noopener" href="https://uat-lockerai.deepblueai.com/locker/mqtt/event">https://uat-lockerai.deepblueai.com/locker/mqtt/event</a></p>
+<p>储物柜设备下线（$events/client_disconnected）</p>
+<p>SELECT * FROM “$events/client_disconnected” where username=’locker’</p>
+<p>储物柜设备上线（$events/client_connected）</p>
+<p>SELECT * FROM “$events/client_connected” where username=’locker’</p>
+<p>spring-boot-starter-actuator度量metric，底层使用的是micrometer-core</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-actuator<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.2.2.RELEASE<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">scope</span>&gt;</span>compile<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>io.micrometer<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>micrometer-core<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.3.6<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">scope</span>&gt;</span>compile<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.jolokia<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>jolokia-core<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.6.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">scope</span>&gt;</span>compile<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>java基础知识（集合、并发集合、队列、线程（线程池、Thread、Runnable、Callback、Future、CompletableFuture）、synchronized 、CAS 、volatile、ReentrantLock、ReentrantReadWriteLock、JMM、jvm、SPI、javaagent、instruction、JMX）</p>
+<p>阻塞队列：</p>
+<p>　　ArrayBlockingQueue ：一个由数组结构组成的有界阻塞队列。</p>
+<p>　　LinkedBlockingQueue ：一个由链表结构组成的有界阻塞队列。</p>
+<p>　　PriorityBlockingQueue ：一个支持优先级排序的无界阻塞队列。</p>
+<p>　　DelayQueue： 一个使用优先级队列实现的无界阻塞队列。</p>
+<p>　　SynchronousQueue： 一个不存储元素的阻塞队列。</p>
+<p>　　LinkedTransferQueue： 一个由链表结构组成的无界阻塞队列。</p>
+<p>　　LinkedBlockingDeque： 一个由链表结构组成的双向阻塞队列。</p>
+<p>拒绝策略：</p>
+<p>　　ThreadPoolExecutor.AbortPolicy: 丢弃任务并抛出RejectedExecutionException异常。 (默认)</p>
+<p>　　ThreadPoolExecutor.DiscardPolicy：也是丢弃任务，但是不抛出异常。</p>
+<p>　　ThreadPoolExecutor.DiscardOldestPolicy：丢弃队列最前面的任务，然后重新尝试执行任务。（重复此过程）</p>
+<p>　　ThreadPoolExecutor.CallerRunsPolicy：由调用线程处理该任务。</p>
+<p>JVM：CMS配置：<strong>UseCMSCompactAtFullCollection</strong>  <strong>CMSFullGCsBeforeCompaction=0</strong>    -XX:+CMSParallelInitialMarkEnabled -XX:+CMSScavengeBeforeRemark</p>
+<h2 id="Redis"><a href="#Redis" class="headerlink" title="Redis"></a>Redis</h2><p>数据结构、场景、底层数据结构、持久化原理及区别、过期策略、淘汰策略、数据恢复、主从集群、sentinel集群、Redis Cluster集群、缓存穿透、击穿、雪崩</p>
+<h2 id="Zookeeper"><a href="#Zookeeper" class="headerlink" title="Zookeeper"></a>Zookeeper</h2><p>（架构设计、工作原理、数据结构、zab原子广播协议，消息广播、崩溃恢复（选举、数据同步），场景）</p>
+<p>场景：分布式协调，集群主从（HA高可用），分布式锁，队列，元数据/配置信息管理，注册中心</p>
+<p>redis 分布式锁和 zk 分布式锁的对比</p>
+<ul>
+<li>redis 分布式锁，其实<strong>需要自己不断去尝试获取锁</strong>，比较消耗性能。（返回过期时间的方式减少尝试次数；续期问题：使用watch dog后台线程，进行续期；主从数据丢失问题：多个客户端获取到了锁，使用ReadLock思路；客户端宕机时：key过期之后才能获取到锁）</li>
+<li>zk 分布式锁，获取不到锁，注册个监听器即可，维持一个连接，不需要不断主动尝试获取锁，性能开销较小。写入时需要等到一半以上节点返回ACK之后才能写入，写入性能差，只能主节点进行写入。当节点宕机时，需要选举出新的节点，并完成数据同步之后才能提供服务，这块性能相较于Redis也差。</li>
+</ul>
+<p>znode类型：零时节点，持久化节点，临时顺序节点，持久化顺序节点</p>
+<h3 id="消息广播"><a href="#消息广播" class="headerlink" title="消息广播"></a>消息广播</h3><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806163835364.png" alt="image-20210806163835364" style="zoom:67%;">
+节点数据一致，消息广播时，二阶段提交，Leader生成proposal事务，添加全局唯一64位递增事务id叫做zxid。zxid组成：32位为纪元，32为自增id。Leader会为每一个Follower节点分配一个单独的FIFO队列，然后把Proposal发送到队列中，Follower节点收到对应的Proposal之后会把它持久化到磁盘上，写入完成 返回ACK给Leader。Follower节点收过超过半数的ACK后 (Quorum机制) ，提交本地机器上的事务，同时广播commit ，Follower收到commit止呕，完成各自事务的提交。
+
+<h2 id="ES"><a href="#ES" class="headerlink" title="ES"></a>ES</h2><p>ES（架构设计、原理、近实时1s、数据结构（index，type，document，filed）、倒排索引、优化思路（操作系统会将磁盘文件里的数据自动缓存到 <code>filesystem cache</code> 里面去，尽量让数据留在缓存里：数据预热、冷热分离、document设计（不要做关联操作）、分页优化（不允许深翻页，一页一页翻页scroll api和search_after，scroll 会一次性给你生成<strong>所有数据的一个快照</strong>，然后每次滑动向后翻页就是通过<strong>游标</strong> <code>scroll_id</code> 移动；<code>search_after</code> 的思想是使用前一页的结果来帮助检索下一页的数据）），更新删除底层原理（如果是删除操作，commit 的时候会生成一个 <code>.del</code> 文件，里面将某个 doc 标识为 <code>deleted</code> 状态，那么搜索的时候根据 <code>.del</code> 文件就知道这个 doc 是否被删除了。如果是更新操作，就是将原来的 doc 标识为 <code>deleted</code> 状态，然后新写入一条数据。））</p>
+<p>merge原理（buffer 每 refresh 一次，就会产生一个 <code>segment file</code>，所以默认情况下是 1 秒钟一个 <code>segment file</code>，这样下来 <code>segment file</code> 会越来越多，此时会定期执行 merge。每次 merge 的时候，会将多个 <code>segment file</code> 合并成一个，同时这里会将标识为 <code>deleted</code> 的 doc 给<strong>物理删除掉</strong>，然后将新的 <code>segment file</code> 写入磁盘，这里会写一个 <code>commit point</code>，标识所有新的 <code>segment file</code>，然后打开 <code>segment file</code> 供搜索使用，同时删除旧的 <code>segment file</code>。）</p>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210802173727433.png" alt="image-20210802173727433" style="zoom: 50%;">
+
+<h2 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h2><p>MySQL（存储引擎，索引，行锁，表锁，意向锁，隔离级别，ACID，当前读、快照读、幻读、MVCC原理（Read Veiw）、Redo log、Undo log、Undo log 、主从复制（半同步复制、异步复制，relay log，并行复制（库级别），半一致性读）、索引调优（explain，最左匹配原则））</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_38629422/article/details/105813338?spm=1001.2014.3001.5501">redo日志的刷盘策略</a> <a target="_blank" rel="noopener" href="https://www.jianshu.com/p/2b7fdad5fc0c">binlog/redolog/undolog详解</a><br><font color="red">innodb_flush_log_at_trx_commit</font>  0（Redo log buffer写入buffer）  1（Redo log buffer -》保证到redo日志文件） 2（Redo log buffer -》只保证到os cache -》redo日志文件）<br><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806161707243.png" alt="image-20210806161707243" style="zoom:67%;"></p>
+<p><code>redo log</code>是<code>InnoDB</code>存储引擎层的日志，又被称为重写日志，用来记录事务操作的变化，记录的是数据修改之后的值，不管事务提交是否成功，都会被记录下来。<code>redo log</code>实现上采用来大小固定，循环写入的方式，当记录写到末尾时，又会从头开始写，如下图所示。</p>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806155610943.png" alt="image-20210806155610943" style="zoom:67%;">
+`write pos`是当前记录的位置，一边写一边后移，写到4号文件末尾就回到1号文件开头。`check point`是当前要把记录写入到数据文件的位置，也是后移并且循环的。 <font color="red"> 用于系统奔溃恢复(crash-safe)</font>
+
+<p><code>bin log</code>是mysql数据库service层的，是所有存储引擎共享的日志模块，它用于记录数据库执行的写入性操作，也就是在事务<code>commit</code>阶段进行记录，以二进制的形式保存于磁盘中。<code>bin log</code>是逻辑日志，并且由mysql数据库的service层执行，也就是说使用所有的存储引擎数据库都会记录<code>bin log</code>日志。</p>
+<p><code>bin log</code>是以追加的方式进行写入的，可以通过 <code>max_binlog_size</code> 参数设置<code>bin log</code>文件大小，当文件大小达到某个值时，会生成新的文件来保存日志。</p>
+<h3 id="bin-log刷盘机制"><a href="#bin-log刷盘机制" class="headerlink" title="bin log刷盘机制"></a>bin log刷盘机制</h3><p>在每次事务<code>commit</code>提交时才会记录bin log日志，此时记录仍然在内存中，那么什么时候存储到磁盘中呢？</p>
+<p>mysql通过 <font color="red">sync_binlog</font> 参数控制bin log刷盘时机，取值范围：0～N：<br> 0：不去强求，由系统自行判断何时写入磁盘；<br> 1：每次事务<code>commit</code>的时候都要将bin log写入磁盘；<br> N：每N个事务<code>commit</code>，才会将bin log写入磁盘；</p>
+<p><code>sync_binlog</code> 参数建议设置为1，这样每次事务commit时就会把bin log写入磁盘中，这样也可以保证mysql异常重启之后bin log日志不会丢失。</p>
+<p>一点是主从复制，另一点是数据恢复</p>
+<ul>
+<li>主从复制：在master端开启 <code>bin log</code> ，然后将 <code>bin log</code> 发送给各个slaver端，slaver端读取 <code>bin log</code> 日志，从而使得主从数据库中数据一致</li>
+<li> 数据恢复：通过 <code>bin log</code> 获取想要恢复的时间段数据</li>
+</ul>
+<p><code>undo log</code> 是回滚日志，逻辑日志是记录每条数据的所有版本，比如 <code>update</code> 语句，那么它首先会将该条记录的数据记录到<code>undo log</code>日志中，并且将最新版本的<strong>roll_pointer指针</strong>指向上一个版本，这样就可以形成当前记录的所有版本，这也是MVCC的实现机制。</p>
+<p>undo log在事务开启之前就产生，当事务提交的时候，不会删除undo log，因为可能需要rollback操作，要执行回滚（rollback）操作时，从缓存中读取数据。InnoDB会将事务对应的日志保存在删除list中，后台通过purge线程进行回收处理</p>
+<h3 id="事务执行过程"><a href="#事务执行过程" class="headerlink" title="事务执行过程"></a>事务执行过程</h3><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806154846154.png" alt="image-20210806154846154" style="zoom: 50%;">
+
+<p>为什么要分库分表（分表数据量太大，分库是因为一个库不能承担大量的并发请求）</p>
+<p>单库数据迁移（停机迁移，双写保证一致性）</p>
+<p>动态扩容缩容分库分表（预先分配足够的分库分表32*32,只需要更新路由规则，迁移库表即可）</p>
+<p>分布式id（多种解决方案：）</p>
+<p>读写分离（分库分表前要考虑读写分离，如果写请求少， 可以不用分库）</p>
+<p>MQ（rabbitmq、kafka）（架构设计、原理、高可用、容错、对比（rabbitmq微秒级延迟，w级吞吐量，kafka秒级延迟，10w级吞吐量，功能上对比rabbitmq通过exchange和queue支持丰富的路由规则，还有死信队列，实现延迟消费，架构设计下海量消息没办法线性扩展；kafka日志存储文件，默认存储7天，对于需要记录的场景适用，而且性能更高）、数据零丢失（可靠性消息服务）、顺序消费、MQ作用、缺点、）</p>
+<h3 id="高可用"><a href="#高可用" class="headerlink" title="高可用"></a>高可用</h3><p>RabbitMQ镜像集群，高可用。Master和Slave队列，写操作，当访问slave队列时，会路由到master队列；读操作，当访问slave时，转发到master获取队列数据，最后请求由slave返回。问题点是：queue中海量数据存储时，没办法线性扩展。负载均衡是master节点尽量不分配在同一个节点上。</p>
+<p>RabbitMQ普通集群，元数据在每个节点上同步一份，queue不会在每个节点上，如果存在queue的节点宕机之后，数据就获取不到了。不能提供高可用</p>
+<p>Kafka集群，分区和副本进行容错，可以通过增加分区的方式线性扩容，副本用于保证高可用。</p>
+<h3 id="消息幂等性（怎么出现重复消费的情况）"><a href="#消息幂等性（怎么出现重复消费的情况）" class="headerlink" title="消息幂等性（怎么出现重复消费的情况）"></a>消息幂等性（怎么出现重复消费的情况）</h3><p>RabbitMQ手动确认channel.ack,处理过程中应用宕机，会导致重复消费</p>
+<p>Kafka手动确认，每隔一段时间（定时定期），会把消费的offset提交到broker，消费一半，应用宕机的情况下，会再次重复消费</p>
+<p>Kafka reblace重平衡，</p>
+<h3 id="零丢失（可靠性传输）"><a href="#零丢失（可靠性传输）" class="headerlink" title="零丢失（可靠性传输）"></a>零丢失（可靠性传输）</h3><h3 id="积压"><a href="#积压" class="headerlink" title="积压"></a>积压</h3><p>RabbitMQ：增加消费者</p>
+<p>Kafka：新建topic，之后创建成倍如10倍的分区，停掉消费者，写程序监听现有队列，将队列中的消息，重写到新的topic中，开启10倍的机器，消费新topic里的消息（一个消费者可以消费多个分区，但是不会多个消费者消费同一个分区）</p>
+<p>当mq快写满了，临时程序，消费数据，丢弃数据，之后补数据</p>
+<h3 id="rabbitmq消息过期（手动补消息）"><a href="#rabbitmq消息过期（手动补消息）" class="headerlink" title="rabbitmq消息过期（手动补消息）"></a>rabbitmq消息过期（手动补消息）</h3><h3 id="Kafka为啥快"><a href="#Kafka为啥快" class="headerlink" title="Kafka为啥快"></a>Kafka为啥快</h3><p>采用Reactor多路复用网络模型（支持百万连接），页缓存+异步磁盘顺序写入，零拷贝</p>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210802163613614.png" alt="image-20210802163613614" style="zoom: 67%;">
+                                                                        多路复用原理图
+
+<p><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210802172944621.png" alt="image-20210802172944621" style="zoom:50%;"><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210802173050027.png" alt="image-20210802173050027" style="zoom:50%;"></p>
+<p>​                                                        左图为正常读写过程，右图为零拷贝过程</p>
+<h3 id="Kafka客户端缓冲池机制"><a href="#Kafka客户端缓冲池机制" class="headerlink" title="Kafka客户端缓冲池机制"></a>Kafka客户端缓冲池机制</h3><p>private final ConcurrentMap&lt;topicpartition, deque&gt;  batches = new CopyOnWriteMap&lt;TopicPartition, Deque&gt;();</p>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210802164216792.png" alt="image-20210802164216792" style="zoom:67%;">
+初始化创建BufferPool 就占用固定的内存，比如 32MB。然后把 32MB 划分为 N 多个内存块，Deque<ByteBuffer> free，比如说一个内存块是 16KB，这样的话这个缓冲池里就会有很多的内存块，使用HeapByteBuffer缓冲区。
+
+<p>然后你需要创建一个新的 Batch，就从缓冲池里取一个 16KB 的内存块就可以了，然后这个 Batch 就不断的写入消息，但是最多就是写 16KB，因为 Batch 底层的内存块就 16KB。</p>
+<p>接着如果 Batch 被发送到 Kafka 服务器了，此时 Batch 底层的内存块就直接还回缓冲池就可以了。</p>
+<p>下次别人再要构建一个 Batch 的时候，再次使用缓冲池里的内存块就好了。这样就可以利用有限的内存，对他不停的反复重复的利用。因为如果你的 Batch 使用完了以后是把内存块还回到缓冲池中去，那么就不涉及到垃圾回收了。</p>
+<p>如果我现在把一个缓冲池里的内存资源都占满了，现在缓冲池里暂时没有内存块了，怎么办呢？</p>
+<p>阻塞你的写入操作，不让你继续写入消息了。把你给阻塞住，不停的等待，直到有内存块释放出来，然后再继续让你写入消息。</p>
+<h3 id="Offset原理"><a href="#Offset原理" class="headerlink" title="Offset原理"></a>Offset原理</h3><p>segment file包含（多个log和index文件，查找时通过offset找到对应的index文件，再到对应的index文件里查找对应的log文件中数据存储位置，找到最终offset数据）index文件使用稀疏列表，通过二分查找，找到offset范围内的，在log文件里的位置。</p>
+<h2 id="Dubbo"><a href="#Dubbo" class="headerlink" title="Dubbo"></a>Dubbo</h2><p>如何设计一个高并发系统（系统拆分、缓存、MQ、分库分表、读写分离、ES）</p>
+<p>架构设计（10层）</p>
+<p>工作原理（注册中心，Provider，Consumer，Monitor、Admin）</p>
+<p>序列化（通信协议，序列化协议，hessian数据结构（8种原始类型，3种递归类型（list，map，object），一种特殊类型ref用来表示对共享对象的引用），PB（protocol buffer）效率高-》proto编译器，速度快，应该比 <code>XML</code> 和 <code>JSON</code> 快上了 <code>20~100</code> 倍；它的数据压缩效果好，就是说它序列化后的数据量体积小。因为体积小，传输起来带宽和速度上会有优化）</p>
+<p>负载均衡和集群容错（4种负载均衡策略，6种集群容错策略）</p>
+<p>RandomLoadblance、RoundRobinLoadblance、LeastActiveLoadblance、ConsistentHashLoadblance</p>
+<p>failover失败之后可以配置重试，默认；</p>
+<p>failfast快速失败，写入请求，不需重试；</p>
+<p>failsafe出现异常时忽略，不重要接口，写日志；</p>
+<p>failback失败了后台自动记录请求，然后定时重发，比较适合于写消息队列这种；</p>
+<p>forking并发调用多个provide人，只要一个成功就返回，常用于实时性要求比较高的读操作，但是会浪费更多的服务资源；</p>
+<p>broadcast逐个调用所有的 provider。任何一个 provider 出错则报错。通常用于通知所有提供者更新缓存或日志等本地资源信息。</p>
+<p>SPI（service provide interface，java自带的缺点：加载所有的实现类，Dubbo使用key-value键值对的方式，可以通过key直接获取实现类，@SPI（dubbo）指定默认通信协议为dubbo实现类)</p>
+<p>@Adaptive扩展点自适应,可以把它看成是运行时动态决定使用哪种扩展的方式。dubbo会在运行时对扩展服务动态生成一个代理类，这个类会在运行时动态决定使用哪一个扩展。总结：运行时动态生成代理类，代理类通过url决定生成哪一个类的扩展类。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();</span><br></pre></td></tr></table></figure>
+
+<p>重点就是看下如何生成这样的代理类，它是通过运行时生成源码文件，然后调用编译器进行编译后生成。</p>
+<p>服务治理（调用链路自动生成（拓扑图），服务访问压力及时长统计（qps，tp90，tp99），失败监控和报警，可用性监控（SLA））</p>
+<p>限流（connections，actives 设置长连接数量，每个长连接下并发执行线程数）</p>
+<p>服务降级（降级使用Mock机制，服务上配置mock，mock=“return null” 或者mock=“true”再使用xxxServiceMock）</p>
+<p>服务重试和超时（retries=“3”，timeout=“2000”）</p>
+<p>幂等性怎么设计（网络超时，重试，重复处理。通用方案，很多情况下都要考虑幂等性）</p>
+<p>接口保证顺序性（使用key如订单id，hash到同一个内存队列或使用Kafka指定key，消息到同一个分区中）</p>
+<p>为什么要进行系统拆分？如何拆分？（不拆分，代码复杂，开发效率低，技术栈要求一致；拆分之前，需要组织结构进行拆分，3-4个人负责一个微服务，需要很强的基础架构和运维能力）</p>
+<p>微服务和传统http地址调用区别（当访问多之后，需要配置对应关系，负载均衡、超时重试、降级、限流）</p>
+<p>SpringCloud（框架、Eureka、Zuul、Gateway、Feign、Hystrix、Ribbon、Sentinel、Seata 、ShardingSphere）<br>Nacos原理：</p>
+<p>配置中心：主动pull，长轮询（超时时间为30s，dataId的MD5对比，服务端29.5s之后执行取消任务并返回，之前挂起，将请求任务存入队列中，管理端更新之后，通过事件通知的方式唤起挂起的长轮询，将队列中的任务删除，并返回。）</p>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806151612513.png" alt="image-20210806151612513" style="zoom:67%;">
+
+<p>注册中心：命名服务类上订阅监听，创建UDP长连接，更新服务时，通知监听器</p>
+<p>SpringBoot</p>
+<p>分布式事务</p>
+<p>2pc(prepare准备阶段（所有的RM锁住需要的资源，在本地执行这个事务（执行sql，写redo/undo log等），但不提交）,commit提交阶段：commit，rollback) TM RM角色</p>
+<p>1、同步阻塞：最大的问题即同步阻塞，即：所有参与事务的逻辑均处于阻塞状态。<br>2、单点：协调者存在单点问题，如果协调者出现故障，参与者将一直处于锁定状态。<br>3、脑裂：在阶段2中，如果只有部分参与者接收并执行了Commit请求，会导致节点数据不一致。</p>
+<p>3pc</p>
+<ul>
+<li>cancommit是否可以提交，参与者节点会对自身逻辑进行事务尝试，其实说白了就是检查下自身状态的健康性，看有没有能力进行事务操作。</li>
+<li> precommit预提交：参与者收到后开始执行事务操作，并将Undo和Redo信息记录到事务日志中。</li>
+<li>docommit</li>
+</ul>
+<p>引入超时机制</p>
+<ul>
+<li>PreCommit阶段 <strong>协调者和参与者都引入了超时机制</strong>，前一个阶段返回，协调者超时，向所有的参与者发送<strong>“abort”</strong>请求。</li>
+<li>doCommit阶段，协调者收到no或者超时，协调者都会向所有的参与者节点发送abort请求。在doCommit阶段，如果参与者无法及时接收到来自协调者的doCommit或者abort请求时，会在等待超时之后，会继续进行事务的提交。（其实这个应该是基于概率来决定的，当进入第三阶段时，说明参与者在第二阶段已经收到了PreCommit请求，那么协调者产生PreCommit请求的前提条件是他在第二阶段开始之前，收到所有参与者的CanCommit响应都是Yes。（一旦参与者收到了PreCommit，意味他知道大家其实都同意修改了）所以，一句话概括就是，当进入第三阶段时，由于网络超时等原因，虽然参与者没有收到commit或者abort响应，但是他有理由相信：成功提交的几率很大。 ）</li>
+</ul>
+<p>避免了参与者在长时间无法与协调者节点通讯（协调者挂掉了）的情况下，无法释放资源的问题，因为参与者自身拥有超时机制会在超时后，自动进行本地commit从而进行释放资源。而这种机制也侧面降低了整个事务的阻塞时间和范围。</p>
+<p>以上就是3PC相对于2PC的一个提高（相对缓解了2PC中的前两个问题），但是3PC依然没有完全解决数据不一致的问题。</p>
+<p>TCC(Try锁定冻结资源，Confirm确认扣除阶段，Cancel取消阶段)</p>
+<p>问题：空回滚（pre阶段超时，此时cancel，丢包，支持），事务悬挂（执行cancel之后执行pre，堵塞时造成此情况，要避免）</p>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804102939532.png" alt="image-20210804102939532" style="zoom:67%;">
+本地消息
+
+<p>消息最终一致性</p>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804102903400.png" alt="image-20210804102903400" style="zoom:67%;">
+消息最终一致性
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804095858230.png" alt="image-20210804095858230" style="zoom:67%;">
+
+<p>最大努力通知</p>
+<p>Seata</p>
+<p><strong>Transaction Coordinator (TC)： 事务协调器，维护全局事务的运行状态，负责协调并驱动全局事务的提交或回滚。</strong></p>
+<p><strong>Transaction Manager (TM)： 控制全局事务的边界，负责开启一个全局事务，并最终发起全局提交或全局回滚的决议。</strong></p>
+<p><strong>Resource Manager (RM)： 控制分支事务，负责分支注册、状态汇报，并接收事务协调器的指令，驱动分支（本地）事务的提交和回滚。</strong></p>
+<p>分布式事务在Seata中AT模式的执行流程：</p>
+<p><strong>TM 向 TC 申请开启一个全局事务，全局事务创建成功并生成一个全局唯一的 XID。</strong></p>
+<p><strong>XID 在微服务调用链路的上下文中传播。</strong></p>
+<p><strong>RM 向 TC 注册分支事务，接着执行这个分支事务并提交（重点：RM在第一阶段就已经执行了本地事务的提交/回滚），最后将执行结果汇报给TC。</strong></p>
+<p><strong>TM 根据 TC 中所有的分支事务的执行情况，发起全局提交或回滚决议。</strong></p>
+<p><strong>TC 调度 XID 下管辖的全部分支事务完成提交或回滚请求。</strong></p>
+<p><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804104558272.png" alt="image-20210804104558272"></p>
+<p>Seata能够在第一阶段直接提交事务，是因为Seata框架为每一个RM维护了一张UNDO_LOG表（这张表需要客户端自行创建），其中保存了每一次本地事务的回滚数据。因此，二阶段的回滚并不依赖于本地数据库事务的回滚，而是RM直接读取这张UNDO_LOG表，并将数据库中的数据更新为UNDO_LOG中存储的历史数据。</p>
+<p>如果第二阶段是提交命令，那么RM事实上并不会对数据进行提交（因为一阶段已经提交了），而实发起一个异步请求删除UNDO_LOG中关于本事务的记录。</p>
+<blockquote>
+<p>由于Seata一阶段直接提交了本地事务，因此会造成隔离性问题，因此Seata的默认隔离级别为Read Uncommitted。然而Seata也支持Read Committed的隔离级别。</p>
+</blockquote>
+<p>IO网络编程</p>
+<p>BIO 传统IO，堵塞式IO</p>
+<ul>
+<li><p>当并发数较大时，需要创建大量线程来处理连接，系统资源占用较大；</p>
+</li>
+<li><p>连接建立后，如果当前线程暂时没有数据可读，则线程就阻塞在 Read 操作上，造成线程资源浪费。</p>
+</li>
+</ul>
+<p>NIO （非堵塞式IO，NewIO，java中NIO实现了非堵塞式IO，基于事件驱动的方式）</p>
+<ul>
+<li>并发连接：使用IO多路复用解决；堵塞读：当某条连接有新的数据可以处理时，操作系统通知应用程序，线程从阻塞状态返回，开始进行业务处理；</li>
+<li>基于线程池复用线程资源：不必再为每个连接创建线程，将连接完成后的业务处理任务分配给线程进行处理，一个线程可以处理多个连接的业务。</li>
+</ul>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804114632365.png" alt="image-20210804114632365" style="zoom:67%;">
+NIO基本实现如图
+
+<p>Reactor 模型组成：</p>
+<ul>
+<li>事件分派器（eventDispatch，负责监听和分发事件）</li>
+<li>多线程：事件处理器（eventHandle，处理程序执行 I/O 事件要完成的实际事件）</li>
+</ul>
+<p>Reactor 线程模型：单Reactor单线程，单Reactor多线程，主从Reactor多线程</p>
+<p>AIO</p>
+<p>Netty基于Future +Listener实现，Future虽然提供了异步任务处理机制，但是获取处理结果确不方便，只能通过堵塞get（）方法或者轮询的方式等到任务的结果   <a target="_blank" rel="noopener" href="https://www.cnblogs.com/lbhym/p/12753314.html">Netty详解</a></p>
+<p>Netty中的<font color="red">pipeline</font>和<font color="red">channelHandler</font>，通过责任链设计模式来组织代码逻辑，并且能够支持逻辑的添加和删除，能够支持各类协议拓展，如HTTP、Websocket等。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">.handler(<span class="keyword">new</span> ChannelInitializer&lt;SocketChannel&gt;() &#123;  <span class="comment">//客户端</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(SocketChannel ch)</span> </span>&#123;</span><br><span class="line">        ch.pipeline().addLast(<span class="keyword">new</span> ClientHandler());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line">.childHandler(<span class="keyword">new</span> ChannelInitializer&lt;NioSocketChannel&gt;() &#123; <span class="comment">//服务端</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(NioSocketChannel ch)</span> </span>&#123;</span><br><span class="line">        ch.pipeline().addLast(<span class="keyword">new</span> ServerHandler());</span><br><span class="line">    &#125;</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806135818842.png" alt="image-20210806135818842" style="zoom:67%;">
+一个双向链表结构，每个节点是一个ChannelHandlerContext对象。这个对象能拿到与channel相关的所有上下文信息，这个对象还包含一个重要的对象：ChannelHandler，它的分类如下。
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806135913812.png" alt="image-20210806135913812" style="zoom:67%;">
+
+<p>拆包粘包解决方法：</p>
+<ol>
+<li>FixedLengthFrameDecoder：固定长度拆包器，每个数据包长度都是固定的。</li>
+</ol>
+<p>　　2. LineBasedFrameDecoder：行拆包器，每个数据包之间以换行符作为分隔。<br>　　3. DelimiterBasedFrameDecoder：类似行拆包器，不过我们可以自定义分隔符。<br>　　4. LengthFieldBasedFrameDecoder：基于长度域拆包器，最常用的，只要你的自定义协议中包含数据长度这个部分，就可以使用。它需要三个参数，第一个是数据包最大长度、第二个是参数长度域偏移量、第三个是长度域长度。</p>
+<p>　　<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/1383122-20200425144254261-1102259668.png" alt="img" style="zoom:67%;"></p>
+<p>　　看看前面通信协议的图，所谓长度域就是数据长度就是数据长度占用的字节，这里是4。长度域偏移量就是数据长度这个部分在通信协议组成部分中的位置，前面几个部分加起来是7，所以它的偏移量就是7。</p>
+<p>ByteBuf和ByteBuffer区别 <a target="_blank" rel="noopener" href="https://blog.csdn.net/mrliuzhao/article/details/89453082">ByteBuffer</a></p>
+<h2 id="响应式编程入门"><a href="#响应式编程入门" class="headerlink" title="响应式编程入门"></a>响应式编程入门</h2><p>　　响应式编程就是基于reactor的思想，当你做一个带有一定延迟的才能够返回的io操作时，不会阻塞，而是立刻返回一个流，并且订阅这个流，当这个流上产生了返回数据，可以立刻得到通知并调用回调函数处理数据。</p>
+<h3 id="Flux"><a href="#Flux" class="headerlink" title="Flux"></a>Flux</h3><p>　　Reactor中的发布者（Publisher）由<strong>Flux</strong>和<strong>Mono</strong>两个类定义，它们都提供了丰富的操作符（operator）。一个Flux对象代表一个包含0..N个元素的响应式序列，<font color="red">元素可以是普通对象、数据库查询的结果、http响应体，甚至是异常</font>。而一个Mono对象代表一个包含零/一个（0..1）元素的结果。下图就是一个Flux类型的数据流，Flux往流上发送了3个元素，Subscriber通过订阅这个流来接收通知。</p>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804153258435.png" alt="image-20210804153258435" style="zoom:67%;">
+Flux和Mono都可以发出三种“数据信号”：元素值、错误信号、完成信号，错误信号和完成信号都是终止信号，完成信号用于告知下游订阅者该数据流正常结束，错误信号终止数据流的同时将错误传递给下游订阅者。
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; words = Arrays.asList(<span class="string">&quot;hello&quot;</span>,<span class="string">&quot;reactive&quot;</span>,<span class="string">&quot;world&quot;</span>);</span><br><span class="line">Flux.fromIterable(words).subscribe(System.out::println);</span><br></pre></td></tr></table></figure>
+
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/yuanrw/p/10050509.html">什么是响应式编程？reactor入门</a></p>
+<h2 id="Sentinel流控"><a href="#Sentinel流控" class="headerlink" title="Sentinel流控"></a>Sentinel流控</h2><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210805133711749.png" alt="image-20210805133711749" style="zoom:67%;">
+**流控规则**：
+    1、阈值类型：通过什么方式限流：qps：每秒请求量大于3的时候开始限流；并发线程数，减少了线程切换
+    2、**流控模式**
+        直接（默认）：接口达到限流条件时，开启限流
+        关联：当关联的资源达到限流条件时，开启限流 [适合做应用让步]
+        链路：当从某个接口过来的资源达到限流条件时，开启限流。**针对来源是针对上级微服务，而链路流控是针对上级接口，也就是说它的粒度更细**，访问通过@SentinelResource("message") 指定的接口
+    3、**流控效果**：
+        **快速失败（默认）**: 直接失败，抛出异常，不做任何额外的处理，是最简单的效果
+        **Warm Up**：它从开始阈值到最大QPS阈值会有一个缓冲阶段，一开始的阈值是最大QPS阈值的1/3，然后慢慢增长，直到最大阈值，适用于将突然增大的流量转换为缓步增长的场景。(令牌桶，平滑预热限流)
+        **排队等待**：让请求以均匀的速度通过，单机阈值为每秒通过数量，其余的排队等待； 它还会让设置一个超时时间，当请求超过超时间时间还未处理，则会被丢弃。（漏桶？）
+
+<p><strong>令牌桶算法</strong>：限制数据的平均传输效率的同时还允许一定程度的突发传输，保护自己的系统不被打垮。平滑突发限流(SmoothBursty)和平滑预热限流(SmoothWarmingUp)实现。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">RateLimiter limiter = RateLimiter.create(<span class="number">5</span>);<span class="comment">//每秒允许5个请求，表示桶容量为5且每秒新增5个令牌，即每隔0.2毫秒新增一个令牌</span></span><br><span class="line"><span class="comment">//permitsPerSecond:每秒新增的令牌数  warmupPeriod:从冷启动速率过渡到平均速率的时间间隔</span></span><br><span class="line"><span class="comment">//系统冷启动后慢慢的趋于平均固定速率（即刚开始速率慢一些，然后慢慢趋于我们设置的固定速率）</span></span><br><span class="line">RateLimiter limiter = RateLimiter.create(<span class="number">10</span>, <span class="number">1000</span>, TimeUnit.MILLISECONDS);</span><br><span class="line">limiter.acquire(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+
+<p><strong>漏桶算法</strong>：限制数据的传输效率。用于保证别人的系统不被打垮</p>
+<p><strong>降级规则</strong><br><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806100935989.png" alt="image-20210806100935989" style="zoom:67%;"></p>
+<ul>
+<li>平均响应时间：当资源的平均响应时间超过阈值（以 ms 为单位）之后，资源进入准降级状态。</li>
+<li>异常比例：当资源的每秒异常总数占通过量的比值超过阈值之后，资源进入降级状态，即在接下的时间窗口（以 s 为单位）之内，对这个方法的调用都会自动地返回。异常比率的阈值范围是[0.0,1.0]。 </li>
+<li>异常数：当资源近 1 分钟的异常数目超过阈值之后会进行服务降级。注意由于统计时间窗口是分钟级别的，若时间窗口小于60s，则结束熔断状态后仍可能再进入熔断状态。</li>
+</ul>
+<p><strong>系统保护规则</strong></p>
+<p>是从应用级别的入口流量进行控制，从单台机器的总体 Load、RT、入口 QPS 、CPU使用率和线程数五个维度监控应用数据，让系统尽可能跑在最大吞吐量的同时保证系统整体的稳定性。系统保护规则是应用整体维度的，而不是资源维度的，并且仅对入口流量 (进入应用的流量) 生效。</p>
+<ul>
+<li>Load（仅对 Linux/Unix-like 机器生效）：当系统 load1 超过阈值，且系统当前的并发线程数超过系统容量时才会触发系统保护。系统容量由系统的 maxQps * minRt 计算得出。设定参考值一般是 CPU cores * 2.5。</li>
+<li>RT：当单台机器上所有入口流量的平均 RT 达到阈值即触发系统保护，单位是毫秒。</li>
+<li>线程数：当单台机器上所有入口流量的并发线程数达到阈值即触发系统保护。</li>
+<li>入口 QPS：当单台机器上所有入口流量的 QPS 达到阈值即触发系统保护。</li>
+<li>CPU使用率：当单台机器上所有入口流量的 CPU使用率达到阈值即触发系统保护</li>
+</ul>
+<h2 id="SkyWalking"><a href="#SkyWalking" class="headerlink" title="SkyWalking"></a>SkyWalking</h2><p>SkyWalking使用javaagent探针的方式进行监控上报，零侵入。</p>
+<p>UI：从Service 、Instance、Endpoint维度进行统计查看，</p>
+<p>CPM  每分钟请求数，SLA 服务等级协议，P50,P90,P95,P99响应时间  slow endpoint慢端点  heatmap热力图：直观感受平台的整体流量</p>
+<p>apdex 是一个衡量服务器性能的标准。apdex有三个指标：</p>
+<p>满意：请求响应时间小于等于T。<br>可容忍：请求响应时间大于T，小于等于4T。<br>失望：请求响应时间大于4T。<br>T：自定义的一个时间值，比如：500ms。apdex = (满意数 + 可容忍数/2)/ 总数。例如：服务A定义T=200ms，在100个采样中，有20个请求小于200ms，有60个请求在200ms到800ms之间，有20个请求大于800ms。计算apdex = (20 + 60/2)/100 = 0.5。</p>
+<p>拓扑图（依赖关系图）</p>
+<h2 id="Gateway核心架构"><a href="#Gateway核心架构" class="headerlink" title="Gateway核心架构"></a>Gateway核心架构</h2><p>路由(Route) 是 gateway 中最基本的组件之一，表示一个具体的路由信息载体。主要定义了下面的几个信息:<br><strong>id</strong>，路由标识符，区别于其他 Route。<br><strong>uri</strong>，路由指向的目的地 uri，即客户端请求最终被转发到的微服务。<br><strong>order</strong>，用于多个 Route 之间的排序，数值越小排序越靠前，匹配优先级越高。<br><strong>predicate</strong>，断言的作用是进行条件判断，只有断言都返回真，才会真正的执行路由。<br><strong>filter</strong>，过滤器用于修改请求和响应信息。<br><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806103936840.png" alt="image-20210806103936840" style="zoom:67%;"><br><strong>执行流程大体如下：</strong></p>
+<ol>
+<li>Gateway Client向Gateway Server发送请求</li>
+<li>请求首先会被HttpWebHandlerAdapter进行提取组装成网关上下文</li>
+<li>然后网关的上下文会传递到DispatcherHandler，它负责将请求分发给RoutePredicateHandlerMapping</li>
+<li>RoutePredicateHandlerMapping负责路由查找，并根据路由断言判断路由是否可用</li>
+<li>如果过断言成功，由FilteringWebHandler创建过滤器链并调用</li>
+<li>请求会一次经过PreFilter–微服务-PostFilter的方法，最终返回响应</li>
+</ol>
+<p>断言-》断言工厂-》AbstractRoutePredicateFactory（继承此抽象类，）</p>
+<p>基于路由权重的断言工厂-》WeightRoutePredicateFactory：接收一个[组名,权重], 然后对于同一个组内的路由按照权重转发</p>
+<p>过滤器-》<strong>Filter</strong>的生命周期只有两个：<strong>“pre” **和</strong>“post”**。</p>
+<ul>
+<li><p>过滤器在请求被路由之前调用，可利用这种过滤器实现身份验证、在集群中选择请求的微服务、记录调试信息等</p>
+</li>
+<li><p>过滤器在路由到微服务以后执行，为响应添加标准的HTTP Header、收集统计信息和指标、将响应从微服务发送给客户端等。</p>
+</li>
+</ul>
+<p>GatewayFilter：应用到单个路由或者一个分组的路由上。GlobalFilter：应用到所有的路由上。</p>
+<p>局部过滤器-》过滤器工厂（AbstractGatewayFilterFactory）</p>
+<h2 id="均摊算法："><a href="#均摊算法：" class="headerlink" title="均摊算法："></a>均摊算法：</h2><p>99 ，128，19，62四个价格，优化60元，优惠之后均摊价格：99-60<em>99/(99+128+19+62)=79<br>128-60</em>128/(99+128+19+62)=103.06</p>
+</ByteBuffer>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/07/21/SpringCloud%E5%85%A8%E5%AE%B6%E6%A1%B6/" rel="prev" title="SpringCloud全家桶">
+                  <i class="fa fa-chevron-left"></i> SpringCloud全家桶
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/07/30/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8FMybatis/" rel="next" title="设计之设计模式Mybatis">
+                  设计之设计模式Mybatis <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

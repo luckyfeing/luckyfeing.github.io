@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="表锁锁定整个表，表级别的共享锁和排他锁。如 LOCK TABLES ... WRITE&#x2F;READ 等命令，实现的就是表级锁。 在 InnoDB 中是支持多粒度的锁共存的，比如表锁和行锁。而 Intention Locks - 意向锁，就是表级锁。和行级锁一样，意向锁分为 intention shared lock (IS) 和 intention exclusive lock (IX) . 但有趣">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mysql之锁">
+<meta property="og:url" content="http://example.com/2020/12/24/mysql%E4%B9%8B%E9%94%81/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="表锁锁定整个表，表级别的共享锁和排他锁。如 LOCK TABLES ... WRITE&#x2F;READ 等命令，实现的就是表级锁。 在 InnoDB 中是支持多粒度的锁共存的，比如表锁和行锁。而 Intention Locks - 意向锁，就是表级锁。和行级锁一样，意向锁分为 intention shared lock (IS) 和 intention exclusive lock (IX) . 但有趣">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/12/24/mysql%E4%B9%8B%E9%94%81/1861307-20200308182522643-1705968057.png">
+<meta property="article:published_time" content="2020-12-24T07:32:09.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.075Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="mysql">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/12/24/mysql%E4%B9%8B%E9%94%81/1861307-20200308182522643-1705968057.png">
+
+
+<link rel="canonical" href="http://example.com/2020/12/24/mysql%E4%B9%8B%E9%94%81/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>mysql之锁 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%A8%E9%94%81"><span class="nav-number">1.</span> <span class="nav-text">表锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%84%8F%E5%90%91%E9%94%81%E7%9A%84%E4%BD%9C%E7%94%A8"><span class="nav-number">1.1.</span> <span class="nav-text">意向锁的作用</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%8C%E9%94%81"><span class="nav-number">2.</span> <span class="nav-text">行锁</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AF%BB%E9%94%81%E5%92%8C%E5%86%99%E9%94%81"><span class="nav-number">2.1.</span> <span class="nav-text">读锁和写锁</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%97%B4%E9%9A%99%E9%94%81"><span class="nav-number">3.</span> <span class="nav-text">间隙锁</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Next-Key-Lock"><span class="nav-number">4.</span> <span class="nav-text">Next_Key  Lock</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E5%92%8C%E6%8F%92%E5%85%A5%EF%BC%88%E5%B8%A6%E9%97%B4%E9%9A%99%E9%94%81%EF%BC%89"><span class="nav-number">4.1.</span> <span class="nav-text">更新和插入（带间隙锁）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%92%E5%85%A5%E5%92%8C%E6%9B%B4%E6%96%B0%EF%BC%88%E4%B8%8D%E5%B8%A6%E9%97%B4%E9%9A%99%E9%94%81-%E9%94%81%E7%B4%A2%E5%BC%95%E8%A1%8C%EF%BC%89"><span class="nav-number">4.2.</span> <span class="nav-text">插入和更新（不带间隙锁,锁索引行）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%92%E5%85%A5%E5%92%8C%E6%8F%92%E5%85%A5%EF%BC%88%E4%B8%8D%E5%B8%A6%E9%94%81%EF%BC%89"><span class="nav-number">4.3.</span> <span class="nav-text">插入和插入（不带锁）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8F%92%E5%85%A5%E5%92%8C%E5%88%A0%E9%99%A4%EF%BC%88%E8%A1%8C%E9%94%81%EF%BC%89"><span class="nav-number">4.4.</span> <span class="nav-text">插入和删除（行锁）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E5%92%8C%E6%8F%92%E5%85%A5%EF%BC%88%E5%B8%A6%E9%97%B4%E9%9A%99%E9%94%81%EF%BC%89"><span class="nav-number">4.5.</span> <span class="nav-text">删除和插入（带间隙锁）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E5%92%8C%E6%9B%B4%E6%96%B0%EF%BC%88%E8%A1%8C%E9%94%81%EF%BC%89"><span class="nav-number">4.6.</span> <span class="nav-text">删除和更新（行锁）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E5%92%8C%E5%88%A0%E9%99%A4%EF%BC%88%E8%A1%8C%E9%94%81%EF%BC%89"><span class="nav-number">4.7.</span> <span class="nav-text">删除和删除（行锁）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9B%B4%E6%96%B0%E5%92%8C%E6%9B%B4%E6%96%B0%EF%BC%88%E8%A1%8C%E9%94%81%EF%BC%89"><span class="nav-number">4.8.</span> <span class="nav-text">更新和更新（行锁）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.9.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%97%B4%E9%9A%99%E9%94%81%E8%8C%83%E5%9B%B4"><span class="nav-number">4.10.</span> <span class="nav-text">间隙锁范围</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%A0%E9%94%81%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%8E%9F%E5%88%99%EF%BC%88RR%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB%E4%B8%8B%EF%BC%89"><span class="nav-number">5.</span> <span class="nav-text">加锁的基本原则（RR隔离级别下）</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%89%93%E5%BC%80-InnoDB-%E9%94%81%E6%97%A5%E5%BF%97"><span class="nav-number">6.</span> <span class="nav-text">打开 InnoDB 锁日志</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MySQL-InnoDB-%E9%94%81%E6%80%BB%E7%BB%93%EF%BC%88%E4%BA%8C%EF%BC%89-RC-%E5%8A%A0%E9%94%81%E6%B5%81%E7%A8%8B"><span class="nav-number">7.</span> <span class="nav-text">MySQL InnoDB 锁总结（二）- RC 加锁流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B3%E4%BA%8E-InnoDB-%E9%94%81%E7%9A%84%E8%B6%85%E5%85%A8%E6%80%BB%E7%BB%93"><span class="nav-number">8.</span> <span class="nav-text">关于 InnoDB 锁的超全总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B9%BB%E8%AF%BB%E5%9C%A8-InnoDB-%E4%B8%AD%E6%98%AF%E8%A2%AB%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3%E7%9A%84%EF%BC%9F"><span class="nav-number">9.</span> <span class="nav-text">幻读在 InnoDB 中是被如何解决的？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#8%E7%82%B9%E5%87%A0%E7%89%88%E6%9C%ACperformance-schema-data-locks%E7%90%86%E8%A7%A3"><span class="nav-number">10.</span> <span class="nav-text">8点几版本performance_schema.data_locks理解</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#mysql%E4%B8%ADQPS%E3%80%81TPS%E3%80%81%E7%B3%BB%E7%BB%9F%E5%90%9E%E5%90%90%E9%87%8F"><span class="nav-number">11.</span> <span class="nav-text">mysql中QPS、TPS、系统吞吐量</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/24/mysql%E4%B9%8B%E9%94%81/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          mysql之锁
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-12-24 15:32:09" itemprop="dateCreated datePublished" datetime="2020-12-24T15:32:09+08:00">2020-12-24</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="表锁"><a href="#表锁" class="headerlink" title="表锁"></a>表锁</h2><p>锁定整个表，表级别的共享锁和排他锁。如 <code>LOCK TABLES ... WRITE/READ</code> 等命令，实现的就是表级锁。</p>
+<p>在 InnoDB 中是支持多粒度的锁共存的，比如表锁和行锁。而 Intention Locks - 意向锁，就是表级锁。和行级锁一样，意向锁分为 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/5.7/en/glossary.html#glos_intention_shared_lock">intention shared lock</a> (<code>IS</code>) 和 <a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/5.7/en/glossary.html#glos_intention_exclusive_lock">intention exclusive lock</a> (<code>IX</code>) . 但有趣的是，IS 和 IX 之间并不互斥，也就是说可以同时给不同的事务加上 IS 和 IX. 兼容性如下：<br><img src="/2020/12/24/mysql%E4%B9%8B%E9%94%81/1861307-20200308182522643-1705968057.png" alt="img"></p>
+<p>这里的X锁和S锁和行锁没关系，指的是表级别的共享锁和排它锁。</p>
+<h3 id="意向锁的作用"><a href="#意向锁的作用" class="headerlink" title="意向锁的作用"></a>意向锁的作用</h3><p>意向锁的目的就是表明有事务正在或者将要锁住某个表中的行。</p>
+<p>想象这样一个场景，我们使用 <code>select * from t where id=0 for update;</code> 将 id=0 这行加上了写锁。假设同时，一个新的事务想要发起 <code>LOCK TABLES ... WRITE</code> 锁表的操作，这时如果没有意向锁的话，就需要去一行行检测是否所在表中的某行是否存在写锁，从而引发冲突，效率太低。相反有意向锁的话，在发起 <code>lock in share mode</code> 或者 <code>for update</code> 前就会自动加上意向锁，这样检测起来就方便多了。</p>
+<p>在实际中，手动锁表的情况并不常见，所以意向锁并不常用。特别是之后 MySQL 引入了 <a target="_blank" rel="noopener" href="https://www.cnblogs.com/michael9/p/12167434.html#_label1_2">MDL 锁</a>，解决了 DML 和 DDL 冲突的问题，意向锁就更不被提起来了。</p>
+<h2 id="行锁"><a href="#行锁" class="headerlink" title="行锁"></a>行锁</h2><p>共享锁和排他锁，就是我们常说的读锁和写锁。<strong>共享锁和排他锁是标准的实现行级别的锁。</strong>Innodb支持行级锁。每一个索引对应一颗 B+ 树，这里的行锁锁的就是 B+ 中的索引记录。之前提到的共享锁和排他锁，就是将锁加在这里。</p>
+<p>当给 select 语句应用 <code>lock in share mode</code> 或者 <code>for update</code>，或者更新、删除某条记录时，加的都是行级别的锁。</p>
+<ul>
+<li>RR隔离级别下条件字段不是索引，则会锁表；是索引则锁行。</li>
+<li>RC隔离级别下， <code>lock in share mode</code> 或者 <code>for update</code>，会先全表扫描，先加锁，符合查询条件的数据则加锁，不符合查询条件的数据释放锁；update或者delete时，使用半一致性读，提高 RC 并发，如果一个行被锁上后，通过返回最近的 commit 版本，来判断当前锁定的行是否符合 WHERE 条件。如果不匹配，不会对该记录加锁，如果匹配，会再次读取该行进行加锁或者阻塞来等待锁定该行。<font color="red">半一致性读仅发生在 RC 或者开启 innodb_locks_unsafe_for_binlog 的情况下。</font></li>
+</ul>
+<h3 id="读锁和写锁"><a href="#读锁和写锁" class="headerlink" title="读锁和写锁"></a>读锁和写锁</h3><p>有些情况下为了保证数据逻辑的一致性，需要对SELECT的操作加锁。InnoDB存储引擎对于SELECT语句支持两种一致性的锁定读（locking read）操作。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">1、  SELECT …… FOR UPDATE</span><br><span class="line">2、  SELECT …… LOCK IN SHARE MODE</span><br></pre></td></tr></table></figure>
+
+<p>其中，SELECT …… FOR UPDATE对读取的记录加一个锁，其他事务不能对已锁定的行加任何锁。而SELECT …… LOCK IN SHARE MODE也是对读取的记录加一个锁。 </p>
+<p>但是如果有另一个一致性非锁定读的操作来读取该行那么数据是不会阻塞的，读取的是改行的快照版本(也就是指改行之前的数据版本,也就会出现脏读，所以也称为非锁定读，因为不需要等待被访问行的锁的释放。非锁定读的方式极大提高了数据库的并发性。在InnoDB存储引擎中，这是默认的读取方式)   </p>
+<p>SELECT …… FOR UPDATE和SELECT …… LOCK IN SHARE MODE必须在一个事务中，当一个事务提交了，锁就释放了。因此在使用这两个SELECT锁定语句时，必须开启事务。</p>
+<h2 id="间隙锁"><a href="#间隙锁" class="headerlink" title="间隙锁"></a>间隙锁</h2><p>Gap Locks, 间隙锁锁住的是索引记录间的空隙，是为了解决<a target="_blank" rel="noopener" href="https://dev.mysql.com/doc/refman/5.7/en/innodb-locking.html">幻读问题</a>被引入的。有一点需要注意，间隙锁和间隙锁本身之间并不冲突，仅仅和插入这个操作发生冲突</p>
+<h2 id="Next-Key-Lock"><a href="#Next-Key-Lock" class="headerlink" title="Next_Key  Lock"></a>Next_Key  Lock</h2><p>行锁+间隙锁，<a target="_blank" rel="noopener" href="https://www.cnblogs.com/michael9/p/12358631.html#_label2">是行锁（Record）和间隙锁的并集</a><br>如下测试：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`test`</span> (</span><br><span class="line">  <span class="string">`id`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line">  <span class="string">`age`</span> <span class="built_in">int</span>(<span class="number">11</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`name`</span> <span class="built_in">varchar</span>(<span class="number">255</span>) <span class="keyword">DEFAULT</span> <span class="literal">NULL</span>,</span><br><span class="line">  PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>),</span><br><span class="line">  <span class="keyword">KEY</span> <span class="string">`keyname`</span> (<span class="string">`age`</span>)</span><br><span class="line">) <span class="keyword">ENGINE</span>=<span class="keyword">InnoDB</span> AUTO_INCREMENT=<span class="number">335</span> <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span>=gbk</span><br><span class="line">+<span class="comment">-----+------+-------+</span></span><br><span class="line">| <span class="keyword">id</span>  | age  | <span class="keyword">name</span>  |</span><br><span class="line">+<span class="comment">-----+------+-------+</span></span><br><span class="line">| <span class="number">302</span> |    <span class="number">3</span> | xxx   |</span><br><span class="line">| <span class="number">303</span> |    <span class="number">6</span> | xxx22 |</span><br><span class="line">| <span class="number">304</span> |    <span class="number">9</span> | <span class="literal">NULL</span>  |</span><br><span class="line">| <span class="number">330</span> |    <span class="number">9</span> | <span class="number">2222</span>  |</span><br><span class="line">| <span class="number">331</span> |   <span class="number">19</span> | <span class="number">2222</span>  |</span><br><span class="line">+<span class="comment">-----+------+-------+</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="更新和插入（带间隙锁）"><a href="#更新和插入（带间隙锁）" class="headerlink" title="更新和插入（带间隙锁）"></a>更新和插入（带间隙锁）</h3><p>当事务为快照读时，不会有幻读现象，当为当前读时，通过间隙锁+行锁（next-key lock）解决幻读</p>
+<table>
+<thead>
+<tr>
+<th>事务一</th>
+<th>事务二</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>begin;</td>
+<td></td>
+</tr>
+<tr>
+<td>update test set name=’xxxx’ where age=7;</td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td>begin;</td>
+</tr>
+<tr>
+<td></td>
+<td>insert into test(age,name) values(8,’xxxx’);    //堵塞插入</td>
+</tr>
+<tr>
+<td>commit；</td>
+<td>此时执行</td>
+</tr>
+<tr>
+<td></td>
+<td>commit；</td>
+</tr>
+</tbody></table>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">+<span class="comment">-----+------+-------+</span></span><br><span class="line">| id  | age  | name  |</span><br><span class="line">+<span class="comment">-----+------+-------+</span></span><br><span class="line">| 302 |    3 | xxx   |</span><br><span class="line">| 303 |    6 | xxx22 |</span><br><span class="line">| 304 |    9 | NULL  |</span><br><span class="line">| 330 |    9 | 2222  |</span><br><span class="line">| 331 |   19 | 2222  |</span><br><span class="line">| 332 |    8 | xxxx  |</span><br><span class="line">+<span class="comment">-----+------+-------+</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="插入和更新（不带间隙锁-锁索引行）"><a href="#插入和更新（不带间隙锁-锁索引行）" class="headerlink" title="插入和更新（不带间隙锁,锁索引行）"></a>插入和更新（不带间隙锁,锁索引行）</h3><p>先插入，再用另一个事务更新数据，此时如果使用更新条件为插入字段，会堵塞；否则正常更新</p>
+<h3 id="插入和插入（不带锁）"><a href="#插入和插入（不带锁）" class="headerlink" title="插入和插入（不带锁）"></a>插入和插入（不带锁）</h3><p>二个事务，可以正常插入，不会堵塞，不会开启间隙锁和行锁</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">insert</span> <span class="keyword">into</span> <span class="keyword">test</span>(age,<span class="keyword">name</span>) <span class="keyword">values</span>(<span class="number">7</span>,<span class="string">&#x27;xooxx&#x27;</span>);  <span class="comment">#二个sql都可以插入成功，id自增</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="插入和删除（行锁）"><a href="#插入和删除（行锁）" class="headerlink" title="插入和删除（行锁）"></a>插入和删除（行锁）</h3><h3 id="删除和插入（带间隙锁）"><a href="#删除和插入（带间隙锁）" class="headerlink" title="删除和插入（带间隙锁）"></a>删除和插入（带间隙锁）</h3><p>先删除再插入，会使用间隙锁</p>
+<h3 id="删除和更新（行锁）"><a href="#删除和更新（行锁）" class="headerlink" title="删除和更新（行锁）"></a>删除和更新（行锁）</h3><p>二个事务，锁存在锁行，行不存在不加锁</p>
+<h3 id="删除和删除（行锁）"><a href="#删除和删除（行锁）" class="headerlink" title="删除和删除（行锁）"></a>删除和删除（行锁）</h3><p>二个事务，锁存在锁行，行不存在不加锁</p>
+<h3 id="更新和更新（行锁）"><a href="#更新和更新（行锁）" class="headerlink" title="更新和更新（行锁）"></a>更新和更新（行锁）</h3><p>二个事务，锁存在锁行，行不存在不加锁</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
+<li>删除和更新（推论共享锁和排它锁也是一样），之后再插入，会使用间隙锁+行锁（next-key lock）。</li>
+<li>插入和插入，不带锁。</li>
+<li>其它都是行锁</li>
+</ul>
+<h3 id="间隙锁范围"><a href="#间隙锁范围" class="headerlink" title="间隙锁范围"></a>间隙锁范围</h3><p>前开后闭，如（6，10] 不包含前数6包含后数10</p>
+<h2 id="加锁的基本原则（RR隔离级别下）"><a href="#加锁的基本原则（RR隔离级别下）" class="headerlink" title="加锁的基本原则（RR隔离级别下）"></a>加锁的基本原则（RR隔离级别下）</h2><ol>
+<li>原则1：加锁的基本单位是 next-key lock。next-key lock 是前开后闭区间。</li>
+<li>原则2：查找过程中访问到的对象才会加锁。</li>
+<li>优化1：索引上的等值查询，给唯一索引加锁的时候，next-key lock 退化为行锁。</li>
+<li>优化2：索引上的等值查询，向右遍历时且最后一个值不满足等值条件的时候，next-key lock 退化为间隙锁。</li>
+<li>一个 bug：唯一索引上的范围查询会访问到不满足条件的第一个值为止。</li>
+</ol>
+<p><strong>行锁和间隙锁都是由 next-key 锁满足一定后条件后转换的，加锁的默认单位是 next-key.</strong></p>
+<p><strong>加锁其实是在索引上，并且只加在访问到的记录上，如果想要在 lock in share mode 下避免数据被更新，需要引入覆盖索引不能包含的字段。</strong>假设将 Session A 的语句改成 <code>select id from t where c=5 for update;</code>, for update 表示可能当前事务要更新数据，所以也会给满足的条件的主键索引加锁。</p>
+<p><strong>对于非唯一索引，考虑加锁范围时要考虑到主键 Id 的情况。</strong></p>
+<p><strong>间隙锁仅仅对插入操作本身互斥</strong>，不同事务之间的间隙锁并不互斥。</p>
+<h2 id="打开-InnoDB-锁日志"><a href="#打开-InnoDB-锁日志" class="headerlink" title="打开 InnoDB 锁日志"></a>打开 InnoDB 锁日志</h2><p>打开 InnoDB 的锁日志，在遇到一些奇葩的现象时，会帮助我们确定锁范围。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">show</span> <span class="keyword">variables</span> <span class="keyword">like</span> <span class="string">&#x27;innodb_status_output&#x27;</span>;</span><br><span class="line"><span class="keyword">SET</span> <span class="keyword">GLOBAL</span> innodb_status_output=<span class="keyword">ON</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">show</span> <span class="keyword">variables</span> <span class="keyword">like</span> <span class="string">&#x27;innodb_status_output&#x27;</span>;</span><br><span class="line"><span class="keyword">SET</span> <span class="keyword">GLOBAL</span> innodb_status_output_locks=<span class="keyword">ON</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">show</span> <span class="keyword">variables</span> <span class="keyword">like</span> <span class="string">&#x27;%tx_isolation%&#x27;</span>;</span><br><span class="line"><span class="keyword">SET</span> <span class="keyword">SESSION</span> <span class="keyword">TRANSACTION</span> <span class="keyword">ISOLATION</span> <span class="keyword">LEVEL</span> <span class="keyword">READ</span> COMMITTED;</span><br><span class="line"><span class="keyword">show</span> <span class="keyword">engine</span> <span class="keyword">innodb</span> <span class="keyword">status</span>\G;</span><br></pre></td></tr></table></figure>
+
+<p>打开 SQL 记录，用于分析 transcation</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SHOW</span> <span class="keyword">VARIABLES</span> <span class="keyword">LIKE</span> <span class="string">&quot;general_log%&quot;</span>;</span><br><span class="line"><span class="keyword">SET</span> <span class="keyword">GLOBAL</span> general_log = <span class="string">&#x27;ON&#x27;</span>;</span><br></pre></td></tr></table></figure>
+<p>分析死锁</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">show engine innodb status\G;</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="MySQL-InnoDB-锁总结（二）-RC-加锁流程"><a href="#MySQL-InnoDB-锁总结（二）-RC-加锁流程" class="headerlink" title="MySQL InnoDB 锁总结（二）- RC 加锁流程"></a><a target="_blank" rel="noopener" href="https://www.cnblogs.com/michael9/p/14135436.html">MySQL InnoDB 锁总结（二）- RC 加锁流程</a></h2><h2 id="关于-InnoDB-锁的超全总结"><a href="#关于-InnoDB-锁的超全总结" class="headerlink" title="关于 InnoDB 锁的超全总结"></a><a target="_blank" rel="noopener" href="https://www.cnblogs.com/michael9/p/12443975.html">关于 InnoDB 锁的超全总结</a></h2><h2 id="幻读在-InnoDB-中是被如何解决的？"><a href="#幻读在-InnoDB-中是被如何解决的？" class="headerlink" title="幻读在 InnoDB 中是被如何解决的？"></a><a target="_blank" rel="noopener" href="https://www.cnblogs.com/michael9/p/12358631.html">幻读在 InnoDB 中是被如何解决的？</a></h2><h2 id="8点几版本performance-schema-data-locks理解"><a href="#8点几版本performance-schema-data-locks理解" class="headerlink" title="8点几版本performance_schema.data_locks理解"></a><a target="_blank" rel="noopener" href="https://www.jb51.net/article/214306.htm">8点几版本performance_schema.data_locks理解</a></h2><h2 id="mysql中QPS、TPS、系统吞吐量"><a href="#mysql中QPS、TPS、系统吞吐量" class="headerlink" title="mysql中QPS、TPS、系统吞吐量"></a><a target="_blank" rel="noopener" href="https://blog.csdn.net/yxl_num/article/details/107952577">mysql中QPS、TPS、系统吞吐量</a></h2>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/12/24/mysql%E4%B9%8BMVCC%E5%8F%8A%E5%BF%AB%E7%85%A7%E8%AF%BB%E5%92%8C%E5%BD%93%E5%89%8D%E8%AF%BB/" rel="prev" title="mysql之MVCC及快照读和当前读">
+                  <i class="fa fa-chevron-left"></i> mysql之MVCC及快照读和当前读
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/12/24/mysql%E4%B9%8B%E5%88%86%E5%8C%BA%E5%8F%8A%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8/" rel="next" title="mysql之分区及分库分表">
+                  mysql之分区及分库分表 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="https:&#x2F;&#x2F;blog.csdn.net&#x2F;liangcha007&#x2F;article&#x2F;details&#x2F;86699013 4种常用Metrics types（指标类型）Counter（计数器） 连续增加不会减少的计数器，可以用于记录只增不减的类型，例如：网站访问人数，系统运行时间等。 对于Counter类型的指标，只包含一个inc()的方法，就是用于计数器+1. 一般而言，Counter类型的metr">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Prometheus简单demo">
+<meta property="og:url" content="http://example.com/2021/03/04/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E7%9B%91%E6%8E%A7Prometheus%E7%AE%80%E5%8D%95demo/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="https:&#x2F;&#x2F;blog.csdn.net&#x2F;liangcha007&#x2F;article&#x2F;details&#x2F;86699013 4种常用Metrics types（指标类型）Counter（计数器） 连续增加不会减少的计数器，可以用于记录只增不减的类型，例如：网站访问人数，系统运行时间等。 对于Counter类型的指标，只包含一个inc()的方法，就是用于计数器+1. 一般而言，Counter类型的metr">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-03-04T02:01:42.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.261Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="监控">
+<meta property="article:tag" content="Prometheus">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/03/04/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E7%9B%91%E6%8E%A7Prometheus%E7%AE%80%E5%8D%95demo/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Prometheus简单demo | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#4%E7%A7%8D%E5%B8%B8%E7%94%A8Metrics-types%EF%BC%88%E6%8C%87%E6%A0%87%E7%B1%BB%E5%9E%8B%EF%BC%89"><span class="nav-number">1.</span> <span class="nav-text">4种常用Metrics types（指标类型）</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Counter%EF%BC%88%E8%AE%A1%E6%95%B0%E5%99%A8%EF%BC%89"><span class="nav-number">1.1.</span> <span class="nav-text">Counter（计数器）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Gauge%EF%BC%88%E8%AE%A1%E9%87%8F%E5%99%A8%EF%BC%89"><span class="nav-number">1.2.</span> <span class="nav-text">Gauge（计量器）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Histogram%EF%BC%88%E7%9B%B4%E6%96%B9%E5%9B%BE%E3%80%81%E6%9F%B1%E7%8A%B6%E5%9B%BE%EF%BC%89"><span class="nav-number">1.3.</span> <span class="nav-text">Histogram（直方图、柱状图）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Summary%EF%BC%88%E6%91%98%E8%A6%81%EF%BC%89"><span class="nav-number">1.4.</span> <span class="nav-text">Summary（摘要）</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#exporter"><span class="nav-number">2.</span> <span class="nav-text">exporter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Blackbox-Exporter"><span class="nav-number">3.</span> <span class="nav-text">Blackbox Exporter</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#blackbox%E7%9A%84%E5%AE%89%E8%A3%85"><span class="nav-number">3.1.</span> <span class="nav-text">blackbox的安装</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AEprometheus%E9%87%87%E9%9B%86%E6%95%B0%E6%8D%AE"><span class="nav-number">3.2.</span> <span class="nav-text">配置prometheus采集数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#grafana%E5%B1%95%E7%A4%BAblackbox%E9%87%87%E9%9B%86%E6%95%B0%E6%8D%AE"><span class="nav-number">3.3.</span> <span class="nav-text">grafana展示blackbox采集数据</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#pushgateway%E4%BD%BF%E7%94%A8"><span class="nav-number">4.</span> <span class="nav-text">pushgateway使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BA%94%E7%94%A8%E9%9B%86%E6%88%90%E8%87%AA%E5%AE%9A%E4%B9%89exporter"><span class="nav-number">5.</span> <span class="nav-text">应用集成自定义exporter</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-pom-xml%E9%85%8D%E7%BD%AE%E5%A6%82%E4%B8%8B"><span class="nav-number">5.1.</span> <span class="nav-text">1.pom.xml配置如下</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-Application%E7%B1%BB%E6%B3%A8%E8%A7%A3"><span class="nav-number">5.2.</span> <span class="nav-text">2.Application类注解</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-CounterDemo"><span class="nav-number">5.3.</span> <span class="nav-text">3.CounterDemo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-GaugeDemo"><span class="nav-number">5.4.</span> <span class="nav-text">4.GaugeDemo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-HistogramDemo"><span class="nav-number">5.5.</span> <span class="nav-text">5.HistogramDemo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-SummaryDemo"><span class="nav-number">5.6.</span> <span class="nav-text">6.SummaryDemo</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-%E5%85%B3%E4%BA%8Epushgateway"><span class="nav-number">5.7.</span> <span class="nav-text">7.关于pushgateway</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Prometheus-%E7%9B%91%E6%8E%A7-Redis"><span class="nav-number">6.</span> <span class="nav-text">Prometheus 监控 Redis</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/03/04/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E7%9B%91%E6%8E%A7Prometheus%E7%AE%80%E5%8D%95demo/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Prometheus简单demo
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-03-04 10:01:42" itemprop="dateCreated datePublished" datetime="2021-03-04T10:01:42+08:00">2021-03-04</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p><a target="_blank" rel="noopener" href="https://blog.csdn.net/liangcha007/article/details/86699013">https://blog.csdn.net/liangcha007/article/details/86699013</a></p>
+<h2 id="4种常用Metrics-types（指标类型）"><a href="#4种常用Metrics-types（指标类型）" class="headerlink" title="4种常用Metrics types（指标类型）"></a>4种常用Metrics <strong>types</strong>（指标类型）</h2><h3 id="Counter（计数器）"><a href="#Counter（计数器）" class="headerlink" title="Counter（计数器）"></a>Counter<strong>（计数器）</strong></h3><blockquote>
+<p>连续增加不会减少的计数器，可以用于记录只增不减的类型，例如：网站访问人数，系统运行时间等。</p>
+<p>对于Counter类型的指标，只包含一个inc()的方法，就是用于计数器+1.</p>
+<p>一般而言，Counter类型的metric指标在冥冥中我们使用_total结束，如http_requests_total.</p>
+</blockquote>
+<h3 id="Gauge（计量器）"><a href="#Gauge（计量器）" class="headerlink" title="Gauge（计量器）"></a>Gauge<strong>（计量器）</strong></h3><blockquote>
+<p>可增可减的仪表盘，曲线图</p>
+<p>对于这类可增可减的指标，用于反应应用的当前状态。</p>
+<p>例如在监控主机时，主机当前空闲的内存大小，可用内存大小等等。</p>
+<p>对于Gauge指标的对象则包含两个主要的方法inc()和dec()，用于增加和减少计数。</p>
+</blockquote>
+<h3 id="Histogram（直方图、柱状图）"><a href="#Histogram（直方图、柱状图）" class="headerlink" title="Histogram（直方图、柱状图）"></a>Histogram<strong>（直方图、柱状图）</strong></h3><blockquote>
+<p>主要用来统计数据的分布情况，这是一种特殊的metrics数据类型，代表的是一种近似的百分比估算数值，统计所有离散的指标数据在各个取值区段内的次数。例如：我们想统计一段时间内http请求响应小于0.005秒、小于0.01秒、小于0.025秒的数据分布情况。那么使用Histogram采集每一次http请求的时间，同时设置bucket。</p>
+<p>Histogram会自动创建3个指标，分别为：<br>一、事件发生总次数： basename_count:<br>#实际含义： 当前一共发生了2次http请求<br>io_namespace_http_requests_latency_seconds_histogram_count{path=”/“,method=”GET”,code=”200”,} 2.0<br>二、所有事件产生值的大小的总和： basename_sum<br>#实际含义： 发生的2次http请求总的响应时间为13.107670803000001 秒<br>io_namespace_http_requests_latency_seconds_histogram_sum{path=”/“,method=”GET”,code=”200”,} 13.107670803000001<br>三、事件产生的值分布在bucket中的次数： basename_bucket{le=”上包含”}</p>
+<p>在总共2次请求当中。http请求响应时间 &lt;=0.005 秒 的请求次数为0</p>
+<p>io_namespace_http_requests_latency_seconds_histogram_bucket{path=”/“,method=”GET”,code=”200”,le=”0.005”,} 0.0<br>在总共2次请求当中。http请求响应时间 &lt;=0.01 秒 的请求次数为0<br>io_namespace_http_requests_latency_seconds_histogram_bucket{path=”/“,method=”GET”,code=”200”,le=”0.01”,} 0.0<br>在总共2次请求当中。http请求响应时间 &lt;=0.025 秒 的请求次数为0<br>io_namespace_http_requests_latency_seconds_histogram_bucket{path=”/“,method=”GET”,code=”200”,le=”0.025”,} 0.0</p>
+</blockquote>
+<h3 id="Summary（摘要）"><a href="#Summary（摘要）" class="headerlink" title="Summary（摘要）"></a>Summary<strong>（摘要）</strong></h3><blockquote>
+<p>Summary和Histogram非常相似，都可以统计事件发生的次数或者大小，以及其分布情况，他们都提供了对时间的计数_count以及值的汇总_sum，也都提供了可以计算统计样本分布情况的功能，不同之处在于Histogram可以通过histogram_quantile函数在服务器计算分位数。而Sumamry的分位数则是直接在客户端进行定义的。因此对于分位数的计算，Summary在通过PromQL进行查询的时候有更好的性能表现，而Histogram则会消耗更多的资源，但是相对于客户端而言Histogram消耗的资源就更少。用哪个都行，根据实际场景自由调整即可。</p>
+</blockquote>
+<h2 id="exporter"><a href="#exporter" class="headerlink" title="exporter"></a>exporter</h2><p>广义上向prometheus提供监控数据的程序都可以成为一个exporter的，一个exporter的实例称为target, prometheus通过轮训的方式定时从这些target中获取监控数据。exporter来源主要2个方面，一个是社区提供的，一种是用户自定义的。</p>
+<p>官方和一些社区提供好多exproter, 我们可以直接拿过来采集我们的数据。 官方的exporter地址： <a target="_blank" rel="noopener" href="https://prometheus.io/docs/instrumenting/exporters/">https://prometheus.io/docs/instrumenting/exporters/</a></p>
+<h2 id="Blackbox-Exporter"><a href="#Blackbox-Exporter" class="headerlink" title="Blackbox Exporter"></a>Blackbox Exporter</h2><p>bloackbox exporter是prometheus社区提供的黑盒监控解决方案，运行用户通过HTTP、HTTPS、DNS、TCP以及ICMP的方式对网络进行探测。这里通过blackbox对我们的站点信息进行采集。</p>
+<h3 id="blackbox的安装"><a href="#blackbox的安装" class="headerlink" title="blackbox的安装"></a>blackbox的安装</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 进入下载目录</span></span><br><span class="line">[root@node00 ~]# cd /usr/src/</span><br><span class="line"><span class="meta">#</span><span class="bash"> 下载</span></span><br><span class="line">[root@node00 src]# wget https://github.com/prometheus/blackbox_exporter/releases/download/v0.15.1/blackbox_exporter-0.15.1.linux-amd64.tar.gz</span><br><span class="line"><span class="meta">#</span><span class="bash"> 解压</span></span><br><span class="line">[root@node00 src]#  tar xf blackbox_exporter-0.15.1.linux-amd64.tar.gz </span><br><span class="line"><span class="meta">#</span><span class="bash"> 部署到特定位置</span></span><br><span class="line">[root@node00 src]# mv blackbox_exporter-0.15.1.linux-amd64 /usr/local/exporter/</span><br><span class="line"><span class="meta">#</span><span class="bash"> 进入目录</span></span><br><span class="line">[root@node00 src]# cd /usr/local/exporter/</span><br><span class="line"><span class="meta">#</span><span class="bash"> 软连接</span></span><br><span class="line">[root@node00 exporter]# ln -s blackbox_exporter-0.15.1.linux-amd64 blackbox_exporter</span><br><span class="line"><span class="meta">#</span><span class="bash"> 进入自启目录</span></span><br><span class="line">[root@node00 exporter]#  cd /usr/lib/systemd/system</span><br><span class="line"><span class="meta">#</span><span class="bash"> 配置blackbox的开机自启文件</span></span><br><span class="line">[root@node00 system]# cat blackbox_exporter.service </span><br><span class="line">[Unit]</span><br><span class="line">Description=blackbox_exporter</span><br><span class="line">After=network.target </span><br><span class="line"></span><br><span class="line">[Service]</span><br><span class="line">User=prometheus</span><br><span class="line">Group=prometheus</span><br><span class="line">WorkingDirectory=/usr/local/exporter/blackbox_exporter</span><br><span class="line">ExecStart=/usr/local/exporter/blackbox_exporter/blackbox_exporter</span><br><span class="line">[Install]</span><br><span class="line">WantedBy=multi-user.target</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> 启动</span></span><br><span class="line">[root@node00 system]# systemctl restart blackbox_exporter</span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看状态</span></span><br><span class="line">[root@node00 system]# systemctl status blackbox_exporter</span><br><span class="line"><span class="meta">#</span><span class="bash"> 开机自启</span></span><br><span class="line">[root@node00 system]# systemctl enable blackbox_exporter</span><br></pre></td></tr></table></figure>
+
+<h3 id="配置prometheus采集数据"><a href="#配置prometheus采集数据" class="headerlink" title="配置prometheus采集数据"></a>配置prometheus采集数据</h3><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="bullet">-</span> <span class="attr">job_name:</span> <span class="string">&quot;blackbox&quot;</span></span><br><span class="line">    <span class="attr">metrics_path:</span> <span class="string">/probe</span></span><br><span class="line">    <span class="attr">params:</span></span><br><span class="line">      <span class="attr">module:</span> [<span class="string">http_2xx</span>]  <span class="comment"># Look for a HTTP 200 response.</span></span><br><span class="line">    <span class="attr">file_sd_configs:</span> </span><br><span class="line">    <span class="bullet">-</span> <span class="attr">refresh_interval:</span> <span class="string">1m</span></span><br><span class="line">      <span class="attr">files:</span> </span><br><span class="line">      <span class="bullet">-</span> <span class="string">&quot;/usr/local/prometheus/prometheus/conf/blackbox*.yml&quot;</span></span><br><span class="line">    <span class="attr">relabel_configs:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">source_labels:</span> [<span class="string">__address__</span>]</span><br><span class="line">      <span class="attr">target_label:</span> <span class="string">__param_target</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">source_labels:</span> [<span class="string">__param_target</span>]</span><br><span class="line">      <span class="attr">target_label:</span> <span class="string">instance</span></span><br><span class="line">    <span class="bullet">-</span> <span class="attr">target_label:</span> <span class="string">__address__</span></span><br><span class="line">      <span class="attr">replacement:</span> <span class="number">192.168</span><span class="number">.100</span><span class="number">.10</span><span class="string">:9115</span>  <span class="comment"># Blackbox exporter.</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">[root@node00 prometheus]# cat conf/blackbox-dis.yml </span><br><span class="line">- targets:</span><br><span class="line">  - https://www.alibaba.com</span><br><span class="line">  - https://www.tencent.com</span><br><span class="line">  - https://www.baidu.com </span><br></pre></td></tr></table></figure>
+
+<h3 id="grafana展示blackbox采集数据"><a href="#grafana展示blackbox采集数据" class="headerlink" title="grafana展示blackbox采集数据"></a>grafana展示blackbox采集数据</h3><p>重启prometheus查看数据, 可以在grafana导入dashboard id <code>9965</code> 可以看到如下数据。</p>
+<h2 id="pushgateway使用"><a href="#pushgateway使用" class="headerlink" title="pushgateway使用"></a>pushgateway使用</h2><p>由于网络问题或者安全问题，可能我们的数据无法直接暴露出一个entrypoint 给prometheus采集。 这个时候可能就需要一个pushgateway来作为中间者完成中转工作。 prometheus还是采用pull方式来采集pushgateway的数据，我们的采集端通过push方式把数据push给pushgateway，来完成数据的上报。</p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/zhaojiedi1992/p/zhaojiedi_liunx_67_prometheus_pushgateway.html">prometheus学习系列十五： Prometheus pushgateway的使用</a></p>
+<h2 id="应用集成自定义exporter"><a href="#应用集成自定义exporter" class="headerlink" title="应用集成自定义exporter"></a>应用集成自定义exporter</h2><h3 id="1-pom-xml配置如下"><a href="#1-pom-xml配置如下" class="headerlink" title="1.pom.xml配置如下"></a>1.pom.xml配置如下</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">project</span> <span class="attr">xmlns</span>=<span class="string">&quot;http://maven.apache.org/POM/4.0.0&quot;</span> <span class="attr">xmlns:xsi</span>=<span class="string">&quot;http://www.w3.org/2001/XMLSchema-instance&quot;</span></span></span><br><span class="line"><span class="tag">	<span class="attr">xsi:schemaLocation</span>=<span class="string">&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">modelVersion</span>&gt;</span>4.0.0<span class="tag">&lt;/<span class="name">modelVersion</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.unicom<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>exporter-demo<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">version</span>&gt;</span>0.0.1-SNAPSHOT<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">packaging</span>&gt;</span>jar<span class="tag">&lt;/<span class="name">packaging</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">name</span>&gt;</span>exporter-demo<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">description</span>&gt;</span>Demo project for Spring Boot<span class="tag">&lt;/<span class="name">description</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">parent</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-parent<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">version</span>&gt;</span>1.5.11.RELEASE<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">relativePath</span>/&gt;</span> <span class="comment">&lt;!-- lookup parent from repository --&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">parent</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">properties</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">project.build.sourceEncoding</span>&gt;</span>UTF-8<span class="tag">&lt;/<span class="name">project.build.sourceEncoding</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">project.reporting.outputEncoding</span>&gt;</span>UTF-8<span class="tag">&lt;/<span class="name">project.reporting.outputEncoding</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">java.version</span>&gt;</span>1.8<span class="tag">&lt;/<span class="name">java.version</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">properties</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br><span class="line">​    <span class="comment">&lt;!--普罗米修斯依赖--&gt;</span></span><br><span class="line">​    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">​        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>io.prometheus<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">​        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>simpleclient_spring_boot<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">​        <span class="tag">&lt;<span class="name">version</span>&gt;</span>0.4.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">​    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">​    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">​        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>io.prometheus<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">​        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>simpleclient_hotspot<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">​        <span class="tag">&lt;<span class="name">version</span>&gt;</span>0.4.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">​    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">​    <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">​        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>io.prometheus<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">​        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>simpleclient_servlet<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">​        <span class="tag">&lt;<span class="name">version</span>&gt;</span>0.4.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">​    <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">​	<span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">​		<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>io.prometheus<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">​		<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>simpleclient_pushgateway<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">​		<span class="tag">&lt;<span class="name">version</span>&gt;</span>0.4.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">​	<span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">​    <span class="comment">&lt;!--springboot--&gt;</span></span><br><span class="line">​	<span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">​		<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">​		<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-web<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">​	<span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"></span><br><span class="line">​	<span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">​		<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">​		<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-test<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">​		<span class="tag">&lt;<span class="name">scope</span>&gt;</span>test<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">​	<span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependencies</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">build</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">plugins</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">			<span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-maven-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">plugins</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">build</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">project</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-Application类注解"><a href="#2-Application类注解" class="headerlink" title="2.Application类注解"></a>2.Application类注解</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SpringBootApplication</span></span><br><span class="line"><span class="meta">@EnableScheduling</span></span><br><span class="line"><span class="meta">@EnablePrometheusEndpoint</span></span><br><span class="line"><span class="meta">@EnableSpringBootMetricsCollector</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ExporterDemoApplication</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        SpringApplication.run(ExporterDemoApplication.class, args);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>添加@EnableScheduling注解主要是添加了定时任务，用于动态模拟数据的变化，后面会看到应用的地方。</p>
+<h3 id="3-CounterDemo"><a href="#3-CounterDemo" class="headerlink" title="3.CounterDemo"></a>3.CounterDemo</h3><p>定义一个Counter类型的metrics，一般而言，Counter类型的metrics指标在命名中我们使用_total结束。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CounterDemo</span> </span>&#123;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     *  使用Counter.build()创建Counter类型的监控指标，并且通过name()方法定义监控指标的名称network_traffic_input</span></span><br><span class="line"><span class="comment">     * ，通过labelNames()定义该指标包含的标签。最后通过register()将该指标注册到Collector的defaultRegistry中</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> Counter counterDemo = Counter.build()</span><br><span class="line">        .name(<span class="string">&quot;counterChanger2&quot;</span>).labelNames(<span class="string">&quot;wy&quot;</span>,<span class="string">&quot;zxjr&quot;</span>,<span class="string">&quot;ocs&quot;</span>,<span class="string">&quot;xxjf&quot;</span>,<span class="string">&quot;unit&quot;</span>)</span><br><span class="line">        .help(<span class="string">&quot;Counter 实例&quot;</span>).register();</span><br><span class="line">    <span class="comment">//指标埋点，定时器会造成普罗米修斯与本地的数据时间戳不同步，尽量不要使用这种方式，实例中的定时器是为了数据演示</span></span><br><span class="line">    <span class="meta">@Scheduled(cron=&quot;0/5 * * * * ?&quot;)</span></span><br><span class="line">    <span class="meta">@RequestMapping(&quot;/changeCounter&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span>  <span class="keyword">void</span> <span class="title">changeCounter</span><span class="params">()</span></span>&#123;</span><br><span class="line">        counterDemo.labels(<span class="string">&quot;网元&quot;</span>,<span class="string">&quot;在线接入&quot;</span>,<span class="string">&quot;OCS&quot;</span>,<span class="string">&quot;消息计费&quot;</span>,<span class="string">&quot;seconds&quot;</span>).inc();<span class="comment">//指标值增加</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>这里每5秒会自动执行changeCounter用于模拟数据的变化。</p>
+<h3 id="4-GaugeDemo"><a href="#4-GaugeDemo" class="headerlink" title="4.GaugeDemo"></a>4.GaugeDemo</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">GaugeDemo</span> </span>&#123;</span><br><span class="line">    <span class="comment">/**指标注册</span></span><br><span class="line"><span class="comment">     * name设置指标名</span></span><br><span class="line"><span class="comment">     * labelNames设置各项指标名称</span></span><br><span class="line"><span class="comment">     * help设置指标描述</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> Gauge gaugeDemo = Gauge.build()</span><br><span class="line">        .name(<span class="string">&quot;gaugeDemo&quot;</span>)</span><br><span class="line">        .labelNames(<span class="string">&quot;label1&quot;</span>,<span class="string">&quot;label2&quot;</span>,<span class="string">&quot;label3&quot;</span>,<span class="string">&quot;label4&quot;</span>,<span class="string">&quot;label5&quot;</span>)</span><br><span class="line">        .help(<span class="string">&quot;gauge 实例&quot;</span>).register();</span><br><span class="line"></span><br><span class="line">    <span class="comment">//指标埋点</span></span><br><span class="line">    <span class="meta">@Scheduled(cron=&quot;0/5 * * * * ?&quot;)</span></span><br><span class="line">    <span class="meta">@RequestMapping(&quot;/changeGauge&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span>  <span class="keyword">void</span>  <span class="title">changeGauge</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        gaugeDemo.labels(<span class="string">&quot;1&quot;</span>,<span class="string">&quot;2&quot;</span>,<span class="string">&quot;3&quot;</span>,<span class="string">&quot;4&quot;</span>,<span class="string">&quot;5&quot;</span>).inc(); <span class="comment">//指标值加1</span></span><br><span class="line">        gaugeDemo.labels(<span class="string">&quot;1&quot;</span>,<span class="string">&quot;2&quot;</span>,<span class="string">&quot;3&quot;</span>,<span class="string">&quot;4&quot;</span>,<span class="string">&quot;5&quot;</span>).dec(); <span class="comment">//指标值减一</span></span><br><span class="line">        gaugeDemo.labels(<span class="string">&quot;1&quot;</span>,<span class="string">&quot;2&quot;</span>,<span class="string">&quot;3&quot;</span>,<span class="string">&quot;4&quot;</span>,<span class="string">&quot;5&quot;</span>).set(<span class="number">19.00</span>); <span class="comment">//指标值直接赋值</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>可以看到Gauge类型的metrics可以对数据进行增加、减小和直接赋值。这种类型在实际应用中比较多。</p>
+<h3 id="5-HistogramDemo"><a href="#5-HistogramDemo" class="headerlink" title="5.HistogramDemo"></a>5.HistogramDemo</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HistogramDemo</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 注册</span></span><br><span class="line"><span class="comment">     * 注册时buckets()设置区间值，如下设置了100、200、300三个区间值</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> Histogram histogramDemo = Histogram.build()</span><br><span class="line">        .labelNames(<span class="string">&quot;label1&quot;</span>, <span class="string">&quot;label2&quot;</span>, <span class="string">&quot;label3&quot;</span>, <span class="string">&quot;label4&quot;</span>, <span class="string">&quot;label5&quot;</span>)</span><br><span class="line">        .name(<span class="string">&quot;histogramDemo&quot;</span>)</span><br><span class="line">        .buckets(<span class="number">100</span>, <span class="number">200</span>, <span class="number">300</span>)</span><br><span class="line">        .help(<span class="string">&quot;Histogram 实例&quot;</span>)</span><br><span class="line">        .register();</span><br><span class="line">    <span class="comment">//指标埋点</span></span><br><span class="line">    <span class="meta">@Scheduled(cron = &quot;0/5 * * * * ?&quot;)</span> </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">changeHistogram</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="comment">/**</span></span><br><span class="line"><span class="comment">         * 本次执行的指标值</span></span><br><span class="line"><span class="comment">         * 如下设置为150，则每次执行，小于200区间以及小于300区间加1，小于100区间不变</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        histogramDemo.labels(<span class="string">&quot;1&quot;</span>, <span class="string">&quot;2&quot;</span>, <span class="string">&quot;3&quot;</span>, <span class="string">&quot;4&quot;</span>, <span class="string">&quot;5&quot;</span>).observe(<span class="number">150</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>定义了三个区间，小于100，小于200，小于300，而changeHistogram中每次我们设置数据为150，所以最后画出来的曲线只有两条。</p>
+<h3 id="6-SummaryDemo"><a href="#6-SummaryDemo" class="headerlink" title="6.SummaryDemo"></a>6.SummaryDemo</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RestController</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SummaryDemo</span> </span>&#123;</span><br><span class="line">    <span class="comment">//注册</span></span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> Summary summaryDemo = Summary.build()</span><br><span class="line">        .quantile(<span class="number">0.5</span>, <span class="number">0.01</span>)   <span class="comment">// 添加50%分位数，允许有5%的误差,相当于求中位数</span></span><br><span class="line">        .quantile(<span class="number">0.9</span>, <span class="number">0.01</span>)   <span class="comment">// 添加90%分位数，允许有1%的误差</span></span><br><span class="line">        .name(<span class="string">&quot;summaryDemo&quot;</span>).labelNames(<span class="string">&quot;label1&quot;</span>,<span class="string">&quot;label2&quot;</span>,<span class="string">&quot;label3&quot;</span>,<span class="string">&quot;label4&quot;</span>,<span class="string">&quot;label5&quot;</span>)</span><br><span class="line">        .help(<span class="string">&quot;Summary 实例&quot;</span>).register();</span><br><span class="line">    <span class="comment">//指标埋点</span></span><br><span class="line">    <span class="meta">@Scheduled(cron=&quot;0/5 * * * * ?&quot;)</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span>  <span class="keyword">void</span>  <span class="title">changeSummary</span><span class="params">()</span></span>&#123;</span><br><span class="line">        summaryDemo.labels(<span class="string">&quot;1&quot;</span>,<span class="string">&quot;2&quot;</span>,<span class="string">&quot;3&quot;</span>,<span class="string">&quot;4&quot;</span>,<span class="string">&quot;5&quot;</span>).observe(<span class="number">1</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>在prometheus的Graph中通过查看summaryDemo、summaryDemo_count、summaryDemo_sum查看对应结果。</p>
+<h3 id="7-关于pushgateway"><a href="#7-关于pushgateway" class="headerlink" title="7.关于pushgateway"></a>7.关于pushgateway</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">PrometheusConfig</span></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> Counter counterDemo = Counter.build()</span><br><span class="line">        .name(<span class="string">&quot;push_way_counter&quot;</span>)</span><br><span class="line">        .labelNames(<span class="string">&quot;wy&quot;</span>,<span class="string">&quot;zxjr&quot;</span>,<span class="string">&quot;ocs&quot;</span>,<span class="string">&quot;xxjf&quot;</span>,<span class="string">&quot;unit&quot;</span>,<span class="string">&quot;instance&quot;</span>)</span><br><span class="line">        .help(<span class="string">&quot;Counter 实例&quot;</span>)</span><br><span class="line">        .register();</span><br><span class="line">    <span class="comment">//测试发送</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        PushGateway prometheusPush = <span class="keyword">new</span> PushGateway(<span class="string">&quot;localhost:9091&quot;</span>);</span><br><span class="line">        <span class="keyword">try</span>&#123;</span><br><span class="line">            <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;<span class="number">50</span>;i++)&#123;</span><br><span class="line">                counterDemo.labels(<span class="string">&quot;网元&quot;</span>,<span class="string">&quot;在线接入&quot;</span>,<span class="string">&quot;OCS&quot;</span>,<span class="string">&quot;消息计费&quot;</span>,<span class="string">&quot;byte&quot;</span>,<span class="string">&quot;localhsot:9091&quot;</span>).inc();</span><br><span class="line">                prometheusPush.push(counterDemo,<span class="string">&quot;sp-getway&quot;</span>);</span><br><span class="line">                Thread.sleep(<span class="number">5000</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;<span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">            e.printStackTrace();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>这里拿counter举一个简单的例子，其他三种度量也是一样的处理方式。</p>
+<p>关于pushgateway中转数据，根据我自己实际的验证，我发现索然说数据每次都会先发送到pushgateway，但是prometheus去取的时候还是只取当前那一时间点的数据，并不会把历史的也拿过来。</p>
+<h2 id="Prometheus-监控-Redis"><a href="#Prometheus-监控-Redis" class="headerlink" title="Prometheus 监控 Redis"></a><a target="_blank" rel="noopener" href="https://didispace-wx.blog.csdn.net/article/details/104352114">Prometheus 监控 Redis</a></h2>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E7%9B%91%E6%8E%A7/" rel="tag"># 监控</a>
+              <a href="/tags/Prometheus/" rel="tag"># Prometheus</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/03/02/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BElasticsearch%E6%80%BB%E7%BB%93/" rel="prev" title="Elasticsearch总结">
+                  <i class="fa fa-chevron-left"></i> Elasticsearch总结
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/03/04/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E7%9B%91%E6%8E%A7grafana%E4%BB%AA%E8%A1%A8%E7%9B%98%E6%A8%A1%E6%9D%BF/" rel="next" title="grafana仪表盘模板">
+                  grafana仪表盘模板 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

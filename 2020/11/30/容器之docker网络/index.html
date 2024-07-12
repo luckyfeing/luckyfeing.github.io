@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="docker网络知识docker网络类型（–network指定网络） bridge  默认连接到docker0这个网桥上  none 容器只能使用127.0.0.1的本机网络  host 与宿主机共享ip  link  docker run -it –name vm5 –link vm1:db1 ubuntu 创建一个容器vm5，并使用link方式连接vm1,此时的vm1的是容器名，db1是容器的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="docker网络">
+<meta property="og:url" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E7%BD%91%E7%BB%9C/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="docker网络知识docker网络类型（–network指定网络） bridge  默认连接到docker0这个网桥上  none 容器只能使用127.0.0.1的本机网络  host 与宿主机共享ip  link  docker run -it –name vm5 –link vm1:db1 ubuntu 创建一个容器vm5，并使用link方式连接vm1,此时的vm1的是容器名，db1是容器的">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E7%BD%91%E7%BB%9C/bridge_20201013104542.png">
+<meta property="article:published_time" content="2020-11-30T05:04:37.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.244Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="docker">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E7%BD%91%E7%BB%9C/bridge_20201013104542.png">
+
+
+<link rel="canonical" href="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E7%BD%91%E7%BB%9C/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>docker网络 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#docker%E7%BD%91%E7%BB%9C%E7%9F%A5%E8%AF%86"><span class="nav-number">1.</span> <span class="nav-text">docker网络知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#docker%E7%BD%91%E7%BB%9C%E7%B1%BB%E5%9E%8B%EF%BC%88%E2%80%93network%E6%8C%87%E5%AE%9A%E7%BD%91%E7%BB%9C%EF%BC%89"><span class="nav-number">1.1.</span> <span class="nav-text">docker网络类型（–network指定网络）</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#bridge-%E6%A8%A1%E5%BC%8F%E7%9A%84%E7%BD%91%E7%BB%9C%E3%80%82%E5%85%B6%E7%89%B9%E7%82%B9%E5%A6%82%E4%B8%8B%EF%BC%9A"><span class="nav-number">1.1.0.1.</span> <span class="nav-text">bridge 模式的网络。其特点如下：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%B8%BB%E8%A6%81%E4%BD%BF%E7%94%A8%E7%9A%84%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%BC%8F"><span class="nav-number">1.1.0.2.</span> <span class="nav-text">主要使用的网络模式</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#docker%E7%BD%91%E7%BB%9C%E6%93%8D%E4%BD%9C"><span class="nav-number">1.2.</span> <span class="nav-text">docker网络操作</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E4%B8%BB%E6%9C%BA%E5%90%8D%E5%92%8CDNS"><span class="nav-number">1.3.</span> <span class="nav-text">设置主机名和DNS</span></a></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E7%BD%91%E7%BB%9C/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          docker网络
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-11-30 13:04:37" itemprop="dateCreated datePublished" datetime="2020-11-30T13:04:37+08:00">2020-11-30</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%BF%90%E7%BB%B4%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">运维技术</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="docker网络知识"><a href="#docker网络知识" class="headerlink" title="docker网络知识"></a>docker网络知识</h2><h3 id="docker网络类型（–network指定网络）"><a href="#docker网络类型（–network指定网络）" class="headerlink" title="docker网络类型（–network指定网络）"></a>docker网络类型（–network指定网络）</h3><ul>
+<li><p>bridge  默认连接到docker0这个网桥上</p>
+</li>
+<li><p>none 容器只能使用127.0.0.1的本机网络</p>
+</li>
+<li><p>host 与宿主机共享ip</p>
+</li>
+<li><p>link  docker run -it –name vm5 –link vm1:db1 ubuntu 创建一个容器vm5，并使用link方式连接vm1,此时的vm1的是容器名，db1是容器的别名</p>
+</li>
+<li><p>container 网络模式，必须同一个宿主机</p>
+</li>
+<li><p>自定义网络模式：</p>
+<ul>
+<li>bridge network  可以通过容器名互通，单一主机上运行一个相对小的网络，使用桥接网络</li>
+<li>overlay network  创建一个大网络，可以通过overlay 网络来实现</li>
+<li>MACVLAN network</li>
+<li>network plugin</li>
+<li>remote network</li>
+</ul>
+</li>
+<li><p>跨主机docker容器通信方案介绍（就是自定义网络下的方案，除开bridge）</p>
+<ul>
+<li><p>隧道（Overlay Networking）方案：</p>
+<ul>
+<li>  Weave：UDP广播，本机建立新的BR，通过PCAP互通。</li>
+<li>  Open vSwitch(OVS)：基于VxLAN和GRE协议，但是性能方面损失比较严重。</li>
+<li>  Flannel：UDP广播，VxLan。  </li>
+</ul>
+</li>
+<li><p>路由方案</p>
+<ul>
+<li>  Calico：基于BGP协议的路由方案，支持很细致的ACL控制，对混合云亲和度比较高。</li>
+<li>  Macvlan：从逻辑和Kernel层来看隔离性和性能最优的方案，基于二层隔离，所以需要二层路由器支持，大多数云服务商不支持，所以混合云上比较难以实现。</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p><code>    隧道方案在IaaS层的网络中应用也比较多，大家共识是随着节点规模的增长复杂度会提升，而且出了网络问题跟踪起来比较麻烦，大规模集群情况下这是需要考虑的一个点。</code></p>
+<p><code>    路由方案一般是从3层或者2层实现隔离和跨主机容器互通的，出了问题也很容易排查。</code></p>
+<h5 id="bridge-模式的网络。其特点如下："><a href="#bridge-模式的网络。其特点如下：" class="headerlink" title="bridge 模式的网络。其特点如下："></a>bridge 模式的网络。其特点如下：</h5><ul>
+<li>  使用一个 linux bridge，默认为 docker0</li>
+<li>  使用 veth 对，一头在容器的网络 namespace 中，一头在 docker0 上</li>
+<li>  该模式下Docker Container不具有一个公有IP，因为宿主机的IP地址与vethpair的 IP地址不在同一个网段内</li>
+<li>  Docker采用NAT网络地址转换(Network Address Translation)方式，将容器内部的服务监听的端口与宿主机的某一个端口port 进行“绑定”，使得宿主机以外的世界可以主动将网络报文发送至容器内部</li>
+<li>  外界访问容器内的服务时，需要访问宿主机的 IP 以及宿主机的端口 port</li>
+<li>  NAT 模式由于是在三层网络上的实现手段，故肯定会影响网络的传输效率。</li>
+<li>容器拥有独立、隔离的网络栈；让容器和宿主机以外的世界通过NAT建立通信<br>  <img src="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E7%BD%91%E7%BB%9C/bridge_20201013104542.png" alt="输入图片描述"></li>
+</ul>
+<h5 id="主要使用的网络模式"><a href="#主要使用的网络模式" class="headerlink" title="主要使用的网络模式"></a>主要使用的网络模式</h5><ul>
+<li>Libnetwork 从Docker核心代码中分离出去，形成一个单独的库</li>
+<li>Flannel CoreOS团队针对Kubernetes设计的一个重载网络工具，它的主要思路是：预先留出一个网段，每个主机使用其中一部分，然后每个容器被分配不同的ip；让所有的容器认为大家在同一个直连的网络，底层通过UDP/VxLAN等进行报文的封装和转发</li>
+<li>Calico 是一个纯3层的数据中心网络方案，而且无缝集成像OpenStack这种IaaS云架构，能够提供可控的VM、容器、裸机之间的IP通信</li>
+</ul>
+<p><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/d84cdfe2ea86">详细网络知识</a><br><a target="_blank" rel="noopener" href="https://blog.csdn.net/dhaiuda/article/details/82824333">docker的overlay网络</a></p>
+<h3 id="docker网络操作"><a href="#docker网络操作" class="headerlink" title="docker网络操作"></a>docker网络操作</h3><ul>
+<li>docker network ls            查看docker网卡</li>
+<li>docker network rm 网卡id    删除docker网卡</li>
+<li>docker network inspect 网卡id   查看docker网卡的相关详细信息</li>
+<li>创建网络，如下使用–subnet创建网络（用来指定ip段），–gateway（用来指定网关），my_net3为创建的名字：<br>docker network create –driver bridge –subnet 172.22.1.0/24 –gateway 172.22.1.1 my_net3</li>
+</ul>
+<h3 id="设置主机名和DNS"><a href="#设置主机名和DNS" class="headerlink" title="设置主机名和DNS"></a>设置主机名和DNS</h3><p>docker run -it –name mycon -h lion –dns=8.8.8.8 ubuntu:14.04</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/docker/" rel="tag"># docker</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E5%9F%BA%E7%A1%80/" rel="prev" title="docker基础">
+                  <i class="fa fa-chevron-left"></i> docker基础
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bk8s%E5%9F%BA%E7%A1%80/" rel="next" title="k8s基础">
+                  k8s基础 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

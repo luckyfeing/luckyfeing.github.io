@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="1、Feign介绍Feign是一个http请求调用的轻量级框架，可以以Java接口注解的方式调用Http请求。Spring Cloud引入 Feign并且集成了Ribbon实现客户端负载均衡调用。 Feign解决了什么问题？封装了Http调用流程，更适合面向接口化的变成习惯 2、Feign工作原理Feign远程调用流程图 (1) 基于面向接口的动态代理方式生成实现类在使用feign 时，会定义对">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Feign之详解">
+<meta property="og:url" content="http://example.com/2021/04/25/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFeign%E4%B9%8B%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="1、Feign介绍Feign是一个http请求调用的轻量级框架，可以以Java接口注解的方式调用Http请求。Spring Cloud引入 Feign并且集成了Ribbon实现客户端负载均衡调用。 Feign解决了什么问题？封装了Http调用流程，更适合面向接口化的变成习惯 2、Feign工作原理Feign远程调用流程图 (1) 基于面向接口的动态代理方式生成实现类在使用feign 时，会定义对">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2021/04/25/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFeign%E4%B9%8B%E8%AF%A6%E8%A7%A3/6271376-285b0cf66bc1b24c.png">
+<meta property="og:image" content="http://example.com/2021/04/25/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFeign%E4%B9%8B%E8%AF%A6%E8%A7%A3/6271376-7635e2dc9b32e3ec.png">
+<meta property="og:image" content="http://example.com/2021/04/25/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFeign%E4%B9%8B%E8%AF%A6%E8%A7%A3/14126519-4949493085b0f547.png">
+<meta property="og:image" content="http://example.com/2021/04/25/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFeign%E4%B9%8B%E8%AF%A6%E8%A7%A3/6271376-cebfed0fa4f18190.png">
+<meta property="og:image" content="http://example.com/2021/04/25/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFeign%E4%B9%8B%E8%AF%A6%E8%A7%A3/14126519-b5c571b44f453707.png">
+<meta property="article:published_time" content="2021-04-25T10:14:02.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.251Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="Fegin">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2021/04/25/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFeign%E4%B9%8B%E8%AF%A6%E8%A7%A3/6271376-285b0cf66bc1b24c.png">
+
+
+<link rel="canonical" href="http://example.com/2021/04/25/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFeign%E4%B9%8B%E8%AF%A6%E8%A7%A3/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Feign之详解 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1%E3%80%81Feign%E4%BB%8B%E7%BB%8D"><span class="nav-number">1.</span> <span class="nav-text">1、Feign介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Feign%E8%A7%A3%E5%86%B3%E4%BA%86%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98%EF%BC%9F"><span class="nav-number">1.0.1.</span> <span class="nav-text">Feign解决了什么问题？</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2%E3%80%81Feign%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">2、Feign工作原理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Feign%E8%BF%9C%E7%A8%8B%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B%E5%9B%BE"><span class="nav-number">2.0.1.</span> <span class="nav-text">Feign远程调用流程图</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-%E5%9F%BA%E4%BA%8E%E9%9D%A2%E5%90%91%E6%8E%A5%E5%8F%A3%E7%9A%84%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86%E6%96%B9%E5%BC%8F%E7%94%9F%E6%88%90%E5%AE%9E%E7%8E%B0%E7%B1%BB"><span class="nav-number">2.0.2.</span> <span class="nav-text">(1) 基于面向接口的动态代理方式生成实现类</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-%E6%A0%B9%E6%8D%AEContract%E5%8D%8F%E8%AE%AE%E8%A7%84%E5%88%99%EF%BC%8C%E8%A7%A3%E6%9E%90%E6%8E%A5%E5%8F%A3%E7%B1%BB%E7%9A%84%E6%B3%A8%E8%A7%A3%E4%BF%A1%E6%81%AF%EF%BC%8C%E8%A7%A3%E6%9E%90%E6%88%90%E5%86%85%E9%83%A8%E8%A1%A8%E7%8E%B0%EF%BC%9A"><span class="nav-number">2.0.3.</span> <span class="nav-text">(2) 根据Contract协议规则，解析接口类的注解信息，解析成内部表现：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-%E5%9F%BA%E4%BA%8E-RequestBean%EF%BC%8C%E5%8A%A8%E6%80%81%E7%94%9F%E6%88%90Request"><span class="nav-number">2.0.4.</span> <span class="nav-text">(3) 基于 RequestBean，动态生成Request</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-%E4%BD%BF%E7%94%A8Encoder-%E5%B0%86Bean%E8%BD%AC%E6%8D%A2%E6%88%90-Http%E6%8A%A5%E6%96%87%E6%AD%A3%E6%96%87%EF%BC%88%E6%B6%88%E6%81%AF%E8%A7%A3%E6%9E%90%E5%92%8C%E8%BD%AC%E7%A0%81%E9%80%BB%E8%BE%91%EF%BC%89"><span class="nav-number">2.0.5.</span> <span class="nav-text">(4) 使用Encoder 将Bean转换成 Http报文正文（消息解析和转码逻辑）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-%E6%8B%A6%E6%88%AA%E5%99%A8%E8%B4%9F%E8%B4%A3%E5%AF%B9%E8%AF%B7%E6%B1%82%E5%92%8C%E8%BF%94%E5%9B%9E%E8%BF%9B%E8%A1%8C%E8%A3%85%E9%A5%B0%E5%A4%84%E7%90%86"><span class="nav-number">2.0.6.</span> <span class="nav-text">(5) 拦截器负责对请求和返回进行装饰处理</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-%E6%97%A5%E5%BF%97%E8%AE%B0%E5%BD%95"><span class="nav-number">2.0.7.</span> <span class="nav-text">(6) 日志记录</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-%E5%9F%BA%E4%BA%8E%E9%87%8D%E8%AF%95%E5%99%A8%E5%8F%91%E9%80%81HTTP%E8%AF%B7%E6%B1%82"><span class="nav-number">2.0.8.</span> <span class="nav-text">(7) 基于重试器发送HTTP请求</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#8-%E5%8F%91%E9%80%81Http%E8%AF%B7%E6%B1%82"><span class="nav-number">2.0.9.</span> <span class="nav-text">(8) 发送Http请求</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3%E3%80%81Feign%E4%BC%98%E5%8C%96"><span class="nav-number">3.</span> <span class="nav-text">3、Feign优化</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%EF%BC%881%EF%BC%89GZIP%E5%8E%8B%E7%BC%A9"><span class="nav-number">3.1.</span> <span class="nav-text">（1）GZIP压缩</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%EF%BC%882%EF%BC%89%E6%9B%BF%E6%8D%A2%E4%B8%BAHttpClient%E5%AE%A2%E6%88%B7%E7%AB%AF%EF%BC%88%E4%BD%BF%E7%94%A8HTTP%E8%BF%9E%E6%8E%A5%E6%B1%A0%E6%8F%90%E4%BE%9B%E6%80%A7%E8%83%BD%EF%BC%89"><span class="nav-number">3.2.</span> <span class="nav-text">（2）替换为HttpClient客户端（使用HTTP连接池提供性能）</span></a></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/04/25/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFeign%E4%B9%8B%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Feign之详解
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-04-25 18:14:02" itemprop="dateCreated datePublished" datetime="2021-04-25T18:14:02+08:00">2021-04-25</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p><img src="/2021/04/25/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFeign%E4%B9%8B%E8%AF%A6%E8%A7%A3/6271376-285b0cf66bc1b24c.png" alt="img"></p>
+<h2 id="1、Feign介绍"><a href="#1、Feign介绍" class="headerlink" title="1、Feign介绍"></a>1、Feign介绍</h2><p>Feign是一个http请求调用的轻量级框架，可以以Java接口注解的方式调用Http请求。Spring Cloud引入 Feign并且集成了Ribbon实现客户端负载均衡调用。</p>
+<h4 id="Feign解决了什么问题？"><a href="#Feign解决了什么问题？" class="headerlink" title="Feign解决了什么问题？"></a>Feign解决了什么问题？</h4><p>封装了Http调用流程，更适合面向接口化的变成习惯</p>
+<h2 id="2、Feign工作原理"><a href="#2、Feign工作原理" class="headerlink" title="2、Feign工作原理"></a>2、Feign工作原理</h2><h4 id="Feign远程调用流程图"><a href="#Feign远程调用流程图" class="headerlink" title="Feign远程调用流程图"></a>Feign远程调用流程图</h4><p><img src="/2021/04/25/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFeign%E4%B9%8B%E8%AF%A6%E8%A7%A3/6271376-7635e2dc9b32e3ec.png" alt="img"></p>
+<h4 id="1-基于面向接口的动态代理方式生成实现类"><a href="#1-基于面向接口的动态代理方式生成实现类" class="headerlink" title="(1) 基于面向接口的动态代理方式生成实现类"></a>(1) 基于面向接口的动态代理方式生成实现类</h4><p>在使用feign 时，会定义对应的接口类，在接口类上使用Http相关的注解，标识HTTP请求参数信息</p>
+<p>在Feign 底层，通过基于面向接口的动态代理方式生成实现类，将请求调用委托到动态代理实现类，基本原理如下所示：</p>
+<p><img src="/2021/04/25/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFeign%E4%B9%8B%E8%AF%A6%E8%A7%A3/14126519-4949493085b0f547.png" alt="img"></p>
+<h4 id="2-根据Contract协议规则，解析接口类的注解信息，解析成内部表现："><a href="#2-根据Contract协议规则，解析接口类的注解信息，解析成内部表现：" class="headerlink" title="(2) 根据Contract协议规则，解析接口类的注解信息，解析成内部表现："></a>(2) 根据Contract协议规则，解析接口类的注解信息，解析成内部表现：</h4><p><img src="/2021/04/25/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFeign%E4%B9%8B%E8%AF%A6%E8%A7%A3/6271376-cebfed0fa4f18190.png" alt="img"></p>
+<h4 id="3-基于-RequestBean，动态生成Request"><a href="#3-基于-RequestBean，动态生成Request" class="headerlink" title="(3) 基于 RequestBean，动态生成Request"></a>(3) 基于 RequestBean，动态生成Request</h4><p>根据传入的Bean对象和注解信息，从中提取出相应的值，来构造Http Request 对象</p>
+<h4 id="4-使用Encoder-将Bean转换成-Http报文正文（消息解析和转码逻辑）"><a href="#4-使用Encoder-将Bean转换成-Http报文正文（消息解析和转码逻辑）" class="headerlink" title="(4) 使用Encoder 将Bean转换成 Http报文正文（消息解析和转码逻辑）"></a>(4) 使用Encoder 将Bean转换成 Http报文正文（消息解析和转码逻辑）</h4><p>Feign 最终会将请求转换成Http 消息发送出去，传入的请求对象最终会解析成消息体，如下所示：</p>
+<p><img src="/2021/04/25/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFeign%E4%B9%8B%E8%AF%A6%E8%A7%A3/14126519-b5c571b44f453707.png" alt="img"></p>
+<h4 id="5-拦截器负责对请求和返回进行装饰处理"><a href="#5-拦截器负责对请求和返回进行装饰处理" class="headerlink" title="(5) 拦截器负责对请求和返回进行装饰处理"></a>(5) 拦截器负责对请求和返回进行装饰处理</h4><p>在请求转换的过程中，Feign 抽象出来了拦截器接口，用于用户自定义对请求的操作，比如，如果希望Http消息传递过程中被压缩，可以定义一个请求拦截器。</p>
+<h4 id="6-日志记录"><a href="#6-日志记录" class="headerlink" title="(6) 日志记录"></a>(6) 日志记录</h4><h4 id="7-基于重试器发送HTTP请求"><a href="#7-基于重试器发送HTTP请求" class="headerlink" title="(7) 基于重试器发送HTTP请求"></a>(7) 基于重试器发送HTTP请求</h4><p>Feign 内置了一个重试器，当HTTP请求出现IO异常时，Feign会有一个最大尝试次数发送请求</p>
+<h4 id="8-发送Http请求"><a href="#8-发送Http请求" class="headerlink" title="(8) 发送Http请求"></a>(8) 发送Http请求</h4><p>Feign 真正发送HTTP请求是委托给 feign.Client 来做的。</p>
+<p>Feign 默认底层通过JDK 的 java.net.HttpURLConnection 实现了feign.Client接口类,<strong>在每次发送请求的时候，都会创建新的HttpURLConnection 链接</strong>，这也就是为什么默认情况下Feign的性能很差的原因。可以通过拓展该接口，使用Apache HttpClient 或者OkHttp3等基于连接池的高性能Http客户端。</p>
+<p><strong>Feign 整体框架非常小巧，在处理请求转换和消息解析的过程中，基本上没什么时间消耗。真正影响性能的，是处理Http请求的环节。</strong></p>
+<h2 id="3、Feign优化"><a href="#3、Feign优化" class="headerlink" title="3、Feign优化"></a>3、Feign优化</h2><h3 id="（1）GZIP压缩"><a href="#（1）GZIP压缩" class="headerlink" title="（1）GZIP压缩"></a>（1）GZIP压缩</h3><p>gzip是一种数据格式，采用deflate算法压缩数据。当Gzip压缩到一个纯文本数据时，可以减少70％以上的数据大小。</p>
+<p>gzip作用：网络数据经过压缩后实际上降低了网络传输的字节数，最明显的好处就是可以加快网页加载的速度。</p>
+<p>只配置Feign请求-应答的GZIP压缩</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># feign gzip</span></span><br><span class="line"><span class="comment"># 局部配置。只配置feign技术相关的http请求-应答中的gzip压缩。</span></span><br><span class="line"><span class="comment"># 配置的是application client和application service之间通讯是否使用gzip做数据压缩。</span></span><br><span class="line"><span class="comment"># 和浏览器到application client之间的通讯无关。</span></span><br><span class="line"><span class="comment"># 开启feign请求时的压缩， application client -&gt; application service</span></span><br><span class="line">feign.compression.request.enabled=<span class="literal">true</span></span><br><span class="line"><span class="comment"># 开启feign技术响应时的压缩，  application service -&gt; application client</span></span><br><span class="line">feign.compression.response.enabled=<span class="literal">true</span></span><br><span class="line"><span class="comment"># 设置可以压缩的请求/响应的类型。</span></span><br><span class="line">feign.compression.request.mime-types=text/xml,application/xml,application/json</span><br><span class="line"><span class="comment"># 当请求的数据容量达到多少的时候，使用压缩。默认是2048字节。</span></span><br><span class="line">feign.compression.request.min-request-size=512</span><br></pre></td></tr></table></figure>
+
+<p>配置全局的GZIP压缩</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># spring boot gzip</span></span><br><span class="line"><span class="comment"># 开启spring boot中的gzip压缩。就是针对和当前应用所有相关的http请求-应答的gzip压缩。</span></span><br><span class="line">server.compression.enabled=<span class="literal">true</span></span><br><span class="line"><span class="comment"># 哪些客户端发出的请求不压缩，默认是不限制</span></span><br><span class="line">server.compression.excluded-user-agents=gozilla,traviata</span><br><span class="line"><span class="comment"># 配置想压缩的请求/应答数据类型，默认是 text/html,text/xml,text/plain</span></span><br><span class="line">server.compression.mime-types=application/json,application/xml,text/html,text/xml,text/plain</span><br><span class="line"><span class="comment"># 执行压缩的阈值，默认为2048</span></span><br><span class="line">server.compression.min-response-size=512</span><br></pre></td></tr></table></figure>
+
+<h3 id="（2）替换为HttpClient客户端（使用HTTP连接池提供性能）"><a href="#（2）替换为HttpClient客户端（使用HTTP连接池提供性能）" class="headerlink" title="（2）替换为HttpClient客户端（使用HTTP连接池提供性能）"></a>（2）替换为HttpClient客户端（使用HTTP连接池提供性能）</h3><p>Feign的HTTP客户端支持3种框架，分别是；HttpURLConnection、HttpClient、OKHttp。Feign中默认使用HttpURLConnection。</p>
+<ul>
+<li>HttpURLConnection是JDK自带的HTTP客户端技术，并不支持连接池，如果要实现连接池的机制，还需要自己来管理连接对象。对于网络请求这种底层相对复杂的操作，如果有可用的其他方案，也没有必要自己去管理连接对象。</li>
+<li>Apache提供的<strong>HttpClient</strong>框架相比传统JDK自带的HttpURLConnection，它封装了访问http的请求头，参数，内容体，响应等等；它不仅使客户端发送HTTP请求变得容易，而且也方便了开发人员测试接口（基于Http协议的），即提高了开发的效率，也方便提高代码的健壮性；另外高并发大量的请求网络的时候，<strong>还是用“HTTP连接池”提升吞吐量</strong>。</li>
+<li>OKHttp是一个处理网络请求的开源项目,是安卓端最火热的轻量级框架。<strong>OKHttp拥有共享Socket,减少对服务器的请求次数，通过连接池,减少了请求延迟等技术特点</strong>。</li>
+</ul>
+<p>本案例中，通过替换Feign底层的HTTP客户端实现为HttpClient，来提升Feign的通讯性能。</p>
+<p>修改全局配置文件：开启feign技术对底层httpclient的依赖。 切换底层实现技术。</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">feign.httpclient.enabled=<span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>作者：Finnnnnnnn<br>链接：<a target="_blank" rel="noopener" href="https://www.jianshu.com/p/e0218c142d03">https://www.jianshu.com/p/e0218c142d03</a><br>来源：简书<br>著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</p>
+<p>在通过Feign来实现远程服务调用时，需要提供一个本地接口来继承服务标准工程提供的服务接口。这个本地接口不需要给予任何实现，在底层Spring容器会为这个接口提供一个<strong>基于JDK实现的代理对象</strong>，这个代理对象<strong>由Feign技术提供具体的HandlerInterceptor逻辑</strong>，实现远程的调用。实现过程<strong>类似通过代码调用LoadBalancerClient实现的Rest远程访问</strong>。　　</p>
+<p>而本地接口继承服务标准接口后，需要提供注解**@FeignClient<strong>，注解的属性</strong>name代表当前接口要调用的远程服务的应用命名**。</p>
+<p>在Feign处理远程服务调用时，传递参数是通过HTTP协议传递的，参数存在的位置是请求头或请求体中。请求头传递的参数必须依赖@RequestParam注解来处理请求参数，请求体传递的参数必须依赖@RequestBody注解来处理请求参数。如果传递的是对象，不要使用@RequestParam注解，使用@SpringQueryMap注解，其实就是转换成立map传递</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Fegin/" rel="tag"># Fegin</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/04/23/java%E5%B9%B6%E5%8F%91%E4%B9%8BSynchronized%E8%AF%A6%E8%A7%A3/" rel="prev" title="java之Synchronized详解">
+                  <i class="fa fa-chevron-left"></i> java之Synchronized详解
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/04/29/java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B/" rel="next" title="java之并发编程">
+                  java之并发编程 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="作者：坏掉的牙 出处：mysql中InnoDB引擎中页的概念 Linux内存页默认大小是4K的，所以每个4K都有一个对应的page结构体进行管理。Linux有大页功能，比如2M，1G大页，但这里的大页并不是指Linux管理物理内存的基本单位，而是指MMU页表项所能描述的最大物理块空间，使用更大的页，是为了减少TLB miss造成查页表带来的性能开销。一个大页，也是由多个连续的物理页组成的，每个物理">
+<meta property="og:type" content="article">
+<meta property="og:title" content="mysql页的概念">
+<meta property="og:url" content="http://example.com/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="作者：坏掉的牙 出处：mysql中InnoDB引擎中页的概念 Linux内存页默认大小是4K的，所以每个4K都有一个对应的page结构体进行管理。Linux有大页功能，比如2M，1G大页，但这里的大页并不是指Linux管理物理内存的基本单位，而是指MMU页表项所能描述的最大物理块空间，使用更大的页，是为了减少TLB miss造成查页表带来的性能开销。一个大页，也是由多个连续的物理页组成的，每个物理">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hx">
+<meta property="og:image" content="http://example.com/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/1.png">
+<meta property="og:image" content="http://example.com/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hF">
+<meta property="og:image" content="http://example.com/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hK">
+<meta property="og:image" content="http://example.com/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hN">
+<meta property="og:image" content="http://example.com/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hP">
+<meta property="og:image" content="http://example.com/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hS">
+<meta property="og:image" content="http://example.com/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hZ">
+<meta property="og:image" content="http://example.com/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1h2">
+<meta property="og:image" content="http://example.com/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hk">
+<meta property="article:published_time" content="2021-02-26T02:40:23.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.076Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="mysql">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hx">
+
+
+<link rel="canonical" href="http://example.com/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>mysql页的概念 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E7%A1%80%E7%BB%93%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">基础结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%B4%E9%83%A8%E6%95%B0%E6%8D%AE"><span class="nav-number">2.</span> <span class="nav-text">头部数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BB%E4%BD%93%E6%95%B0%E6%8D%AE"><span class="nav-number">3.</span> <span class="nav-text">主体数据</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#User-Record"><span class="nav-number">3.1.</span> <span class="nav-text">User Record</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%A6%82%E4%BD%95%E5%AE%9A%E4%BD%8D%E4%B8%80%E4%B8%AARecord%EF%BC%9A"><span class="nav-number">3.1.1.</span> <span class="nav-text">如何定位一个Record：</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#User-Record%E5%86%85%E9%83%A8%E7%9A%84%E6%95%B0%E6%8D%AE"><span class="nav-number">3.1.2.</span> <span class="nav-text">User Record内部的数据</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%95%B4%E4%BD%93%E7%9A%84%E6%9F%A5%E6%89%BE%E8%BF%87%E7%A8%8B"><span class="nav-number"></span> <span class="nav-text">整体的查找过程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AE%80%E4%BB%8B%E7%9A%84%E6%A0%91%E5%BD%A2%E6%9F%A5%E6%89%BE%E7%A4%BA%E6%84%8F%E5%9B%BE"><span class="nav-number">1.</span> <span class="nav-text">简介的树形查找示意图</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          mysql页的概念
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-02-26 10:40:23" itemprop="dateCreated datePublished" datetime="2021-02-26T10:40:23+08:00">2021-02-26</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>作者：<a target="_blank" rel="noopener" href="https://segmentfault.com/u/huaidiaodeya">坏掉的牙</a></p>
+<p>出处：<a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000008545713">mysql中InnoDB引擎中页的概念</a></p>
+<p>Linux内存页默认大小是4K的，所以每个4K都有一个对应的page结构体进行管理。Linux有大页功能，比如2M，1G大页，但这里的大页并不是指Linux管理物理内存的基本单位，而是指MMU页表项所能描述的最大物理块空间，使用更大的页，是为了减少TLB miss造成查页表带来的性能开销。一个大页，也是由多个连续的物理页组成的，每个物理页也都有page结构体描述。</p>
+<h2 id="基础结构"><a href="#基础结构" class="headerlink" title="基础结构"></a>基础结构</h2><p>Page是Innodb存储的最基本结构，也是Innodb磁盘管理的最小单位，与数据库相关的所有内容都存储在Page结构里。Page分为几种类型：<code>数据页（B-Tree Node）</code>，<code>Undo页（Undo Log Page）</code>，<code>系统页（System Page）</code>，<code>事务数据页（Transaction System Page）</code>等；每个数据页的大小为<code>16kb</code>，每个Page使用一个32位（一位表示的就是0或1）的int值来表示，正好对应Innodb最大64TB的存储容量(16kb * 2^32=64tib)。一个Page的基本结构如下：</p>
+<img src="/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hx" alt="clipboard.png" style="zoom:67%;">
+
+<h2 id="头部数据"><a href="#头部数据" class="headerlink" title="头部数据"></a>头部数据</h2><p>每个page都有通用的头和尾，但是中部的内容根据page的类型不同而发生变化，头部的数据如下：</p>
+<p><img src="/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/1.png" alt="clipboard.png"><br>page头部保存了两个指针，分别指向前一个Page和后一个Page，头部还有Page的类型信息和用来唯一标识Page的编号。根据这个指针分布可以想象到Page链接起来就是一个双向链表</p>
+<p><img src="/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hF" alt="clipboard.png"></p>
+<h2 id="主体数据"><a href="#主体数据" class="headerlink" title="主体数据"></a>主体数据</h2><p>在Page的主体部分，主要关注数据和索引的存储，他们都位于<code>User Records</code>部分，User Records占据Page的大部分空间，User Records由一条条的Record组成，每条记录代表索引树上的一个节点（非叶子节点和叶子节点）；在一个单链表的内部，单链表的头尾由两条记录来表示，字符串形式的“ Infimum”代表开头，“Supremum”表示结尾；System Record 和 User Record是两个平行的段；<br>Innodb中存在四种不同的Record，分别是</p>
+<ol>
+<li>主键索引树非叶子节点</li>
+<li>主键索引树叶子节点</li>
+<li>辅助键索引树非叶子节点</li>
+<li>辅助键索引树叶子节点</li>
+</ol>
+<p>这四种节点Record格式上有差异，但是内部都存储着Next指针指向下一个Record</p>
+<p><img src="/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hK" alt="clipboard.png"></p>
+<h3 id="User-Record"><a href="#User-Record" class="headerlink" title="User Record"></a>User Record</h3><p>User Record在Page内以单链表的形式存在，最初数据是按照插入的先后顺序排列的，但是随着新数据的插入和旧数据的删除，数据物理顺序发生改变，但是他们依然保持着逻辑上的先后顺序</p>
+<p><img src="/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hN" alt="clipboard.png"></p>
+<p>把User Record组织形式和若干Page组织起来，就得到了稍微完整的形式：</p>
+<p><img src="/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hP" alt="clipboard.png"></p>
+<h4 id="如何定位一个Record："><a href="#如何定位一个Record：" class="headerlink" title="如何定位一个Record："></a>如何定位一个Record：</h4><ol>
+<li>通过根节点开始遍历一个索引的B+树，通过各层非叶子节点达到底层的叶子节点的数据页（Page），这个Page内部存放的都是叶子节点</li>
+<li>在Page内部从“Infimum”节点开始遍历单链表（遍历一般会被优化），如果找到键则返回。如果遍历到了“Supremum”，说明当前Page里没有合适的键，这时借助Page页内部的next page指针，跳转到下一个page继续从“Infmum”开始逐个查找</li>
+</ol>
+<p><img src="/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hS" alt="clipboard.png"></p>
+<h4 id="User-Record内部的数据"><a href="#User-Record内部的数据" class="headerlink" title="User Record内部的数据"></a>User Record内部的数据</h4><p>User Record内部存储了四种格式的数据：</p>
+<ol>
+<li>主索引树非叶子节点（绿色）<ul>
+<li>子节点存储的主键里最小的值，这时B+树必须的，作用是在一个Page里定位到具体的记录的位置</li>
+<li>最小的值所在的Page的编号，作用是定位到对应的Record所在的Page</li>
+</ul>
+</li>
+<li>主索引树叶子节点（黄色）<ul>
+<li>主键，B+树所必须的，也是数据行的一部分</li>
+<li>除去主键以外的所有列，这时数据行的除去主键的其他所有列的集合</li>
+</ul>
+</li>
+<li>辅助索引树非叶子节点（蓝色）<ul>
+<li>子节点里存储的辅助键值里的最小值，这时B+Tree必须的，作用是在一个Page里定位到具体记录的位置</li>
+</ul>
+</li>
+<li>辅助索引树叶子节点（红色）<ul>
+<li>辅助索引键值，是B+树必须的</li>
+<li>主键值，用来在主索引树里在做一次B+树检索来找到整条记录</li>
+</ul>
+</li>
+</ol>
+<p><img src="/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hZ" alt="clipboard.png"></p>
+<h1 id="整体的查找过程"><a href="#整体的查找过程" class="headerlink" title="整体的查找过程"></a>整体的查找过程</h1><p><img src="/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1h2" alt="clipboard.png"></p>
+<h2 id="简介的树形查找示意图"><a href="#简介的树形查找示意图" class="headerlink" title="简介的树形查找示意图"></a>简介的树形查找示意图</h2><p><img src="/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/bVJ1hk" alt="clipboard.png"></p>
+<p>Page和B+树之间并没有一一对应的关系，Page只是作为一个Record的保存容器，它存在的目的是便于对磁盘空间进行批量管理。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/02/26/MySQL%E4%BD%BF%E7%94%A8RC%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB/" rel="prev" title="mysql使用RC隔离级别">
+                  <i class="fa fa-chevron-left"></i> mysql使用RC隔离级别
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/02/26/Mysql%E7%BC%93%E5%AD%98%E6%B1%A0/" rel="next" title="Mysql缓存池">
+                  Mysql缓存池 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

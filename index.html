@@ -1,0 +1,1732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="学习还是需要记录">
+<meta property="og:type" content="website">
+<meta property="og:title" content="个人博客">
+<meta property="og:url" content="http://example.com/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="学习还是需要记录">
+<meta property="og:locale" content="en_US">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : true,
+    isPost : false,
+    lang   : 'en'
+  };
+</script>
+
+  <title>个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner index posts-expand">
+      
+
+      
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/30/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8FMybatis/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/07/30/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8FMybatis/" class="post-title-link" itemprop="url">设计之设计模式Mybatis</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-07-30 13:26:32" itemprop="dateCreated datePublished" datetime="2021-07-30T13:26:32+08:00">2021-07-30</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>其中XMLConfigBuilder在构建Configuration对象时，也会调用XMLMapperBuilder用于读取*Mapper文件，而XMLMapperBuilder会使用XMLStatementBuilder来读取和build所有的SQL语句。</p>
+<p>SqlSessionFactoryBuilder(使用XMLConfigBuilder读取所有的MybatisMapConfig.xml和所有的*Mapper.xml，屏蔽了复杂对象的创建过程，构建核心对象Configuration对象，<br>将该Configuration对象作为参数构建一个SqlSessionFactory对象。)<br>-&gt;SqlSessionFactory（工厂方法模式创建SqlSession，实现类是DefaultSqlSessionFactory）-》SqlSession（通过这个接口可以执行执行SQL语句、获取Mappers、管理事务。委托给Executor执行）</p>
+<p>单例模式 （ErrorContext和LogFactory）<br>ErrorContext是用在每个线程范围内的单例，用于记录该线程的执行环境错误信息。使用ThreadLocal静态常量<br>LogFactory则是提供给整个Mybatis使用的日志工厂，用于获得针对项目配置好的日志对象。</p>
+<p>代理模式（我们只需要编写Mapper.java接口，不需要实现，由Mybatis后台帮我们完成具体SQL的执行。）<br>Subject: 抽象主题角色<br>Proxy: 代理主题角色<br>RealSubject: 真实主题角色<br>当我们使用Configuration的getMapper方法时，会调用mapperRegistry.getMapper方法，而该方法又会调用mapperProxyFactory.newInstance(sqlSession)来生成一个具体的代理<br>代理关键类(MapperProxyFactory和MapperProxy，MapperProxy类实现了InvocationHandler，MapperProxyFactory通过JDK代理Proxy.newProxyInstance(类加载器，被代理接口数组，实现了InvocationHandler类))</p>
+<p>MappedStatement -》SQL语句<br>ResultMap  -》返回值对应映射<br>ParameterMap -》参数对应映射</p>
+<p>new PlainMethodInvoker(new MapperMethod(mapperInterface, method, sqlSession.getConfiguration()));  主要是这段代码：找到对应的MappedStatement<br>调用后续的sqlSession.crud&gt;executor.execute&gt;prepareStatement等一系列方法，完成SQL的执行和返回。</p>
+<p>组合模式(动态SQL，SqlNode接口，有很多实现类，如ForEachSqlNode)</p>
+<p>模板方法模式(在Mybatis中，sqlSession的SQL执行，都是委托给Executor实现的，抽象类BaseExecutor，Executor实现类有SimpleExecutor，BatchExecutor，ReuseExecutor)<br>简单SimpleExecutor：每执行一次update或select，就开启一个Statement对象，用完立刻关闭Statement对象。（可以是Statement或PrepareStatement对象）</p>
+<p>重用ReuseExecutor：执行update或select，以sql作为key查找Statement对象，存在就使用，不存在就创建，用完后，不关闭Statement对象，而是放置于Map内，供下一次使用。（可以是Statement或PrepareStatement对象）</p>
+<p>批量BatchExecutor：执行update（没有select，JDBC批处理不支持select），将所有sql都添加到批处理中（addBatch()），等待统一执行（executeBatch()），它缓存了多个Statement对象，每个Statement对象都是addBatch()完毕后，等待逐一执行executeBatch()批处理的；BatchExecutor相当于维护了多个桶，每个桶里都装了很多属于自己的SQL，就像苹果蓝里装了很多苹果，番茄蓝里装了很多番茄，最后，再统一倒进仓库。（可以是Statement或PrepareStatement对象）</p>
+<p>适配器模式（Log接口，不用日志框架，不同的实现类，对象适配）</p>
+<p>装饰者模式（缓存的功能由根接口Cache（org.apache.ibatis.cache.Cache）定义。整个体系采用装饰器设计模式，数据存储和缓存的基本功能由PerpetualCache（org.apache.ibatis.cache.impl.PerpetualCache）永久缓存实现，<br>然后通过一系列的装饰器来对PerpetualCache永久缓存进行缓存策略等方便的控制。）<br>FifoCache：先进先出算法，缓存回收策略<br>LoggingCache：输出缓存命中的日志信息<br>LruCache：最近最少使用算法，缓存回收策略<br>ScheduledCache：调度缓存，负责定时清空缓存<br>SerializedCache：缓存序列化和反序列化存储<br>SoftCache：基于软引用实现的缓存管理策略<br>SynchronizedCache：同步的缓存装饰器，用于防止多线程并发访问<br>WeakCache：基于弱引用实现的缓存管理策略<br>TransactionalCache：事务性的缓存<br>一级缓存，又叫本地缓存，是PerpetualCache类型的永久缓存，保存在执行器中（BaseExecutor），而执行器又在SqlSession（DefaultSqlSession）中，所以一级缓存的生命周期与SqlSession是相同的。<br>二级缓存，又叫自定义缓存，实现了Cache接口的类都可以作为二级缓存，所以可配置如encache等的第三方缓存。二级缓存以namespace名称空间为其唯一标识，被保存在Configuration核心配置对象中。<br>Cache对象之间的引用顺序为：SynchronizedCache–&gt;LoggingCache–&gt;SerializedCache–&gt;ScheduledCache–&gt;LruCache–&gt;PerpetualCache</p>
+<p>迭代器模式（PropertyTokenizer是property包中的重量级类，该类会被reflection包中其他的类频繁的引用到。这个类实现了Iterator接口，在使用时经常被用到的是Iterator接口中的hasNext这个函数。）</p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/" class="post-title-link" itemprop="url">资料文档整理</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-07-30 13:23:28" itemprop="dateCreated datePublished" datetime="2021-07-30T13:23:28+08:00">2021-07-30</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p>业务你不能瞎编，场景和规模、技术架构，你可以做一下战术美化，然后将我的单体ssm改成spring cloud 一套，引入各种分布式技术栈</p>
+<p>7-9月培训高峰期，吃饭期间会集中做问卷调查，服务器压力非常大，然后将我的单体ssm改成spring cloud 一套，引入各种分布式技术栈了，不过你最好自己先做好业务分析，找个你认为比较合理的爆发点，去想技术方案</p>
+<p>首先要先将自己的项目拆分成微服务，需要画架构图、物理图、做概要设计、详细设计、核心业务时序图等等，需要先自我深挖一波业务，做一下分析。这些可以去百度看看别人怎样画的，自己仿照来画，这样自己对整个项目能拆成多少个微服务，一个核心业务会调用多少个微服务已经很清晰了。不要看做这一步要很多时间，但是能不能顶住面试官的炮火这一步的分析是很重要的，也是自己对业务的提炼。</p>
+<p>我说我们测试组会跟产品先出一份测试用例方案的，会对着来测试，基本大部分业务场景都覆盖了</p>
+<p>我们融入业务之前需要先定好业务指标例如qps多少、tps多少、每个服务需要部署多少个实例来抗请求。<br>融入什么技术之前都需要先划定一个业务场景、设备数量，这样你聊的时候自己就中心有数了，无论面试官聊什么，你都要先定好业务边界，再聊技术方案，这样面试官会感觉你自己是有思考过，有“实干”过的。</p>
+<p>1、你平时是如何设计项目的？<br>使用uml进行业务流程的建模，映射系统用例，对系统用例进行领域分析出类图。<br>对系统用例，进行功能的分析序列图设计，完整阐释领域类之间如何协作完成功能。<br>然后是db的设计，接口契约的设计，工时的预估。</p>
+<p>2、设计一个类似于微博消息系统，能提示消息未读，对已读未读做统计，不要用redis，原始数据结构的设计。<br>当时我给了几张表，发布主题的消息表，个人维度的消息读取数量的统计表，已读消息序号增长表。</p>
+<p>3、设计一个千万级别的分库分表，多维度如何处理？复杂查询如何处理？扩容如何处理？<br>当时我的回答是，用shardingjdbc分库分表，多维度也按不同的维度字段分。复杂查询数据canal监听binlog导入es<br>（1）幂等你们是怎么做的<br>（2）说一说你们现在分布式id的实现方案，有什么缺点</p>
+<p>1、你觉的你是一个什么样的人？<br>自我驱动，用于担当，主动沟通和推进项目，能和团队成员良好协作，完成部门内和跨部门协作任务。</p>
+<p>2、你觉的你能胜任我们提供的这个职位吗？<br>完全可以，工作态度认真积极，自我驱动力强，勇于挑战。</p>
+<p>6.1、如果一个接口慢，造成这个接口慢的原因都有哪些？<br>1、网络IO （说下数据库优化、redis优化）<br>2、磁盘IO （可以用异步优化）<br>3、锁竞争-》优化思路 （分段加锁、锁粒度）<br>4、jvm优化（如果前面没问jvm的话，这时候也可以说一下jvm专栏里的优化方案）</p>
+<p>6.2、如果让你来实现一个注册的功能，要考虑哪些点？<br>1、项目初期没什么数据量，单库单表就可以<br>2、数据量大了以后要考虑分库分表<br>3、超时重试<br>4、接口幂等性<br>5、注册功能属于核心功能，不能降级</p>
+<p>6.3、怎么实现直播间送礼排行榜的功能？(使用redis，只展示前100名)<br>分两种情况考虑<br>1、访问量很小的直播间<br>（1）使用redis sorted set数据结构存储用户id，分数就是送礼金额<br>（2）查询的的时候直接获取前100个</p>
+<p>2、访问量很大的直播间 （在这种情况下，使用上述设计方案，会有两个问题：一个问题是单台redis是扛不住那么高的并发;<br>另一个问题是送礼的人很多，展示的话只需要前100个，多个机器都存全量的key会浪费资源）<br>（1）同一个排行榜放在多个redis实例上，客户端读的时候做个轮询<br>（2）一个redis实例存全量的排行榜，只负责写数据；其他redis存前100名的数据，负责读。写数据时，如果前100名发生变化，就把最新的数据同步到其他节点。</p>
+<p>6.4、一个很大的文件里存的都是些id，怎么统计出重复id的次数？(内存不能一次性加载所有数据)<br>1、把大文件拆分成内存可以放下的小文件比如10个小文件。<br>2、大文件中的id通过一个hash函数计算出hash值，寻址算法找到小文件<br>3、把小文件加载到内存中用HashMap就可以统计了</p>
+<p>6.5、一个文件里都是电话号码，重复的号码需要记录重复次数，你会怎么设计存储？<br>1、电话号码可以分成三段，前面3位、中间4位、后面4位<br>2、仿照Mysql索引树设计，叶子节点挂的是重复次数<br>3、面试官说可以使用混合树（我不了解什么是混合树）</p>
+<p>6.6、 mysql里一个字段的值需要存几百万个id怎么设计？<br>1、这些id先计算出一个base（所有id减去这个base就是个int类型的值）<br>2、搞一个bitmap，通过一个特殊的hash函数计算出（id-base）在bitmap中的位置（这个是唯一的）<br>3、核心思想就是使用bitmap存数据</p>
+<p>6.7、 怎么设计一个接口的降级方案？<br>降级方案要分两种情况<br>1、核心链路的接口不能随便降级，有的接口慢，就得在那等着（同步接口）<br>2、非核心链路参照面试突击里使用Hystrix降级（后置校验；有损降级，提示用户可能失败，异步处理；缓存的本地缓存）</p>
+<p>架构设计</p>
+<p>需求分析阶段: 主要梳理所有用例（Use case）和场景，并抽象出面向系统的用户与角色，梳理出需求提供哪些功能与非功能的需求给这些用户。</p>
+<p>概要设计阶段：根据需求分析的产物：核心需求，对整个系统进行模块划分，并定义好模块之间的交互关系。<br>详细设计阶段：通过多个视图来描述系统的架构，包括但不局限于：逻辑系统、物理视图、数据视图、物理视图</p>
+<p>非功能需求:非功能的需求主要体现在高性能、高可用、可伸缩、可扩展、安全性等维度。<br>非功能需求对应不同系统指标主要分为 4 部分：应用服务器  数据库 缓存  消息队列</p>
+<p>为什么零拷贝更快，具体原理<br>mysql事务acid是如何实现的<br>mysql幻读是如何解决的<br>mysql rr模式的原理<br>redis锁和zk锁的实现原理</p>
+<p>谈谈你对锁优化的理解<br>谈谈你对JMM的理解<br>谈谈你对AQS的理解<br>谈谈你对读写锁的理解<br>谈谈有哪些保证原子性的手段<br>说一说你对ddd 战术部分的理解，代码如何分层<br>聊聊spring cloud各个组件的原理<br>hystrix限流是怎么做的，原理<br>谈一谈你对CompletableFuture的理解，为什么要用这个，超时机制怎么实现的<br>rocketmq中间件里面有哪些组件，说一说都有什么作用<br>mq事务消息的实现原理<br>如何解决缓存热key问题</p>
+<p>Mysql只有在Read-Commit和Repeated-read两种隔离级别下实现MVCC机制</p>
+<p>1、在Repeated-read隔离级别中，对MYSQL MVCC机制的理解：<br>1）mysql执行修改与新增操作SQL语句时，会对修改的数据以及新增的和删除数据记录到undo回滚日志文件中形成一个版本链，<br>并且记录当前操作的表中这一行记录中隐藏的列trx_id（当前事务Id）和roll_pointer（当前事务在undo日志文件中的磁盘地址）<br>2）当开启mysql事务执行SQL查询语句时会生成当前事务的一致性视图（read view），<br>该视图是由当前数据库中未提交事务id的数组（其中最小的事务id为min_trxId）和已经创建事务最大的trx_id(max_trxid)组成的</p>
+<p>3）根据上面查询语句获取到表记录中隐藏的trx_id值与read view视图中的事务id进行对比，<br>如果trx_id&lt;min_trxid，则直接返回当前min_trxid对应的数据；<br>如果min_trxid &lt;= trx_id &lt;=max_trxid ，如果该trxid正好在read view视图中，则返回当前视图中trx_id对应的数据，<br>如果不在read view视图中则会根据roll_pinter指针在版本链中找到为当前记录对应trx_id的数据并且返回；<br>如果trx_id&gt;max_trxId则直接返回sql语句查询到的trx_id对应的数据</p>
+<p>4）对于删除的情况可以认为是update的特殊情况，会将版本链上最新的数据复制一份，然后将trx_id修改成删除操作的 trx_id，<br>同时在该条记录的头信息（record header）里的（deleted_flag）标记位写上true，来表示当前记录已经被删除，<br>在查询时按照上面的规则查到对应的记录如果delete_flag标记位为true，意味着记录已被删除，则不返回数据。</p>
+<p>2 在Read-commint隔离级别中，对MYSQL MVCC机制的理解：实际跟上述差不太多，唯独是在每次执行查询sql时都会重新生成read view视图</p>
+<p>Archery MySQL监控平台</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/sinat_36748650/article/details/88033383">https://blog.csdn.net/sinat_36748650/article/details/88033383</a></p>
+<p><a target="_blank" rel="noopener" href="https://my.oschina.net/u/4397001/blog/3421494">https://my.oschina.net/u/4397001/blog/3421494</a></p>
+<p><a target="_blank" rel="noopener" href="http://www.suoniao.com/article/5ea23be9e2fbc11f0a0517da">http://www.suoniao.com/article/5ea23be9e2fbc11f0a0517da</a>  </p>
+<p><a target="_blank" rel="noopener" href="https://gitee.com/shishan100/projects">https://gitee.com/shishan100/projects</a>   </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Heap</span><br><span class="line"> PSYoungGen      total 552448K, used 67990K [0x000000076b780000, 0x0000000797500000, 0x00000007c0000000)</span><br><span class="line">  eden space 537600K, 9% used [0x000000076b780000,0x000000076eb6e7e8,0x000000078c480000)</span><br><span class="line">  from space 14848K, 99% used [0x0000000796680000,0x00000007974f7028,0x0000000797500000)</span><br><span class="line">  to   space 23040K, 0% used [0x0000000794800000,0x0000000794800000,0x0000000795e80000)</span><br><span class="line"> ParOldGen       total 222208K, used 41930K [0x00000006c2600000, 0x00000006cff00000, 0x000000076b780000)</span><br><span class="line">  object space 222208K, 18% used [0x00000006c2600000,0x00000006c4ef2b88,0x00000006cff00000)</span><br><span class="line"> Metaspace       used 62761K, capacity 66234K, committed 66328K, reserved 1105920K</span><br><span class="line">  class space    used 8381K, capacity 8993K, committed 9008K, reserved 1048576K</span><br><span class="line"></span><br><span class="line">2021-07-01T15:03:11.502+0800: 34.466: [GC (Metadata GC Threshold) [PSYoungGen: 236338K-&gt;7762K(513536K)] 273443K-&gt;53629K(667136K), 0.0148958 secs]</span><br><span class="line"> [Times: user&#x3D;0.01 sys&#x3D;0.00, real&#x3D;0.01 secs] </span><br><span class="line"> </span><br><span class="line">2021-07-01T15:03:11.517+0800: 34.481: [Full GC (Metadata GC Threshold) [PSYoungGen: 7762K-&gt;0K(513536K)] [ParOldGen: 45867K-&gt;41922K(222208K)] 53629K-&gt;41922K(735744K),</span><br><span class="line"> [Metaspace: 56313K-&gt;56313K(1099776K)], 0.2781880 secs] [Times: user&#x3D;1.19 sys&#x3D;0.09, real&#x3D;0.28 secs] </span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;String, Object&gt; params = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">params.put(<span class="string">&quot;x-dead-letter-exchange&quot;</span>, sdlExchange);</span><br><span class="line">params.put(<span class="string">&quot;x-dead-letter-routing-key&quot;</span>, sdlKey);</span><br><span class="line"><span class="keyword">return</span> <span class="keyword">new</span> Queue(queue, <span class="keyword">true</span>, <span class="keyword">false</span>, <span class="keyword">false</span>, params);</span><br></pre></td></tr></table></figure>
+
+<p><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210803161445625.png" alt="image-20210803161445625"></p>
+<p><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210803161603524.png" alt="image-20210803161603524"></p>
+<p><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210803160430802.png" alt="image-20210803160430802"></p>
+<p>Lifecycle 生命周期  -》SmartLifecycle</p>
+<p>BeanDefinitionRegistryPostProcessor    void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException;</p>
+<p>BeanFactoryPostProcessor   void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException;</p>
+<p>储物柜设备上/下线webhook： <a target="_blank" rel="noopener" href="https://uat-lockerai.deepblueai.com/locker/mqtt/event">https://uat-lockerai.deepblueai.com/locker/mqtt/event</a></p>
+<p>储物柜设备下线（$events/client_disconnected）</p>
+<p>SELECT * FROM “$events/client_disconnected” where username=’locker’</p>
+<p>储物柜设备上线（$events/client_connected）</p>
+<p>SELECT * FROM “$events/client_connected” where username=’locker’</p>
+<p>spring-boot-starter-actuator度量metric，底层使用的是micrometer-core</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.springframework.boot<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>spring-boot-starter-actuator<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.2.2.RELEASE<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">scope</span>&gt;</span>compile<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span>  </span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>io.micrometer<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>micrometer-core<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.3.6<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">scope</span>&gt;</span>compile<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.jolokia<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>jolokia-core<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">version</span>&gt;</span>1.6.2<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">scope</span>&gt;</span>compile<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>java基础知识（集合、并发集合、队列、线程（线程池、Thread、Runnable、Callback、Future、CompletableFuture）、synchronized 、CAS 、volatile、ReentrantLock、ReentrantReadWriteLock、JMM、jvm、SPI、javaagent、instruction、JMX）</p>
+<p>阻塞队列：</p>
+<p>　　ArrayBlockingQueue ：一个由数组结构组成的有界阻塞队列。</p>
+<p>　　LinkedBlockingQueue ：一个由链表结构组成的有界阻塞队列。</p>
+<p>　　PriorityBlockingQueue ：一个支持优先级排序的无界阻塞队列。</p>
+<p>　　DelayQueue： 一个使用优先级队列实现的无界阻塞队列。</p>
+<p>　　SynchronousQueue： 一个不存储元素的阻塞队列。</p>
+<p>　　LinkedTransferQueue： 一个由链表结构组成的无界阻塞队列。</p>
+<p>　　LinkedBlockingDeque： 一个由链表结构组成的双向阻塞队列。</p>
+<p>拒绝策略：</p>
+<p>　　ThreadPoolExecutor.AbortPolicy: 丢弃任务并抛出RejectedExecutionException异常。 (默认)</p>
+<p>　　ThreadPoolExecutor.DiscardPolicy：也是丢弃任务，但是不抛出异常。</p>
+<p>　　ThreadPoolExecutor.DiscardOldestPolicy：丢弃队列最前面的任务，然后重新尝试执行任务。（重复此过程）</p>
+<p>　　ThreadPoolExecutor.CallerRunsPolicy：由调用线程处理该任务。</p>
+<p>JVM：CMS配置：<strong>UseCMSCompactAtFullCollection</strong>  <strong>CMSFullGCsBeforeCompaction=0</strong>    -XX:+CMSParallelInitialMarkEnabled -XX:+CMSScavengeBeforeRemark</p>
+<h2 id="Redis"><a href="#Redis" class="headerlink" title="Redis"></a>Redis</h2><p>数据结构、场景、底层数据结构、持久化原理及区别、过期策略、淘汰策略、数据恢复、主从集群、sentinel集群、Redis Cluster集群、缓存穿透、击穿、雪崩</p>
+<h2 id="Zookeeper"><a href="#Zookeeper" class="headerlink" title="Zookeeper"></a>Zookeeper</h2><p>（架构设计、工作原理、数据结构、zab原子广播协议，消息广播、崩溃恢复（选举、数据同步），场景）</p>
+<p>场景：分布式协调，集群主从（HA高可用），分布式锁，队列，元数据/配置信息管理，注册中心</p>
+<p>redis 分布式锁和 zk 分布式锁的对比</p>
+<ul>
+<li>redis 分布式锁，其实<strong>需要自己不断去尝试获取锁</strong>，比较消耗性能。（返回过期时间的方式减少尝试次数；续期问题：使用watch dog后台线程，进行续期；主从数据丢失问题：多个客户端获取到了锁，使用ReadLock思路；客户端宕机时：key过期之后才能获取到锁）</li>
+<li>zk 分布式锁，获取不到锁，注册个监听器即可，维持一个连接，不需要不断主动尝试获取锁，性能开销较小。写入时需要等到一半以上节点返回ACK之后才能写入，写入性能差，只能主节点进行写入。当节点宕机时，需要选举出新的节点，并完成数据同步之后才能提供服务，这块性能相较于Redis也差。</li>
+</ul>
+<p>znode类型：零时节点，持久化节点，临时顺序节点，持久化顺序节点</p>
+<h3 id="消息广播"><a href="#消息广播" class="headerlink" title="消息广播"></a>消息广播</h3><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806163835364.png" alt="image-20210806163835364" style="zoom:67%;">
+节点数据一致，消息广播时，二阶段提交，Leader生成proposal事务，添加全局唯一64位递增事务id叫做zxid。zxid组成：32位为纪元，32为自增id。Leader会为每一个Follower节点分配一个单独的FIFO队列，然后把Proposal发送到队列中，Follower节点收到对应的Proposal之后会把它持久化到磁盘上，写入完成 返回ACK给Leader。Follower节点收过超过半数的ACK后 (Quorum机制) ，提交本地机器上的事务，同时广播commit ，Follower收到commit止呕，完成各自事务的提交。
+
+<h2 id="ES"><a href="#ES" class="headerlink" title="ES"></a>ES</h2><p>ES（架构设计、原理、近实时1s、数据结构（index，type，document，filed）、倒排索引、优化思路（操作系统会将磁盘文件里的数据自动缓存到 <code>filesystem cache</code> 里面去，尽量让数据留在缓存里：数据预热、冷热分离、document设计（不要做关联操作）、分页优化（不允许深翻页，一页一页翻页scroll api和search_after，scroll 会一次性给你生成<strong>所有数据的一个快照</strong>，然后每次滑动向后翻页就是通过<strong>游标</strong> <code>scroll_id</code> 移动；<code>search_after</code> 的思想是使用前一页的结果来帮助检索下一页的数据）），更新删除底层原理（如果是删除操作，commit 的时候会生成一个 <code>.del</code> 文件，里面将某个 doc 标识为 <code>deleted</code> 状态，那么搜索的时候根据 <code>.del</code> 文件就知道这个 doc 是否被删除了。如果是更新操作，就是将原来的 doc 标识为 <code>deleted</code> 状态，然后新写入一条数据。））</p>
+<p>merge原理（buffer 每 refresh 一次，就会产生一个 <code>segment file</code>，所以默认情况下是 1 秒钟一个 <code>segment file</code>，这样下来 <code>segment file</code> 会越来越多，此时会定期执行 merge。每次 merge 的时候，会将多个 <code>segment file</code> 合并成一个，同时这里会将标识为 <code>deleted</code> 的 doc 给<strong>物理删除掉</strong>，然后将新的 <code>segment file</code> 写入磁盘，这里会写一个 <code>commit point</code>，标识所有新的 <code>segment file</code>，然后打开 <code>segment file</code> 供搜索使用，同时删除旧的 <code>segment file</code>。）</p>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210802173727433.png" alt="image-20210802173727433" style="zoom: 50%;">
+
+<h2 id="MySQL"><a href="#MySQL" class="headerlink" title="MySQL"></a>MySQL</h2><p>MySQL（存储引擎，索引，行锁，表锁，意向锁，隔离级别，ACID，当前读、快照读、幻读、MVCC原理（Read Veiw）、Redo log、Undo log、Undo log 、主从复制（半同步复制、异步复制，relay log，并行复制（库级别），半一致性读）、索引调优（explain，最左匹配原则））</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_38629422/article/details/105813338?spm=1001.2014.3001.5501">redo日志的刷盘策略</a> <a target="_blank" rel="noopener" href="https://www.jianshu.com/p/2b7fdad5fc0c">binlog/redolog/undolog详解</a><br><font color="red">innodb_flush_log_at_trx_commit</font>  0（Redo log buffer写入buffer）  1（Redo log buffer -》保证到redo日志文件） 2（Redo log buffer -》只保证到os cache -》redo日志文件）<br><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806161707243.png" alt="image-20210806161707243" style="zoom:67%;"></p>
+<p><code>redo log</code>是<code>InnoDB</code>存储引擎层的日志，又被称为重写日志，用来记录事务操作的变化，记录的是数据修改之后的值，不管事务提交是否成功，都会被记录下来。<code>redo log</code>实现上采用来大小固定，循环写入的方式，当记录写到末尾时，又会从头开始写，如下图所示。</p>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806155610943.png" alt="image-20210806155610943" style="zoom:67%;">
+`write pos`是当前记录的位置，一边写一边后移，写到4号文件末尾就回到1号文件开头。`check point`是当前要把记录写入到数据文件的位置，也是后移并且循环的。 <font color="red"> 用于系统奔溃恢复(crash-safe)</font>
+
+<p><code>bin log</code>是mysql数据库service层的，是所有存储引擎共享的日志模块，它用于记录数据库执行的写入性操作，也就是在事务<code>commit</code>阶段进行记录，以二进制的形式保存于磁盘中。<code>bin log</code>是逻辑日志，并且由mysql数据库的service层执行，也就是说使用所有的存储引擎数据库都会记录<code>bin log</code>日志。</p>
+<p><code>bin log</code>是以追加的方式进行写入的，可以通过 <code>max_binlog_size</code> 参数设置<code>bin log</code>文件大小，当文件大小达到某个值时，会生成新的文件来保存日志。</p>
+<h3 id="bin-log刷盘机制"><a href="#bin-log刷盘机制" class="headerlink" title="bin log刷盘机制"></a>bin log刷盘机制</h3><p>在每次事务<code>commit</code>提交时才会记录bin log日志，此时记录仍然在内存中，那么什么时候存储到磁盘中呢？</p>
+<p>mysql通过 <font color="red">sync_binlog</font> 参数控制bin log刷盘时机，取值范围：0～N：<br> 0：不去强求，由系统自行判断何时写入磁盘；<br> 1：每次事务<code>commit</code>的时候都要将bin log写入磁盘；<br> N：每N个事务<code>commit</code>，才会将bin log写入磁盘；</p>
+<p><code>sync_binlog</code> 参数建议设置为1，这样每次事务commit时就会把bin log写入磁盘中，这样也可以保证mysql异常重启之后bin log日志不会丢失。</p>
+<p>一点是主从复制，另一点是数据恢复</p>
+<ul>
+<li>主从复制：在master端开启 <code>bin log</code> ，然后将 <code>bin log</code> 发送给各个slaver端，slaver端读取 <code>bin log</code> 日志，从而使得主从数据库中数据一致</li>
+<li> 数据恢复：通过 <code>bin log</code> 获取想要恢复的时间段数据</li>
+</ul>
+<p><code>undo log</code> 是回滚日志，逻辑日志是记录每条数据的所有版本，比如 <code>update</code> 语句，那么它首先会将该条记录的数据记录到<code>undo log</code>日志中，并且将最新版本的<strong>roll_pointer指针</strong>指向上一个版本，这样就可以形成当前记录的所有版本，这也是MVCC的实现机制。</p>
+<p>undo log在事务开启之前就产生，当事务提交的时候，不会删除undo log，因为可能需要rollback操作，要执行回滚（rollback）操作时，从缓存中读取数据。InnoDB会将事务对应的日志保存在删除list中，后台通过purge线程进行回收处理</p>
+<h3 id="事务执行过程"><a href="#事务执行过程" class="headerlink" title="事务执行过程"></a>事务执行过程</h3><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806154846154.png" alt="image-20210806154846154" style="zoom: 50%;">
+
+<p>为什么要分库分表（分表数据量太大，分库是因为一个库不能承担大量的并发请求）</p>
+<p>单库数据迁移（停机迁移，双写保证一致性）</p>
+<p>动态扩容缩容分库分表（预先分配足够的分库分表32*32,只需要更新路由规则，迁移库表即可）</p>
+<p>分布式id（多种解决方案：）</p>
+<p>读写分离（分库分表前要考虑读写分离，如果写请求少， 可以不用分库）</p>
+<p>MQ（rabbitmq、kafka）（架构设计、原理、高可用、容错、对比（rabbitmq微秒级延迟，w级吞吐量，kafka秒级延迟，10w级吞吐量，功能上对比rabbitmq通过exchange和queue支持丰富的路由规则，还有死信队列，实现延迟消费，架构设计下海量消息没办法线性扩展；kafka日志存储文件，默认存储7天，对于需要记录的场景适用，而且性能更高）、数据零丢失（可靠性消息服务）、顺序消费、MQ作用、缺点、）</p>
+<h3 id="高可用"><a href="#高可用" class="headerlink" title="高可用"></a>高可用</h3><p>RabbitMQ镜像集群，高可用。Master和Slave队列，写操作，当访问slave队列时，会路由到master队列；读操作，当访问slave时，转发到master获取队列数据，最后请求由slave返回。问题点是：queue中海量数据存储时，没办法线性扩展。负载均衡是master节点尽量不分配在同一个节点上。</p>
+<p>RabbitMQ普通集群，元数据在每个节点上同步一份，queue不会在每个节点上，如果存在queue的节点宕机之后，数据就获取不到了。不能提供高可用</p>
+<p>Kafka集群，分区和副本进行容错，可以通过增加分区的方式线性扩容，副本用于保证高可用。</p>
+<h3 id="消息幂等性（怎么出现重复消费的情况）"><a href="#消息幂等性（怎么出现重复消费的情况）" class="headerlink" title="消息幂等性（怎么出现重复消费的情况）"></a>消息幂等性（怎么出现重复消费的情况）</h3><p>RabbitMQ手动确认channel.ack,处理过程中应用宕机，会导致重复消费</p>
+<p>Kafka手动确认，每隔一段时间（定时定期），会把消费的offset提交到broker，消费一半，应用宕机的情况下，会再次重复消费</p>
+<p>Kafka reblace重平衡，</p>
+<h3 id="零丢失（可靠性传输）"><a href="#零丢失（可靠性传输）" class="headerlink" title="零丢失（可靠性传输）"></a>零丢失（可靠性传输）</h3><h3 id="积压"><a href="#积压" class="headerlink" title="积压"></a>积压</h3><p>RabbitMQ：增加消费者</p>
+<p>Kafka：新建topic，之后创建成倍如10倍的分区，停掉消费者，写程序监听现有队列，将队列中的消息，重写到新的topic中，开启10倍的机器，消费新topic里的消息（一个消费者可以消费多个分区，但是不会多个消费者消费同一个分区）</p>
+<p>当mq快写满了，临时程序，消费数据，丢弃数据，之后补数据</p>
+<h3 id="rabbitmq消息过期（手动补消息）"><a href="#rabbitmq消息过期（手动补消息）" class="headerlink" title="rabbitmq消息过期（手动补消息）"></a>rabbitmq消息过期（手动补消息）</h3><h3 id="Kafka为啥快"><a href="#Kafka为啥快" class="headerlink" title="Kafka为啥快"></a>Kafka为啥快</h3><p>采用Reactor多路复用网络模型（支持百万连接），页缓存+异步磁盘顺序写入，零拷贝</p>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210802163613614.png" alt="image-20210802163613614" style="zoom: 67%;">
+                                                                        多路复用原理图
+
+<p><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210802172944621.png" alt="image-20210802172944621" style="zoom:50%;"><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210802173050027.png" alt="image-20210802173050027" style="zoom:50%;"></p>
+<p>​                                                        左图为正常读写过程，右图为零拷贝过程</p>
+<h3 id="Kafka客户端缓冲池机制"><a href="#Kafka客户端缓冲池机制" class="headerlink" title="Kafka客户端缓冲池机制"></a>Kafka客户端缓冲池机制</h3><p>private final ConcurrentMap&lt;topicpartition, deque&gt;  batches = new CopyOnWriteMap&lt;TopicPartition, Deque&gt;();</p>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210802164216792.png" alt="image-20210802164216792" style="zoom:67%;">
+初始化创建BufferPool 就占用固定的内存，比如 32MB。然后把 32MB 划分为 N 多个内存块，Deque<ByteBuffer> free，比如说一个内存块是 16KB，这样的话这个缓冲池里就会有很多的内存块，使用HeapByteBuffer缓冲区。
+
+<p>然后你需要创建一个新的 Batch，就从缓冲池里取一个 16KB 的内存块就可以了，然后这个 Batch 就不断的写入消息，但是最多就是写 16KB，因为 Batch 底层的内存块就 16KB。</p>
+<p>接着如果 Batch 被发送到 Kafka 服务器了，此时 Batch 底层的内存块就直接还回缓冲池就可以了。</p>
+<p>下次别人再要构建一个 Batch 的时候，再次使用缓冲池里的内存块就好了。这样就可以利用有限的内存，对他不停的反复重复的利用。因为如果你的 Batch 使用完了以后是把内存块还回到缓冲池中去，那么就不涉及到垃圾回收了。</p>
+<p>如果我现在把一个缓冲池里的内存资源都占满了，现在缓冲池里暂时没有内存块了，怎么办呢？</p>
+<p>阻塞你的写入操作，不让你继续写入消息了。把你给阻塞住，不停的等待，直到有内存块释放出来，然后再继续让你写入消息。</p>
+<h3 id="Offset原理"><a href="#Offset原理" class="headerlink" title="Offset原理"></a>Offset原理</h3><p>segment file包含（多个log和index文件，查找时通过offset找到对应的index文件，再到对应的index文件里查找对应的log文件中数据存储位置，找到最终offset数据）index文件使用稀疏列表，通过二分查找，找到offset范围内的，在log文件里的位置。</p>
+<h2 id="Dubbo"><a href="#Dubbo" class="headerlink" title="Dubbo"></a>Dubbo</h2><p>如何设计一个高并发系统（系统拆分、缓存、MQ、分库分表、读写分离、ES）</p>
+<p>架构设计（10层）</p>
+<p>工作原理（注册中心，Provider，Consumer，Monitor、Admin）</p>
+<p>序列化（通信协议，序列化协议，hessian数据结构（8种原始类型，3种递归类型（list，map，object），一种特殊类型ref用来表示对共享对象的引用），PB（protocol buffer）效率高-》proto编译器，速度快，应该比 <code>XML</code> 和 <code>JSON</code> 快上了 <code>20~100</code> 倍；它的数据压缩效果好，就是说它序列化后的数据量体积小。因为体积小，传输起来带宽和速度上会有优化）</p>
+<p>负载均衡和集群容错（4种负载均衡策略，6种集群容错策略）</p>
+<p>RandomLoadblance、RoundRobinLoadblance、LeastActiveLoadblance、ConsistentHashLoadblance</p>
+<p>failover失败之后可以配置重试，默认；</p>
+<p>failfast快速失败，写入请求，不需重试；</p>
+<p>failsafe出现异常时忽略，不重要接口，写日志；</p>
+<p>failback失败了后台自动记录请求，然后定时重发，比较适合于写消息队列这种；</p>
+<p>forking并发调用多个provide人，只要一个成功就返回，常用于实时性要求比较高的读操作，但是会浪费更多的服务资源；</p>
+<p>broadcast逐个调用所有的 provider。任何一个 provider 出错则报错。通常用于通知所有提供者更新缓存或日志等本地资源信息。</p>
+<p>SPI（service provide interface，java自带的缺点：加载所有的实现类，Dubbo使用key-value键值对的方式，可以通过key直接获取实现类，@SPI（dubbo）指定默认通信协议为dubbo实现类)</p>
+<p>@Adaptive扩展点自适应,可以把它看成是运行时动态决定使用哪种扩展的方式。dubbo会在运行时对扩展服务动态生成一个代理类，这个类会在运行时动态决定使用哪一个扩展。总结：运行时动态生成代理类，代理类通过url决定生成哪一个类的扩展类。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();</span><br></pre></td></tr></table></figure>
+
+<p>重点就是看下如何生成这样的代理类，它是通过运行时生成源码文件，然后调用编译器进行编译后生成。</p>
+<p>服务治理（调用链路自动生成（拓扑图），服务访问压力及时长统计（qps，tp90，tp99），失败监控和报警，可用性监控（SLA））</p>
+<p>限流（connections，actives 设置长连接数量，每个长连接下并发执行线程数）</p>
+<p>服务降级（降级使用Mock机制，服务上配置mock，mock=“return null” 或者mock=“true”再使用xxxServiceMock）</p>
+<p>服务重试和超时（retries=“3”，timeout=“2000”）</p>
+<p>幂等性怎么设计（网络超时，重试，重复处理。通用方案，很多情况下都要考虑幂等性）</p>
+<p>接口保证顺序性（使用key如订单id，hash到同一个内存队列或使用Kafka指定key，消息到同一个分区中）</p>
+<p>为什么要进行系统拆分？如何拆分？（不拆分，代码复杂，开发效率低，技术栈要求一致；拆分之前，需要组织结构进行拆分，3-4个人负责一个微服务，需要很强的基础架构和运维能力）</p>
+<p>微服务和传统http地址调用区别（当访问多之后，需要配置对应关系，负载均衡、超时重试、降级、限流）</p>
+<p>SpringCloud（框架、Eureka、Zuul、Gateway、Feign、Hystrix、Ribbon、Sentinel、Seata 、ShardingSphere）<br>Nacos原理：</p>
+<p>配置中心：主动pull，长轮询（超时时间为30s，dataId的MD5对比，服务端29.5s之后执行取消任务并返回，之前挂起，将请求任务存入队列中，管理端更新之后，通过事件通知的方式唤起挂起的长轮询，将队列中的任务删除，并返回。）</p>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806151612513.png" alt="image-20210806151612513" style="zoom:67%;">
+
+<p>注册中心：命名服务类上订阅监听，创建UDP长连接，更新服务时，通知监听器</p>
+<p>SpringBoot</p>
+<p>分布式事务</p>
+<p>2pc(prepare准备阶段（所有的RM锁住需要的资源，在本地执行这个事务（执行sql，写redo/undo log等），但不提交）,commit提交阶段：commit，rollback) TM RM角色</p>
+<p>1、同步阻塞：最大的问题即同步阻塞，即：所有参与事务的逻辑均处于阻塞状态。<br>2、单点：协调者存在单点问题，如果协调者出现故障，参与者将一直处于锁定状态。<br>3、脑裂：在阶段2中，如果只有部分参与者接收并执行了Commit请求，会导致节点数据不一致。</p>
+<p>3pc</p>
+<ul>
+<li>cancommit是否可以提交，参与者节点会对自身逻辑进行事务尝试，其实说白了就是检查下自身状态的健康性，看有没有能力进行事务操作。</li>
+<li> precommit预提交：参与者收到后开始执行事务操作，并将Undo和Redo信息记录到事务日志中。</li>
+<li>docommit</li>
+</ul>
+<p>引入超时机制</p>
+<ul>
+<li>PreCommit阶段 <strong>协调者和参与者都引入了超时机制</strong>，前一个阶段返回，协调者超时，向所有的参与者发送<strong>“abort”</strong>请求。</li>
+<li>doCommit阶段，协调者收到no或者超时，协调者都会向所有的参与者节点发送abort请求。在doCommit阶段，如果参与者无法及时接收到来自协调者的doCommit或者abort请求时，会在等待超时之后，会继续进行事务的提交。（其实这个应该是基于概率来决定的，当进入第三阶段时，说明参与者在第二阶段已经收到了PreCommit请求，那么协调者产生PreCommit请求的前提条件是他在第二阶段开始之前，收到所有参与者的CanCommit响应都是Yes。（一旦参与者收到了PreCommit，意味他知道大家其实都同意修改了）所以，一句话概括就是，当进入第三阶段时，由于网络超时等原因，虽然参与者没有收到commit或者abort响应，但是他有理由相信：成功提交的几率很大。 ）</li>
+</ul>
+<p>避免了参与者在长时间无法与协调者节点通讯（协调者挂掉了）的情况下，无法释放资源的问题，因为参与者自身拥有超时机制会在超时后，自动进行本地commit从而进行释放资源。而这种机制也侧面降低了整个事务的阻塞时间和范围。</p>
+<p>以上就是3PC相对于2PC的一个提高（相对缓解了2PC中的前两个问题），但是3PC依然没有完全解决数据不一致的问题。</p>
+<p>TCC(Try锁定冻结资源，Confirm确认扣除阶段，Cancel取消阶段)</p>
+<p>问题：空回滚（pre阶段超时，此时cancel，丢包，支持），事务悬挂（执行cancel之后执行pre，堵塞时造成此情况，要避免）</p>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804102939532.png" alt="image-20210804102939532" style="zoom:67%;">
+本地消息
+
+<p>消息最终一致性</p>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804102903400.png" alt="image-20210804102903400" style="zoom:67%;">
+消息最终一致性
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804095858230.png" alt="image-20210804095858230" style="zoom:67%;">
+
+<p>最大努力通知</p>
+<p>Seata</p>
+<p><strong>Transaction Coordinator (TC)： 事务协调器，维护全局事务的运行状态，负责协调并驱动全局事务的提交或回滚。</strong></p>
+<p><strong>Transaction Manager (TM)： 控制全局事务的边界，负责开启一个全局事务，并最终发起全局提交或全局回滚的决议。</strong></p>
+<p><strong>Resource Manager (RM)： 控制分支事务，负责分支注册、状态汇报，并接收事务协调器的指令，驱动分支（本地）事务的提交和回滚。</strong></p>
+<p>分布式事务在Seata中AT模式的执行流程：</p>
+<p><strong>TM 向 TC 申请开启一个全局事务，全局事务创建成功并生成一个全局唯一的 XID。</strong></p>
+<p><strong>XID 在微服务调用链路的上下文中传播。</strong></p>
+<p><strong>RM 向 TC 注册分支事务，接着执行这个分支事务并提交（重点：RM在第一阶段就已经执行了本地事务的提交/回滚），最后将执行结果汇报给TC。</strong></p>
+<p><strong>TM 根据 TC 中所有的分支事务的执行情况，发起全局提交或回滚决议。</strong></p>
+<p><strong>TC 调度 XID 下管辖的全部分支事务完成提交或回滚请求。</strong></p>
+<p><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804104558272.png" alt="image-20210804104558272"></p>
+<p>Seata能够在第一阶段直接提交事务，是因为Seata框架为每一个RM维护了一张UNDO_LOG表（这张表需要客户端自行创建），其中保存了每一次本地事务的回滚数据。因此，二阶段的回滚并不依赖于本地数据库事务的回滚，而是RM直接读取这张UNDO_LOG表，并将数据库中的数据更新为UNDO_LOG中存储的历史数据。</p>
+<p>如果第二阶段是提交命令，那么RM事实上并不会对数据进行提交（因为一阶段已经提交了），而实发起一个异步请求删除UNDO_LOG中关于本事务的记录。</p>
+<blockquote>
+<p>由于Seata一阶段直接提交了本地事务，因此会造成隔离性问题，因此Seata的默认隔离级别为Read Uncommitted。然而Seata也支持Read Committed的隔离级别。</p>
+</blockquote>
+<p>IO网络编程</p>
+<p>BIO 传统IO，堵塞式IO</p>
+<ul>
+<li><p>当并发数较大时，需要创建大量线程来处理连接，系统资源占用较大；</p>
+</li>
+<li><p>连接建立后，如果当前线程暂时没有数据可读，则线程就阻塞在 Read 操作上，造成线程资源浪费。</p>
+</li>
+</ul>
+<p>NIO （非堵塞式IO，NewIO，java中NIO实现了非堵塞式IO，基于事件驱动的方式）</p>
+<ul>
+<li>并发连接：使用IO多路复用解决；堵塞读：当某条连接有新的数据可以处理时，操作系统通知应用程序，线程从阻塞状态返回，开始进行业务处理；</li>
+<li>基于线程池复用线程资源：不必再为每个连接创建线程，将连接完成后的业务处理任务分配给线程进行处理，一个线程可以处理多个连接的业务。</li>
+</ul>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804114632365.png" alt="image-20210804114632365" style="zoom:67%;">
+NIO基本实现如图
+
+<p>Reactor 模型组成：</p>
+<ul>
+<li>事件分派器（eventDispatch，负责监听和分发事件）</li>
+<li>多线程：事件处理器（eventHandle，处理程序执行 I/O 事件要完成的实际事件）</li>
+</ul>
+<p>Reactor 线程模型：单Reactor单线程，单Reactor多线程，主从Reactor多线程</p>
+<p>AIO</p>
+<p>Netty基于Future +Listener实现，Future虽然提供了异步任务处理机制，但是获取处理结果确不方便，只能通过堵塞get（）方法或者轮询的方式等到任务的结果   <a target="_blank" rel="noopener" href="https://www.cnblogs.com/lbhym/p/12753314.html">Netty详解</a></p>
+<p>Netty中的<font color="red">pipeline</font>和<font color="red">channelHandler</font>，通过责任链设计模式来组织代码逻辑，并且能够支持逻辑的添加和删除，能够支持各类协议拓展，如HTTP、Websocket等。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">.handler(<span class="keyword">new</span> ChannelInitializer&lt;SocketChannel&gt;() &#123;  <span class="comment">//客户端</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(SocketChannel ch)</span> </span>&#123;</span><br><span class="line">        ch.pipeline().addLast(<span class="keyword">new</span> ClientHandler());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line">.childHandler(<span class="keyword">new</span> ChannelInitializer&lt;NioSocketChannel&gt;() &#123; <span class="comment">//服务端</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">initChannel</span><span class="params">(NioSocketChannel ch)</span> </span>&#123;</span><br><span class="line">        ch.pipeline().addLast(<span class="keyword">new</span> ServerHandler());</span><br><span class="line">    &#125;</span><br><span class="line">&#125; </span><br></pre></td></tr></table></figure>
+
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806135818842.png" alt="image-20210806135818842" style="zoom:67%;">
+一个双向链表结构，每个节点是一个ChannelHandlerContext对象。这个对象能拿到与channel相关的所有上下文信息，这个对象还包含一个重要的对象：ChannelHandler，它的分类如下。
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806135913812.png" alt="image-20210806135913812" style="zoom:67%;">
+
+<p>拆包粘包解决方法：</p>
+<ol>
+<li>FixedLengthFrameDecoder：固定长度拆包器，每个数据包长度都是固定的。</li>
+</ol>
+<p>　　2. LineBasedFrameDecoder：行拆包器，每个数据包之间以换行符作为分隔。<br>　　3. DelimiterBasedFrameDecoder：类似行拆包器，不过我们可以自定义分隔符。<br>　　4. LengthFieldBasedFrameDecoder：基于长度域拆包器，最常用的，只要你的自定义协议中包含数据长度这个部分，就可以使用。它需要三个参数，第一个是数据包最大长度、第二个是参数长度域偏移量、第三个是长度域长度。</p>
+<p>　　<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/1383122-20200425144254261-1102259668.png" alt="img" style="zoom:67%;"></p>
+<p>　　看看前面通信协议的图，所谓长度域就是数据长度就是数据长度占用的字节，这里是4。长度域偏移量就是数据长度这个部分在通信协议组成部分中的位置，前面几个部分加起来是7，所以它的偏移量就是7。</p>
+<p>ByteBuf和ByteBuffer区别 <a target="_blank" rel="noopener" href="https://blog.csdn.net/mrliuzhao/article/details/89453082">ByteBuffer</a></p>
+<h2 id="响应式编程入门"><a href="#响应式编程入门" class="headerlink" title="响应式编程入门"></a>响应式编程入门</h2><p>　　响应式编程就是基于reactor的思想，当你做一个带有一定延迟的才能够返回的io操作时，不会阻塞，而是立刻返回一个流，并且订阅这个流，当这个流上产生了返回数据，可以立刻得到通知并调用回调函数处理数据。</p>
+<h3 id="Flux"><a href="#Flux" class="headerlink" title="Flux"></a>Flux</h3><p>　　Reactor中的发布者（Publisher）由<strong>Flux</strong>和<strong>Mono</strong>两个类定义，它们都提供了丰富的操作符（operator）。一个Flux对象代表一个包含0..N个元素的响应式序列，<font color="red">元素可以是普通对象、数据库查询的结果、http响应体，甚至是异常</font>。而一个Mono对象代表一个包含零/一个（0..1）元素的结果。下图就是一个Flux类型的数据流，Flux往流上发送了3个元素，Subscriber通过订阅这个流来接收通知。</p>
+<img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210804153258435.png" alt="image-20210804153258435" style="zoom:67%;">
+Flux和Mono都可以发出三种“数据信号”：元素值、错误信号、完成信号，错误信号和完成信号都是终止信号，完成信号用于告知下游订阅者该数据流正常结束，错误信号终止数据流的同时将错误传递给下游订阅者。
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; words = Arrays.asList(<span class="string">&quot;hello&quot;</span>,<span class="string">&quot;reactive&quot;</span>,<span class="string">&quot;world&quot;</span>);</span><br><span class="line">Flux.fromIterable(words).subscribe(System.out::println);</span><br></pre></td></tr></table></figure>
+
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/yuanrw/p/10050509.html">什么是响应式编程？reactor入门</a></p>
+<h2 id="Sentinel流控"><a href="#Sentinel流控" class="headerlink" title="Sentinel流控"></a>Sentinel流控</h2><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210805133711749.png" alt="image-20210805133711749" style="zoom:67%;">
+**流控规则**：
+    1、阈值类型：通过什么方式限流：qps：每秒请求量大于3的时候开始限流；并发线程数，减少了线程切换
+    2、**流控模式**
+        直接（默认）：接口达到限流条件时，开启限流
+        关联：当关联的资源达到限流条件时，开启限流 [适合做应用让步]
+        链路：当从某个接口过来的资源达到限流条件时，开启限流。**针对来源是针对上级微服务，而链路流控是针对上级接口，也就是说它的粒度更细**，访问通过@SentinelResource("message") 指定的接口
+    3、**流控效果**：
+        **快速失败（默认）**: 直接失败，抛出异常，不做任何额外的处理，是最简单的效果
+        **Warm Up**：它从开始阈值到最大QPS阈值会有一个缓冲阶段，一开始的阈值是最大QPS阈值的1/3，然后慢慢增长，直到最大阈值，适用于将突然增大的流量转换为缓步增长的场景。(令牌桶，平滑预热限流)
+        **排队等待**：让请求以均匀的速度通过，单机阈值为每秒通过数量，其余的排队等待； 它还会让设置一个超时时间，当请求超过超时间时间还未处理，则会被丢弃。（漏桶？）
+
+<p><strong>令牌桶算法</strong>：限制数据的平均传输效率的同时还允许一定程度的突发传输，保护自己的系统不被打垮。平滑突发限流(SmoothBursty)和平滑预热限流(SmoothWarmingUp)实现。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">RateLimiter limiter = RateLimiter.create(<span class="number">5</span>);<span class="comment">//每秒允许5个请求，表示桶容量为5且每秒新增5个令牌，即每隔0.2毫秒新增一个令牌</span></span><br><span class="line"><span class="comment">//permitsPerSecond:每秒新增的令牌数  warmupPeriod:从冷启动速率过渡到平均速率的时间间隔</span></span><br><span class="line"><span class="comment">//系统冷启动后慢慢的趋于平均固定速率（即刚开始速率慢一些，然后慢慢趋于我们设置的固定速率）</span></span><br><span class="line">RateLimiter limiter = RateLimiter.create(<span class="number">10</span>, <span class="number">1000</span>, TimeUnit.MILLISECONDS);</span><br><span class="line">limiter.acquire(<span class="number">1</span>);</span><br></pre></td></tr></table></figure>
+
+<p><strong>漏桶算法</strong>：限制数据的传输效率。用于保证别人的系统不被打垮</p>
+<p><strong>降级规则</strong><br><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806100935989.png" alt="image-20210806100935989" style="zoom:67%;"></p>
+<ul>
+<li>平均响应时间：当资源的平均响应时间超过阈值（以 ms 为单位）之后，资源进入准降级状态。</li>
+<li>异常比例：当资源的每秒异常总数占通过量的比值超过阈值之后，资源进入降级状态，即在接下的时间窗口（以 s 为单位）之内，对这个方法的调用都会自动地返回。异常比率的阈值范围是[0.0,1.0]。 </li>
+<li>异常数：当资源近 1 分钟的异常数目超过阈值之后会进行服务降级。注意由于统计时间窗口是分钟级别的，若时间窗口小于60s，则结束熔断状态后仍可能再进入熔断状态。</li>
+</ul>
+<p><strong>系统保护规则</strong></p>
+<p>是从应用级别的入口流量进行控制，从单台机器的总体 Load、RT、入口 QPS 、CPU使用率和线程数五个维度监控应用数据，让系统尽可能跑在最大吞吐量的同时保证系统整体的稳定性。系统保护规则是应用整体维度的，而不是资源维度的，并且仅对入口流量 (进入应用的流量) 生效。</p>
+<ul>
+<li>Load（仅对 Linux/Unix-like 机器生效）：当系统 load1 超过阈值，且系统当前的并发线程数超过系统容量时才会触发系统保护。系统容量由系统的 maxQps * minRt 计算得出。设定参考值一般是 CPU cores * 2.5。</li>
+<li>RT：当单台机器上所有入口流量的平均 RT 达到阈值即触发系统保护，单位是毫秒。</li>
+<li>线程数：当单台机器上所有入口流量的并发线程数达到阈值即触发系统保护。</li>
+<li>入口 QPS：当单台机器上所有入口流量的 QPS 达到阈值即触发系统保护。</li>
+<li>CPU使用率：当单台机器上所有入口流量的 CPU使用率达到阈值即触发系统保护</li>
+</ul>
+<h2 id="SkyWalking"><a href="#SkyWalking" class="headerlink" title="SkyWalking"></a>SkyWalking</h2><p>SkyWalking使用javaagent探针的方式进行监控上报，零侵入。</p>
+<p>UI：从Service 、Instance、Endpoint维度进行统计查看，</p>
+<p>CPM  每分钟请求数，SLA 服务等级协议，P50,P90,P95,P99响应时间  slow endpoint慢端点  heatmap热力图：直观感受平台的整体流量</p>
+<p>apdex 是一个衡量服务器性能的标准。apdex有三个指标：</p>
+<p>满意：请求响应时间小于等于T。<br>可容忍：请求响应时间大于T，小于等于4T。<br>失望：请求响应时间大于4T。<br>T：自定义的一个时间值，比如：500ms。apdex = (满意数 + 可容忍数/2)/ 总数。例如：服务A定义T=200ms，在100个采样中，有20个请求小于200ms，有60个请求在200ms到800ms之间，有20个请求大于800ms。计算apdex = (20 + 60/2)/100 = 0.5。</p>
+<p>拓扑图（依赖关系图）</p>
+<h2 id="Gateway核心架构"><a href="#Gateway核心架构" class="headerlink" title="Gateway核心架构"></a>Gateway核心架构</h2><p>路由(Route) 是 gateway 中最基本的组件之一，表示一个具体的路由信息载体。主要定义了下面的几个信息:<br><strong>id</strong>，路由标识符，区别于其他 Route。<br><strong>uri</strong>，路由指向的目的地 uri，即客户端请求最终被转发到的微服务。<br><strong>order</strong>，用于多个 Route 之间的排序，数值越小排序越靠前，匹配优先级越高。<br><strong>predicate</strong>，断言的作用是进行条件判断，只有断言都返回真，才会真正的执行路由。<br><strong>filter</strong>，过滤器用于修改请求和响应信息。<br><img src="/2021/07/30/%E8%B5%84%E6%96%99%E6%96%87%E6%A1%A3%E6%95%B4%E7%90%86/image-20210806103936840.png" alt="image-20210806103936840" style="zoom:67%;"><br><strong>执行流程大体如下：</strong></p>
+<ol>
+<li>Gateway Client向Gateway Server发送请求</li>
+<li>请求首先会被HttpWebHandlerAdapter进行提取组装成网关上下文</li>
+<li>然后网关的上下文会传递到DispatcherHandler，它负责将请求分发给RoutePredicateHandlerMapping</li>
+<li>RoutePredicateHandlerMapping负责路由查找，并根据路由断言判断路由是否可用</li>
+<li>如果过断言成功，由FilteringWebHandler创建过滤器链并调用</li>
+<li>请求会一次经过PreFilter–微服务-PostFilter的方法，最终返回响应</li>
+</ol>
+<p>断言-》断言工厂-》AbstractRoutePredicateFactory（继承此抽象类，）</p>
+<p>基于路由权重的断言工厂-》WeightRoutePredicateFactory：接收一个[组名,权重], 然后对于同一个组内的路由按照权重转发</p>
+<p>过滤器-》<strong>Filter</strong>的生命周期只有两个：<strong>“pre” **和</strong>“post”**。</p>
+<ul>
+<li><p>过滤器在请求被路由之前调用，可利用这种过滤器实现身份验证、在集群中选择请求的微服务、记录调试信息等</p>
+</li>
+<li><p>过滤器在路由到微服务以后执行，为响应添加标准的HTTP Header、收集统计信息和指标、将响应从微服务发送给客户端等。</p>
+</li>
+</ul>
+<p>GatewayFilter：应用到单个路由或者一个分组的路由上。GlobalFilter：应用到所有的路由上。</p>
+<p>局部过滤器-》过滤器工厂（AbstractGatewayFilterFactory）</p>
+<h2 id="均摊算法："><a href="#均摊算法：" class="headerlink" title="均摊算法："></a>均摊算法：</h2><p>99 ，128，19，62四个价格，优化60元，优惠之后均摊价格：99-60<em>99/(99+128+19+62)=79<br>128-60</em>128/(99+128+19+62)=103.06</p>
+</ByteBuffer>
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/21/SpringCloud%E5%85%A8%E5%AE%B6%E6%A1%B6/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/07/21/SpringCloud%E5%85%A8%E5%AE%B6%E6%A1%B6/" class="post-title-link" itemprop="url">SpringCloud全家桶</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-07-21 17:26:40" itemprop="dateCreated datePublished" datetime="2021-07-21T17:26:40+08:00">2021-07-21</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:26" itemprop="dateModified" datetime="2024-07-12T10:34:26+08:00">2024-07-12</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="全家桶"><a href="#全家桶" class="headerlink" title="全家桶"></a>全家桶</h2><img src="/2021/07/21/SpringCloud%E5%85%A8%E5%AE%B6%E6%A1%B6/image-20210721172650230.png" alt="image-20210721172650230" style="zoom:67%;">
+作用
+
+<ul>
+<li><p>Eureka：各个服务启动时，Eureka Client 都会将服务注册到 Eureka Server，并且 Eureka Client 还可以反过来从 Eureka Server 拉取注册表，从而知道其他服务在哪里</p>
+</li>
+<li><p>Ribbon：服务间发起请求的时候，基于 Ribbon 做负载均衡，从一个服务的多台机器中选择一台</p>
+</li>
+<li><p>Feign：基于 Feign 的动态代理机制，根据注解和选择的机器，拼接请求 URL 地址，发起请求</p>
+</li>
+<li><p>Hystrix：发起请求是通过 Hystrix 的线程池来走的，不同的服务走不同的线程池，实现了不同服务调用的隔离，避免了服务雪崩的问题</p>
+</li>
+<li><p>Zuul：如果前端、移动端要调用后端系统，统一从 Zuul 网关进入，由 Zuul 网关转发请求给对应的服务</p>
+</li>
+</ul>
+<h2 id="Eureka注册发现原理"><a href="#Eureka注册发现原理" class="headerlink" title="Eureka注册发现原理"></a>Eureka注册发现原理</h2><ul>
+<li>client每30秒主动向Server发请求获取注册服务列表，如果服务信息变动，更新本地服务注册列表</li>
+<li>client每30秒向Server发送一次心跳，告诉Server，自己还活着。</li>
+<li>如果Eureka Server在90秒没有收到Eureka客户的续约，它会将实例从其注册表中删除。</li>
+<li>中小型的项目建议关闭自我保护（eureka.server.enableSelfPreservation=false）<img src="/2021/07/21/SpringCloud%E5%85%A8%E5%AE%B6%E6%A1%B6/image-20210721174143940.png" alt="image-20210721174143940" style="zoom:67%;"></li>
+</ul>
+<h2 id="Eureka-Server服务列表存储结构"><a href="#Eureka-Server服务列表存储结构" class="headerlink" title="Eureka Server服务列表存储结构"></a>Eureka Server服务列表存储结构</h2><p>使用ConcurrentHashMap存储，ConcurrentHashMap&lt;String, Map&lt;String,Lease<InstanceInfo>&gt;&gt; registry。维护注册表，拉取注册表，更新心跳时间，全在内存中完成。key为服务名称，value为一个服务的多个服务实例，内存Map的key为服务的id，value为带有最近一次发送心跳的时间的实例信息。Lease类中带有最近一次发送心跳的时间，还有一个泛型对象，存有服务信息，如ip，端口，hostname</InstanceInfo></p>
+<h2 id="Eureka-Server多层缓存机制"><a href="#Eureka-Server多层缓存机制" class="headerlink" title="Eureka Server多层缓存机制"></a>Eureka Server多层缓存机制</h2><p> 为了避免同时读写内存数据结构造成的并发冲突问题，还采用了多级缓存机制来进一步提升服务请求的响应速度。<br><img src="/2021/07/21/SpringCloud%E5%85%A8%E5%AE%B6%E6%A1%B6/image-20210721180624777.png" alt="image-20210721180624777" style="zoom:67%;"></p>
+<h3 id="在拉取注册表的时候："><a href="#在拉取注册表的时候：" class="headerlink" title="在拉取注册表的时候："></a>在拉取注册表的时候：</h3><ul>
+<li>首先从 ReadOnlyCacheMap 里查缓存的注册表。</li>
+<li>若没有，就找 ReadWriteCacheMap 里缓存的注册表。</li>
+<li>如果还没有，就从内存中获取实际的注册表数据。</li>
+</ul>
+<h3 id="在注册表发生变更的时候："><a href="#在注册表发生变更的时候：" class="headerlink" title="在注册表发生变更的时候："></a>在注册表发生变更的时候：</h3><ul>
+<li>会在内存中更新变更的注册表数据，同时过期掉 ReadWriteCacheMap。</li>
+<li>此过程不会影响 ReadOnlyCacheMap 提供人家查询注册表。</li>
+<li>一段时间内（默认 30 秒），各服务拉取注册表会直接读 ReadOnlyCacheMap</li>
+<li>30 秒过后，Eureka Server 的后台线程发现 ReadWriteCacheMap 已经清空了，也会清空 ReadOnlyCacheMap 中的缓存</li>
+<li>下次有服务拉取注册表，又会从内存中获取最新的数据了，同时填充各个缓存。</li>
+</ul>
+<h3 id="多级缓存机制的优点是什么？"><a href="#多级缓存机制的优点是什么？" class="headerlink" title="多级缓存机制的优点是什么？"></a>多级缓存机制的优点是什么？</h3><ul>
+<li>尽可能保证了内存注册表数据不会出现频繁的读写冲突问题。</li>
+<li>并且进一步保证对 Eureka Server 的大量请求，都是快速从纯内存走，性能极高。</li>
+</ul>
+<h2 id="Eureka总结（2000个服务，达到日均千万访问量）"><a href="#Eureka总结（2000个服务，达到日均千万访问量）" class="headerlink" title="Eureka总结（2000个服务，达到日均千万访问量）"></a>Eureka总结（2000个服务，达到日均千万访问量）</h2><ul>
+<li>Eureka 通过设置适当的请求频率（拉取注册表 30 秒间隔，发送心跳 30 秒间隔），可以保证一个大规模的系统每秒请求 Eureka Server 的次数在几百次。</li>
+<li>同时通过纯内存的注册表，保证了所有的请求都可以在内存处理，确保了极高的性能</li>
+<li>另外, 多级缓存机制，确保了不会针对内存数据结构发生频繁的读写并发冲突操作，进一步提升性能。</li>
+<li>上述就是 Spring Cloud 架构中，Eureka 作为微服务注册中心可以承载大规模系统每天千万级访问量的原理。</li>
+<li>Eureka2.0闭源了，问题点：内存存储，如果大服务导致存储不足；异步同步，可能导致数据不一致，或者延迟。</li>
+<li>自己设计Eureka，可以将数据分片存储在节点上，并热备存储。</li>
+<li>Consul基于Raft强一致性，不光支持服务注册和发现，居然还可以支持简单的 kv 存储。<strong>多数据中心支持</strong></li>
+</ul>
+<h2 id="自我保护机制"><a href="#自我保护机制" class="headerlink" title="自我保护机制"></a>自我保护机制</h2><p>Eureka各个节点都是平等的，没有ZK中角色的概念， 即使N-1个节点挂掉也不会影响其他节点的正常运行。默认情况下，<strong>如果Eureka Server在一定时间内（默认90秒）没有接收到某个微服务实例的心跳，Eureka Server将会移除该实例。</strong>但是当网络分区故障发生时，微服务与Eureka Server之间无法正常通信，而微服务本身是正常运行的，此时不应该移除这个微服务，所以引入了自我保护机制。</p>
+<p><strong>客户端节点正常的心跳比例低于85%的，也就是超过15%的客户端节点没有正常心跳才会触发自我保护机制</strong>，此时会出现以下几种情况：</p>
+<ol>
+<li>Eureka Server不再从注册列表中移除因为长时间没收到心跳而应该过期的服务。</li>
+<li>Eureka Server仍然能够接受新服务的注册和查询请求，但是不会被同步到其它节点上，保证当前节点依然可用。</li>
+<li>当网络稳定时，当前Eureka Server新的注册信息会被同步到其它节点中。</li>
+</ol>
+<p>因此Eureka Server可以很好的应对因网络故障导致部分节点失联的情况，而不会像ZK那样如果有一半不可用的情况会导致整个集群不可用而变成瘫痪。</p>
+<h2 id="Consul"><a href="#Consul" class="headerlink" title="Consul"></a>Consul</h2><p>每个服务所在的机器上部署一个 Consul Agent，作为一个服务所在机器的代理。Consul Agent 可以用来收集你的服务信息然后发送给 Consul Server，还会对你的服务不停的发送请求检查他是否健康。发现别的服务的时候，Consul Agent 也会帮你转发请求给 Consul Server，查询其他服务所在机器。</p>
+<p>Consul Server 一般要求部署 3~5 台机器，以保证高可用以及数据一致性。他们之间会自动实现数据同步，而且 Consul Server 集群会自动选举出一台机器作为 leader，其他的 Consul Server 就是 follower。</p>
+<p><strong>Consul 会基于 Raft 协议</strong>保证高可用和数据一致性，注册和发现都会访问leader节点。</p>
+<p>每个机器上的 Consul Agent 会不断的发送请求检查服务是否健康，是否宕机。如果服务宕机了，那么就会通知 Consul Server。</p>
+<h2 id="Feign（接口访问）"><a href="#Feign（接口访问）" class="headerlink" title="Feign（接口访问）"></a>Feign（接口访问）</h2><h2 id="Ribbon（负载均衡）"><a href="#Ribbon（负载均衡）" class="headerlink" title="Ribbon（负载均衡）"></a>Ribbon（负载均衡）</h2><figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">ribbon:</span></span><br><span class="line">	<span class="attr">ConnectTimeout:</span> <span class="number">1000</span></span><br><span class="line">	<span class="attr">ReadTimeout:</span> <span class="number">1000</span></span><br><span class="line">	<span class="attr">OkToRetryOnAllOperations:</span> <span class="literal">true</span> <span class="comment">#所有接口重试，需要注意幂等性</span></span><br><span class="line">	<span class="attr">MaxAutoRetries:</span> <span class="number">1</span> <span class="comment"># 自动重试次数，不包含第一次</span></span><br><span class="line">	<span class="attr">MaxAutoRetriesNextServer:</span> <span class="number">1</span> <span class="comment">#自动重试下一个服务器，不包含第一次</span></span><br></pre></td></tr></table></figure>
+
+<p>自动重试，如果下游接口，可能网络波动RT时间长达1.5s时，会自动重试，可能这次很快就成功了。</p>
+<h2 id="Hystrix（隔离，熔断，降级）"><a href="#Hystrix（隔离，熔断，降级）" class="headerlink" title="Hystrix（隔离，熔断，降级）"></a>Hystrix（隔离，熔断，降级）</h2><h3 id="隔离"><a href="#隔离" class="headerlink" title="隔离"></a>隔离</h3><ul>
+<li><code>hystrix.threadpool.default.maxQueueSize</code>：最大排队长度。默认 -1，使用 <code>SynchronousQueue</code>。其他值则使用 <code>LinkedBlockingQueue</code>。如果要从 -1 换成其他值则需重启，即该值不能动态调整，若要动态调整，需要使用到下边这个配置</li>
+<li><code>hystrix.threadpool.default.queueSizeRejectionThreshold</code>：排队线程数量阈值，默认为 5，达到时拒绝，如果配置了该选项，队列的大小是该队列</li>
+</ul>
+<p>注意： 如果 <code>maxQueueSize=-1</code> 的话，则该选项不起作用</p>
+<h3 id="如何设置服务中每个-hystrix-线程池的大小"><a href="#如何设置服务中每个-hystrix-线程池的大小" class="headerlink" title="如何设置服务中每个 hystrix 线程池的大小"></a>如何设置服务中每个 hystrix 线程池的大小</h3><p>假设你的服务 A，每秒钟会接收 30 个请求，同时会向服务 B 发起 30 个请求，然后每个请求的响应时长经验值大概在 200ms，那么你的 hystrix 线程池需要多少个线程呢？</p>
+<p>计算公式是：30（每秒请求数量） * 0.2（每个请求的处理秒数） + 4（给点缓冲 buffer） = 10（线程数量）。</p>
+<h3 id="请求的超时时间设置"><a href="#请求的超时时间设置" class="headerlink" title="请求的超时时间设置"></a>请求的超时时间设置</h3><p>上例中设置超时时间为300ms。如果你的超时时间设置成了 500 毫秒，一个线程每秒最多只能处理 2 个请求了，10 个线程只能处理 20 个请求。一秒钟30个请求过来，大量的线程会全部卡死，来不及处理那么多请求，最后用户会刷不出来页面。哪怕一段时间后，服务 B 的接口性能恢复到 200 毫秒以内了，服务 A 的线程池里卡死的状况也要好一会儿才能恢复过来。</p>
+<p>超时时间设置的越不合理，比如设置的越长，那么这种卡死的情况就需要越长的时间来恢复。</p>
+<p>根据服务的响应时间、系统高峰 QPS、有多少台机器，来计算出来，线程池的大小以及超时时间！</p>
+<h3 id="熔断"><a href="#熔断" class="headerlink" title="熔断"></a>熔断</h3><p>基于异常比例进行熔断。</p>
+<ul>
+<li><p><code>hystrix.command.default.circuitBreaker.requestVolumeThreshold</code>：当在配置时间窗口内达到此数量的失败后，进行短路。默认 20 个（10s 内请求失败数量达到 20 个，断路器开）</p>
+</li>
+<li><p><code>hystrix.command.default.circuitBreaker.sleepWindowInMilliseconds</code>：短路多久以后开始尝试是否恢复，默认 5s</p>
+</li>
+<li><p><code>hystrix.command.default.circuitBreaker.errorThresholdPercentage</code>：出错百分比阈值，当达到此阈值后，开始短路。默认 50%</p>
+</li>
+<li><p>默认10s 内请求失败数量达到 20 个，断路器开，状态为Open状态（或者出错百分比阈值，当达到此阈值后，开始短路。默认 50%）</p>
+</li>
+<li><p>短路状体下，请求过来直接熔断，走降级流程，默认5s</p>
+</li>
+<li><p>5s之后，短路多久以后开始尝试是否恢复，状态置为半开状态，请求去访问下游接口，如果成功，则将状态改为Close状态，如果失败，则继续将状态改为Open状态</p>
+</li>
+</ul>
+<h3 id="降级"><a href="#降级" class="headerlink" title="降级"></a>降级</h3><p>用户的请求将不再直接访问服务，而是通过线程池中的空闲线程来访问服务，如果线程池已满，则会进行降级处理，用户的请求不会被阻塞，至少可以看到一个执行结果（例如返回友好的提示信息），而不是无休止的等待或者看到系统崩溃。默认不采用排队。加速失败判定时间。</p>
+<p>熔断之后也会降级。</p>
+<ul>
+<li>如果查询数据的服务挂了，你可以查本地的缓存</li>
+<li>如果写入数据的服务挂了，你可以先把这个写入操作记录日志到比如 mysql 里，或者写入 MQ 里，后面再慢慢恢复</li>
+<li>如果 redis 挂了，你可以查 mysql</li>
+<li>如果 mysql 挂了，你可以把操作日志记录到 es 里去，后面再慢慢恢复数据。</li>
+</ul>
+<h2 id="执行方式"><a href="#执行方式" class="headerlink" title="执行方式"></a>执行方式</h2><p><strong>同步执行：</strong>即一旦开始执行该命令，当前线程就得阻塞着直到该命令返回结果，然后才能继续执行下面的逻辑</p>
+<p><strong>异步执行：</strong>命令开始执行会返回一个Future<T>的对象，不阻塞后面的逻辑，开发者自己根据需要去获取结果。</T></p>
+<p><strong>响应式执行：</strong>命令开始执行会返回一个Observable<T> 对象，开发者可以给给Obeservable对象注册上Observer或者Action1对象，响应式地处理命令执行过程中的不同阶段。当调用HystrixCommand的observe()方法，或使用Observable的工厂方法（just(),from()）即为响应式执行，这个功能的实现是基于Netflix的另一个开源项目RxJava（<a target="_blank" rel="noopener" href="https://github.com/Netflix/RxJava%EF%BC%89%E6%9D%A5%E7%9A%84%EF%BC%8C%E6%9B%B4%E7%BB%86%E8%8A%82%E7%9A%84%E7%94%A8%E6%B3%95%E5%8F%AF%E4%BB%A5%E5%8F%82%E8%80%83%EF%BC%9Ahttps://github.com/Netflix/Hystrix/wiki/How-To-Use#wiki-Reactive-Execution%E3%80%82">https://github.com/Netflix/RxJava）来的，更细节的用法可以参考：https://github.com/Netflix/Hystrix/wiki/How-To-Use#wiki-Reactive-Execution。</a></T></p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/19/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E4%B9%8B%E6%8E%A5%E5%8F%A3%E5%B9%82%E7%AD%89/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/07/19/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E4%B9%8B%E6%8E%A5%E5%8F%A3%E5%B9%82%E7%AD%89/" class="post-title-link" itemprop="url">解决方案之接口幂等</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-07-19 15:22:54" itemprop="dateCreated datePublished" datetime="2021-07-19T15:22:54+08:00">2021-07-19</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" itemprop="url" rel="index"><span itemprop="name">解决方案</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="场景"><a href="#场景" class="headerlink" title="场景"></a>场景</h2><ol>
+<li>前端重复提交</li>
+<li>接口超时重试</li>
+<li>消息重复消费</li>
+</ol>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><img src="/2021/07/19/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E4%B9%8B%E6%8E%A5%E5%8F%A3%E5%B9%82%E7%AD%89/image-20210719152422692.png" alt="image-20210719152422692" style="zoom:67%;">
+基于Token实现，分成二步，第一步生成token。第二步比较之后先删除 token，在执行业务。
+<img src="/2021/07/19/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E4%B9%8B%E6%8E%A5%E5%8F%A3%E5%B9%82%E7%AD%89/image-20210719152436778.png" alt="image-20210719152436778" style="zoom:67%;">
+基于去重表日志记录表实现
+<img src="/2021/07/19/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E4%B9%8B%E6%8E%A5%E5%8F%A3%E5%B9%82%E7%AD%89/image-20210719152450125.png" alt="image-20210719152450125" style="zoom:67%;">
+基于Redis唯一标识去重
+
+<ul>
+<li>状态机（状态）</li>
+<li>悲观锁（加锁）</li>
+<li>乐观锁（版本号）</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/19/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BKafka%E4%B8%8EMQ%E5%AF%B9%E6%AF%94/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/07/19/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BKafka%E4%B8%8EMQ%E5%AF%B9%E6%AF%94/" class="post-title-link" itemprop="url">中间件之Kafka与MQ对比</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-07-19 10:08:22" itemprop="dateCreated datePublished" datetime="2021-07-19T10:08:22+08:00">2021-07-19</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="Kafka与RabbitMQ对比"><a href="#Kafka与RabbitMQ对比" class="headerlink" title="Kafka与RabbitMQ对比"></a>Kafka与RabbitMQ对比</h2><ul>
+<li><strong>消息顺序</strong>(kafka可以指定key或者指定partition，同一个分区的同一个消费组是顺序的，RabbitMQ单消费者才能保证顺序性)</li>
+<li><strong>消息路由</strong>（RabbitMQ的多种交换机，默认交换机，direct，fanout，topic，header，提供丰富的路由）</li>
+<li>消息时序（RabbitMQ提供消息存活时间，消息长度，队列存活时间，死信队列）</li>
+<li>消息留存（RabbitMQ消费之后就会将消息删除，而Kafka会留存消息，每个主题配置超时时间，直到消息达到超时时间删除消息）</li>
+<li><strong>容错处理</strong>（RabbitMQ提供交付重试和死信交换器（DLX）来处理消息处理故障，开箱即用；Kafka同组消费者只能一个消费分区，堵塞分区之后的数据消费，而RabbitMQ多个消费者可以同时消费，且不会阻塞后面数据消费）</li>
+<li>性能（Kafka吞吐量每秒百万，Kafka 使用顺序磁盘 I/O 来提高性能。从 Kafka 使用分区的架构上看，它在横向扩展上会优于 RabbitMQ，当然 RabbitMQ 在纵向扩展上会有更多的优势）</li>
+<li><strong>消费者复杂度</strong>（RabbitMQ消费者可以多个消费者同时消费，增加消费者时，也可能需要增加分区，不然可能消费者是空闲的，增加分区时，会进行重平衡，导致重复消费的情况）</li>
+</ul>
+<h2 id="优先选择-RabbitMQ-的条件："><a href="#优先选择-RabbitMQ-的条件：" class="headerlink" title="优先选择 RabbitMQ 的条件："></a>优先选择 RabbitMQ 的条件：</h2><ul>
+<li>高级灵活的路由规则</li>
+<li>消息时序控制（控制消息过期或者消息延迟）</li>
+<li>高级的容错处理能力，在消费者更有可能处理消息不成功的情景中（瞬时或者持久）</li>
+<li>更简单的消费者实现</li>
+</ul>
+<h2 id="优先选择-Kafka-的条件："><a href="#优先选择-Kafka-的条件：" class="headerlink" title="优先选择 Kafka 的条件："></a>优先选择 Kafka 的条件：</h2><ul>
+<li>严格的消息顺序</li>
+<li>延长消息留存时间，包括过去消息重放的可能</li>
+<li>传统解决方案无法满足的高伸缩能力</li>
+</ul>
+<p>除了功能性差异和非功能性限制外，还需考虑限制</p>
+<ul>
+<li>当前开发者对这两个消息平台的了解</li>
+<li>托管云解决方案的可用性（如果适用）</li>
+<li>每种解决方案的运营成本</li>
+<li>适用于我们目标栈的 SDK 的可用性</li>
+</ul>
+<p><img src="/2021/07/19/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BKafka%E4%B8%8EMQ%E5%AF%B9%E6%AF%94/image-20210723142541970.png" alt="image-20210723142541970"></p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" class="post-title-link" itemprop="url">设计之设计模式</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-07-13 13:41:41" itemprop="dateCreated datePublished" datetime="2021-07-13T13:41:41+08:00">2021-07-13</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%AE%BE%E8%AE%A1/" itemprop="url" rel="index"><span itemprop="name">设计</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="统一建模语言-Unified-Modeling-Language，UML"><a href="#统一建模语言-Unified-Modeling-Language，UML" class="headerlink" title="统一建模语言(Unified Modeling Language，UML)"></a>统一建模语言(Unified Modeling Language，<code>UML</code>)</h2><p>UML作为一种统一的软件建模语言具有广泛的建模能力。UML是在消化、吸收、提炼至今存在的所有软件建模语言的基础上提出的，集百家之所长，它是软件建模语言的集大成者。UML还突破了软件的限制，广泛吸收了其他领域的建模方法，并根据建模的一般原理，结合了软件的特点，因此具有坚实的理论基础和广泛性。UML不仅可以用于软件建模，还可以用于其他领域的建模工作。</p>
+<ul>
+<li>用例图；描述角色以及角色与用例之间的连接关系。说明是谁要使用系统，以及他们使用该系统可以做些什么。一个用例图包含了多个模型元素，如系统、参与者和用例，并且显示了这些元素之间的各种关系，如泛化、关联和依赖。</li>
+<li>类图；类图是描述系统中的类，以及各个类之间的关系的静态视图。能够让我们在正确编写代码以前对系统有一个全面的认识。类图是一种模型类型，确切地说，是一种静态模型类型。类图表示类、接口和它们之间的协作关系。</li>
+<li>对象图；与类图极为相似，它是类图的实例，对象图显示类的多个对象实例，而不是实际的类。它描述的不是类之间的关系，而是对象之间的关系。</li>
+<li>活动图；描述用例要求所要进行的活动，以及活动间的约束关系，有利于识别并行活动。能够演示出系统中哪些地方存在功能，以及这些功能和系统中其他组件的功能如何共同满足前面使用用例图建模的商务需求。</li>
+<li>状态图；描述类的对象所有可能的状态，以及事件发生时状态的转移条件，可以捕获对象、子系统和系统的生命周期。它可以告知一个对象可以拥有的状态，并且事件(如消息的接收、时间的流逝、错误、条件变为真等)会怎么随着时间的推移来影响这些状态。一个状态图应该连接到所有具有清晰的可标识状态和复杂行为的类;该图可以确定类的行为，以及该行为如何根据当前的状态变化，也可以展示哪些事件将会改变类的对象的状态。状态图是对类图的补充。</li>
+<li>序列图(时序图)；序列图是用来显示参与者如何以一系列顺序的步骤与系统的对象交互的模型。顺序图可以用来展示对象之间是如何进行交互的。顺序图将显示的重点放在消息序列上，即强调消息是如何在对象之间被发送和接收的。</li>
+<li>协作图；和序列图相似，显示对象间的动态合作关系。可以看成是类图和顺序图的交集，协作图建模对象或者角色，以及它们彼此之间是如何通信的。如果强调时间和顺序，则使用序列图;如果强调上下级关系，则选择协作图;这两种图合称为交互图。</li>
+<li>构件图(组件图)；描述代码构件的物理结构以及各种构建之间的依赖关系。用来建模软件的组件及其相互之间的关系，这些图由构件标记符和构件之间的关系构成。在组件图，构件时软件单个组成部分，它可以是一个文件，产品、可执行文件和脚本等。</li>
+<li>部署图(配置图)；用来建模系统的物理部署。例如，计算机和设备，以及它们之间是如何连接的。部署图的使用者是开发人员、系统集成人员和测试人员。部署图用于表示一组物理结点的集合及结点间的相互关系，从而建立了系统物理层面的模型。</li>
+</ul>
+<h2 id="类图"><a href="#类图" class="headerlink" title="类图"></a>类图</h2><ul>
+<li>继承：带空心三角形的实线表示，student继承person，空心三角形指向person</li>
+<li>实现：带空心三角形的虚线表示，指向接口</li>
+<li>聚合：聚合关系强调是“整体”包含“部分”，但是“部分”可以脱离“整体”而单独存在。比如汽车包含了发动机，而发动机脱离了汽车也能单独存在。<img src="/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/image-20210713142258000.png" alt="image-20210713142258000" style="zoom:67%;"></li>
+<li>组合：组合关系与聚合关系见得最大不同在于：这里的“部分”脱离了“整体”便不复存在。<img src="/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/image-20210713142210958.png" alt="image-20210713142210958" style="zoom:67%;"></li>
+<li>关联：单向关联，双向关联，自关联，用一条带有箭头的实线表示<img src="/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/image-20210713142628986.png" alt="image-20210713142628986" style="zoom:67%;"></li>
+<li>依赖：依赖关系用一条带有箭头的虚线表示。<img src="/2021/07/13/%E8%AE%BE%E8%AE%A1%E4%B9%8B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/image-20210713142416879.png" alt="image-20210713142416879" style="zoom:67%;">
+
+</li>
+</ul>
+<h2 id="设计模式的作用"><a href="#设计模式的作用" class="headerlink" title="设计模式的作用"></a>设计模式的作用</h2><p>设计模式是一套被反复使用的、多数人知晓、经过分类编目的优秀代码设计经验的总结。<br>特定环境下特定问题的处理方法。<br>1）重用设计和代码：重用设计比重用代码更有意义，自动带来代码重用<br>2）提高扩展性：大量使用面向接口编程，预留扩展插槽，新的功能或特性很容易加入到系统中来<br>3）提高灵活性：通过组合提高灵活性，可允许代码修改平稳发生，对一处修改不会波及到其他模块<br>4） 提高开发效率：正确使用设计模式，可以节省大量的时间</p>
+<h2 id="创建型模式（怎样创建对象）"><a href="#创建型模式（怎样创建对象）" class="headerlink" title="创建型模式（怎样创建对象）"></a>创建型模式（怎样创建对象）</h2><p>特点：将对象的创建与使用分离；这样可以降低系统的耦合度，使用者不需要关注对象的创建细节，对象的创建由相关的工厂来完成。就像我们去商场购买商品时，不需要知道商品是怎么生产出来一样，因为它们由专门的厂商生产</p>
+<ul>
+<li>单例模式（singleton）：某个类只能生成一个实例，该类提供了一个全局访问点供外部获取该实例，其拓展是有限多例模式。</li>
+<li>原型模式（Prototype）：将一个对象作为原型，通过对其进行复制而克隆出多个和原型类似的新实例。</li>
+<li>工厂方法模式（FactoryMethod）:定义一个用于创建产品的接口，由子类决定生产什么产品。</li>
+<li>抽象工厂模式（AbstractFactory）:提供一个创建产品族的接口，其每个子类可以生产一系列相关的产品。</li>
+<li>建造者模式（Builder）:将一个复杂对象分解成多个相对简单的部分，然后根据不同需要分别创建它们，最后构建成该复杂对象。</li>
+</ul>
+<p>以上 5 种创建型模式，除了工厂方法模式属于类创建型模式，其他的全部属于对象创建型模式</p>
+<h2 id="结构型模式"><a href="#结构型模式" class="headerlink" title="结构型模式"></a>结构型模式</h2><p>结构型模式描述如何将类或对象按某种布局组成更大的结构。它分为类结构型模式和对象结构型模式，前者采用继承机制来组织接口和类，后者釆用组合或聚合来组合对象。（通过改变一些对象的组织结构来起到所需的作用，于是统称为结构型模式。就比如说组合模式：这个模式就是把单个对象组合起来，为了实现对象的一致性，所以采用了组合这种结构策略。这就是个对对象结构进行了改变，然后达到了我们所需的目地。）</p>
+<p>由于组合关系或聚合关系比继承关系耦合度低，满足“合成复用原则”，所以对象结构型模式比类结构型模式具有更大的灵活性。</p>
+<ul>
+<li>代理（Proxy）模式：为某对象提供一种代理以控制对该对象的访问。即客户端通过代理间接地访问该对象，从而限制、增强或修改该对象的一些特性。代理模式是控制对象访问。代理模式是给一个对象提供一个代理对象，并由代理对象来控制对原有对象的引用；</li>
+<li>装饰（Decorator）模式：动态地给对象增加一些职责，即增加其额外的功能。装饰模式的功能实现是由上层调用者决定的。对客户端透明的方式扩展对象的功能，是继承方案的一个替代方案。</li>
+<li>适配器（Adapter）模式：将一个类的接口转换成客户希望的另外一个接口，使得原本由于接口不兼容而不能一起工作的那些类能一起工作。类适配，对象适配，接口适配（接口默认实现类）</li>
+<li>桥接（Bridge）模式：将抽象与实现分离，使它们可以独立变化。它是用组合关系代替继承关系来实现的，从而降低了抽象和实现这两个可变维度的耦合度。日志log4j中基于SPI，JDBC中Driver基于Class加载 （会员优惠+商品折扣/订单优惠）</li>
+<li>外观（Facade）模式：为多个复杂的子系统提供一个一致的接口，使这些子系统更加容易被访问。</li>
+<li>享元（Flyweight）模式：运用共享技术来有效地支持大量细粒度对象的复用。黑白棋子，颜色不变，改变location坐标即可。</li>
+<li>组合（Composite）模式：将对象组合成树状层次结构，使用户对单个对象和组合对象具有一致的访问性。</li>
+</ul>
+<p>以上7种结构型模式，除了适配器模式分为类结构型模式和对象结构型模式两种，其他的全部属于对象结构型模式</p>
+<h2 id="行为型模式"><a href="#行为型模式" class="headerlink" title="行为型模式"></a>行为型模式</h2><p>行为型模式用于描述程序在运行时复杂的流程控制，即描述多个类或对象之间怎样相互协作共同完成单个对象都无法单独完成的任务，它涉及算法与对象间职责的分配。</p>
+<p>行为型模式分为类行为模式和对象行为模式，前者采用继承机制来在类间分派行为，后者采用组合或聚合在对象间分配行为。由于组合关系或聚合关系比继承关系耦合度低，满足“合成复用原则”，所以对象行为模式比类行为模式具有更大的灵活性。</p>
+<p>行为型模式是 GoF 设计模式中最为庞大的一类，它包含以下 11 种模式。</p>
+<ul>
+<li>模板方法（Template Method）模式：定义一个操作中的算法骨架，将算法的一些步骤延迟到子类中，使得子类在可以不改变该算法结构的情况下重定义该算法的某些特定步骤。接口推送</li>
+<li>策略（Strategy）模式：定义了一系列算法，并将每个算法封装起来，使它们可以相互替换，且算法的改变不会影响使用算法的客户。分单规则</li>
+<li>命令（Command）模式：将一个请求封装为一个对象，使发出请求的责任和执行请求的责任分割开。灯开关命令，灯对象包含开灯方法和关灯方法，命令具有execute和undo方法，关灯命令类传入灯对象，开灯命令类传入灯对象</li>
+<li>职责链（Chain of Responsibility）模式：把请求从链中的一个对象传到下一个对象，直到请求被响应为止。通过这种方式去除对象之间的耦合。拦截器Interceptor 拦截器链InterceptorChain   过滤器filter</li>
+<li>状态（State）模式：允许一个对象在其内部状态发生改变时改变其行为能力。</li>
+<li>观察者（Observer）模式：多个对象间存在一对多关系，当一个对象发生改变时，把这种改变通知给其他多个对象，从而影响其他对象的行为。Spring中事件传播机制</li>
+<li>中介者（Mediator）模式：定义一个中介对象来简化原有对象之间的交互关系，降低系统中对象间的耦合度，使原有对象之间不必相互了解。</li>
+<li>迭代器（Iterator）模式：提供一种方法来顺序访问聚合对象中的一系列数据，而不暴露聚合对象的内部表示。JDK集合迭代器</li>
+<li>访问者（Visitor）模式：在不改变集合元素的前提下，为一个集合中的每个元素提供多种访问方式，即每个元素有多个访问者对象访问。</li>
+<li>备忘录（Memento）模式：在不破坏封装性的前提下，获取并保存一个对象的内部状态，以便以后恢复它。</li>
+<li>解释器（Interpreter）模式：提供如何定义语言的文法，以及对语言句子的解释方法，即解释器。</li>
+</ul>
+<p>以上 11 种行为型模式，除了模板方法模式和解释器模式是类行为型模式，其他的全部属于对象行为型模式</p>
+<h3 id="简单工厂模式"><a href="#简单工厂模式" class="headerlink" title="简单工厂模式"></a>简单工厂模式</h3><ol>
+<li>接口类</li>
+<li>多个具体实现</li>
+<li>factory工厂类，根据条件创建不同实现返回</li>
+<li>客户端，调用工厂类，获取不同实现</li>
+</ol>
+<h3 id="抽象工厂模式"><a href="#抽象工厂模式" class="headerlink" title="抽象工厂模式"></a>抽象工厂模式</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">public abstract class AbstractFactory &#123;</span><br><span class="line">   public abstract Color getColor(String color);</span><br><span class="line">   public abstract Shape getShape(String shape) ;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>抽象工厂类a，多个工厂实现类b\c，工厂生成类d 由d去生成具体的工厂，客户端类e，使用d生存具体工厂b\c，调用实现类里的方法生成对象</p>
+<h4 id="单例模式"><a href="#单例模式" class="headerlink" title="单例模式"></a>单例模式</h4><ul>
+<li>饿汉模式：类加载的时候实例化单例对象，懒加载问题</li>
+<li>懒汉模式：同步方法锁，执行效率问题</li>
+<li>双检测模式：instance = new Singleton()不能保证顺序，先分配空间，之后赋值，最后才生成对象</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">private static volatile Singleton instance;</span><br><span class="line">public static Singleton newInstance()&#123;</span><br><span class="line">    if(instance&#x3D;&#x3D;null)&#123;</span><br><span class="line">        sychrinored(Singleton.class)&#123;</span><br><span class="line">            if(instance&#x3D;&#x3D;null)&#123;</span><br><span class="line">                instance &#x3D; new Singleton();</span><br><span class="line">    &#125;&#125;</span><br><span class="line">&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>静态内部类：调用的时候才会加载类，进行实例化</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">private Singleton ()&#123;&#125;</span><br><span class="line">public static Singleton newInstance()&#123;</span><br><span class="line">     SingletonHolder.INSTANCE;</span><br><span class="line">&#125;</span><br><span class="line">private static class SingletonHolder &#123;  </span><br><span class="line">    private static final Singleton INSTANCE &#x3D; new Singleton();  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="原型模式"><a href="#原型模式" class="headerlink" title="原型模式"></a>原型模式</h3><p>浅复制：实现Clonable接口，重写clone（）方法，调用父类的clone（）方法 深复制：使用流序列化方式</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">public static void main(String[] args) throws Exception&#123;</span><br><span class="line">        ByteArrayOutputStream byteArrayOutputStream &#x3D; new ByteArrayOutputStream();</span><br><span class="line">        ObjectOutputStream objectOutputStream &#x3D; new ObjectOutputStream(byteArrayOutputStream);</span><br><span class="line">        objectOutputStream.writeObject(new Object());</span><br><span class="line"></span><br><span class="line">        ByteArrayInputStream byteArrayInputStream &#x3D; new ByteArrayInputStream(byteArrayOutputStream.toByteArray());</span><br><span class="line">        ObjectInputStream objectInputStream &#x3D; new ObjectInputStream(byteArrayInputStream);</span><br><span class="line">        Object object &#x3D; objectInputStream.readObject();</span><br><span class="line">        System.out.println(object);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="建造者模式"><a href="#建造者模式" class="headerlink" title="建造者模式"></a>建造者模式</h3><p>屏蔽对复杂对象的创建，如多属性的配置，用于返回值对象生成</p>
+<h3 id="适配器模式"><a href="#适配器模式" class="headerlink" title="适配器模式"></a>适配器模式</h3><p>类适配，对象适配，接口适配</p>
+<ul>
+<li>类适配:希望将一个类转换成一个满足新接口的类时，使用新类继承旧类，实现接口</li>
+<li>对象适配:希望将一个对象转换成一个满足新接口对象时，新类wrapper持有实现类的实例，实现接口</li>
+<li>接口适配:希望不实现一个接口中所有的方法时，创建一个抽象类，实现所有的方法，继承抽象类</li>
+</ul>
+<h3 id="装饰模式"><a href="#装饰模式" class="headerlink" title="装饰模式"></a>装饰模式</h3><p>给对象动态的增加些新的功能，扩展类的功能，强调加强概念。</p>
+<p>装饰类a实现接口并持有接口属性b，装饰类方法中b.method()，当需要加强更多的功能时，可以使用抽象装饰类，多个具体实现类继承抽象类，客户端可用接口实例调用方法</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/andong154564667/article/details/80258061">装饰模式与代理模式区别</a></p>
+<h3 id="代理模式"><a href="#代理模式" class="headerlink" title="代理模式"></a>代理模式</h3><p>代理模式强调的是控制权，通过代理类对实际对象进行控制操作</p>
+<p>接口类a，实现类b，代理类c实现接口类a c类中持有实现类b实例属性，通过b的实例属性调用实现类里的方法</p>
+<h3 id="观察者模式"><a href="#观察者模式" class="headerlink" title="观察者模式"></a>观察者模式</h3><p>观察者，只有一个方法，接受通知，执行操作</p>
+<p>被观察者，持有观察者实例，当有变动时通知观察者</p>
+<h3 id="策略模式"><a href="#策略模式" class="headerlink" title="策略模式"></a>策略模式</h3><p>1、算法/行为接口<br>2、具体实现多个<br>3、context上下文，实例化对象，提供结果方法<br>4、客户端new具体实现类，new context 传入具体实现类，调用方法获取结果</p>
+<ul>
+<li>一般可以和工厂模式一起使用，客户端不用考虑对象实例化</li>
+</ul>
+<h3 id="模板模式"><a href="#模板模式" class="headerlink" title="模板模式"></a>模板模式</h3><ol>
+<li>接口类</li>
+<li>抽象类继承接口，默认实现方法</li>
+<li>实现类，实现方法/不实现方法</li>
+<li>客户端调用，未实现方法则调用抽象类的方法，如果实现了方法，则调用实现类的方法</li>
+<li></li>
+</ol>
+<p><a target="_blank" rel="noopener" href="http://ifeve.com/spring-interview-questions-and-answers/">http://ifeve.com/spring-interview-questions-and-answers/</a></p>
+<p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/k-PEJNUG7JdHn1AjR8GghQ">Mybatis中9种设计模式</a></p>
+<p><a target="_blank" rel="noopener" href="https://mp.weixin.qq.com/s/xpQ6GmuDT25pWzjt5bo9xA">Spring中9种设计模式</a></p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/09/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E4%B9%8B%E7%BC%93%E5%AD%98%E9%97%AE%E9%A2%98/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/07/09/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E4%B9%8B%E7%BC%93%E5%AD%98%E9%97%AE%E9%A2%98/" class="post-title-link" itemprop="url">解决方案之缓存问题</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-07-09 15:02:16" itemprop="dateCreated datePublished" datetime="2021-07-09T15:02:16+08:00">2021-07-09</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" itemprop="url" rel="index"><span itemprop="name">解决方案</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="一、缓存处理流程"><a href="#一、缓存处理流程" class="headerlink" title="一、缓存处理流程"></a>一、缓存处理流程</h2><p>前台请求，后台先从缓存中取数据，取到直接返回结果，取不到时从数据库中取，数据库取到更新缓存，并返回结果，数据库也没取到，那直接返回空结果。</p>
+<p> <img src="/2021/07/09/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E4%B9%8B%E7%BC%93%E5%AD%98%E9%97%AE%E9%A2%98/1.png"></p>
+<h2 id="二、缓存穿透"><a href="#二、缓存穿透" class="headerlink" title="二、缓存穿透"></a>二、缓存穿透</h2><h3 id="描述："><a href="#描述：" class="headerlink" title="描述："></a>描述：</h3><p>缓存穿透是指缓存和数据库中都没有的数据，而用户不断发起请求，如发起为id为“-1”的数据或id为特别大不存在的数据。这时的用户很可能是攻击者，攻击会导致数据库压力过大。</p>
+<h3 id="解决方案："><a href="#解决方案：" class="headerlink" title="解决方案："></a>解决方案：</h3><ul>
+<li>接口层增加校验，如用户鉴权校验，id做基础校验，id&lt;=0的直接拦截，如token或mac等业务校验；</li>
+<li>从缓存取不到的数据，在数据库中也没有取到，这时也可以将key-value对写为key-null，缓存有效时间可以设置短点，如30秒（设置太长会导致正常情况也没法使用）。这样可以防止攻击用户反复用同一个id暴力攻击。当大量不存在key访问时可能撑爆Redis。</li>
+<li>使用布隆过滤器，有一定误判。问题：当key存在时，要删除布隆过滤器里的记录，可以使用带计数器的布隆过滤器</li>
+</ul>
+<h2 id="三、缓存击穿"><a href="#三、缓存击穿" class="headerlink" title="三、缓存击穿"></a>三、缓存击穿</h2><h3 id="描述：-1"><a href="#描述：-1" class="headerlink" title="描述："></a>描述：</h3><p>缓存击穿是指缓存中没有但数据库中有的数据（一般是缓存时间到期），这时由于并发用户特别多，同时读缓存没读到数据，又同时去数据库去取数据，引起数据库压力瞬间增大，造成过大压力。<font color="red">引申出热点数据问题，热点发现，将key+标识让key存在多个节点中或者多个存入多个集群中</font></p>
+<h3 id="解决方案：-1"><a href="#解决方案：-1" class="headerlink" title="解决方案："></a>解决方案：</h3><ul>
+<li>设置热点数据永远不过期。</li>
+<li>加互斥锁，分布式锁，减少同时查询数据库的压力</li>
+</ul>
+<h2 id="四、缓存雪崩"><a href="#四、缓存雪崩" class="headerlink" title="四、缓存雪崩"></a>四、缓存雪崩</h2><h3 id="描述：-2"><a href="#描述：-2" class="headerlink" title="描述："></a>描述：</h3><p>  缓存雪崩是指缓存中数据大批量到过期时间，而查询数据量巨大，引起数据库压力过大甚至down机。和缓存击穿不同的是，缓存击穿指并发查同一条数据，缓存雪崩是不同数据都过期了，很多数据都查不到从而查数据库。</p>
+<h3 id="解决方案：-2"><a href="#解决方案：-2" class="headerlink" title="解决方案："></a>解决方案：</h3><ul>
+<li>缓存数据的过期时间设置随机，防止同一时间大量数据过期现象发生。</li>
+<li>加锁计数（即限制并发的数量，可以用semphore）或者起一定数量的队列来避免缓存失效时大量请求并发到数据库。但这种方式会降低吞吐量。</li>
+<li>如果缓存数据库是分布式部署，将热点数据均匀分布在不同搞得缓存数据库中。</li>
+<li>设置热点数据永远不过期。</li>
+</ul>
+<h2 id="热点key"><a href="#热点key" class="headerlink" title="热点key"></a>热点key</h2><p>集群中，key存在某个节点中，当大并发请求时，单台Redis节点，没办法承担这么大的压力，导致Redis宕机。</p>
+<p>解决方案：</p>
+<ul>
+<li>热点发现，可以使用上报的方式，当大量请求访问某个key时，将key（组装成新key）存放集群各个节点或者将key存入各个非集群的节点中</li>
+<li>热点发现，应用内前置缓存</li>
+<li>从节点水平扩容，进行读写分离</li>
+</ul>
+<h2 id="缓存预热"><a href="#缓存预热" class="headerlink" title="缓存预热"></a>缓存预热</h2><p>目的就是在系统上线前，将数据加载到缓存中。</p>
+<p>解决思路： </p>
+<ol>
+<li>数据量不大的话，在系统启动的时候直接加载。</li>
+<li>自己写个简单的缓存预热程序。</li>
+</ol>
+<h2 id="大key（value太大）"><a href="#大key（value太大）" class="headerlink" title="大key（value太大）"></a>大key（value太大）</h2><p>当访问缓存时，如果key对应的value过大，读写、加载很容易超时，容易引发网络拥堵。另外缓存的字段较多时，每个字段的变更都会引发缓存数据的变更，频繁的读写，导致慢查询。如果大key过期被缓存淘汰失效，预热数据要花费较多的时间，也会导致慢查询。</p>
+<p>所以我们在设计缓存的时候，要注意<code>缓存的粒度</code>，既不能过大，如果过大很容易导致网络拥堵；也不能过小，如果太小，查询频率会很高，每次请求都要查询多次。</p>
+<p><strong>解决方案：</strong></p>
+<ul>
+<li>方案一：设置一个阈值，当value的长度超过阈值时，对内容启动压缩，降低kv的大小</li>
+<li>方案二：评估<code>大key</code>所占的比例，由于很多框架采用<code>池化技术</code>，如：Memcache，可以预先分配大对象空间。真正业务请求时，直接拿来即用。</li>
+<li>方案三：颗粒划分，将大key拆分为多个小key，独立维护，成本会降低不少</li>
+<li>方案四：大key要设置合理的过期时间，尽量不淘汰那些大key</li>
+</ul>
+<h2 id="缓存数据一致性"><a href="#缓存数据一致性" class="headerlink" title="缓存数据一致性"></a>缓存数据一致性</h2><p>缓存是用来加速的，一般不会持久化储存。所以，一份数据通常会存在<code>DB</code>和<code>缓存</code>中，由此会带来一个问题，如何保证这两者的数据一致性。另外，缓存热点问题会引入多个副本备份，也可能会发生不一致现象。</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/2KTof9YshwdmOC0H6kaQlnh3rvWF2hPp1KtrV6wKkUEZxHHicAfQWyXGY1MkNw1NuTiczeqWOEAaxk0f9L48dC4w/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片"></p>
+<p><strong>解决方案：</strong></p>
+<ul>
+<li>方案一：当缓存更新失败后，进行重试，如果重试失败，将失败的key写入MQ消息队列，通过异步任务补偿缓存，保证数据的一致性。这也是有问题，没法保证数据一定发送到了MQ，改成对账是否会好点？？？</li>
+<li>方案二：设置一个较短的过期时间，通过自修复的方式，在缓存过期后，缓存重新加载最新的数据。 要求对一致性要求不高的情况</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/08/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/07/08/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/" class="post-title-link" itemprop="url">解决方案之分布式事务</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-07-08 11:30:49" itemprop="dateCreated datePublished" datetime="2021-07-08T11:30:49+08:00">2021-07-08</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88/" itemprop="url" rel="index"><span itemprop="name">解决方案</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p><a target="_blank" rel="noopener" href="https://juejin.cn/post/6867040340797292558">RocketMQ和Kafka事务机制</a></p>
+<p>RocketMQ 解决的是本地事务的执行和发消息这两个动作满足事务的约束。</p>
+<p><img src="/2021/07/08/%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/aHR0cHM6Ly91cGxvYWQtaW1hZ2VzLmppYW5zaHUuaW8vdXBsb2FkX2ltYWdlcy8xNjAzNDI3OS04ODBmOThkMzNkMjNiYWIxLnBuZw"></p>
+<p>Kafka 事务消息则是用在一次事务中需要发送多个消息的情况，保证多个消息之间的事务约束，即多条消息要么都发送成功，要么都发送失败</p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/07/JVM%E4%B9%8B%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/07/07/JVM%E4%B9%8B%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%99%A8/" class="post-title-link" itemprop="url">JVM之垃圾回收器</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-07-07 17:17:01" itemprop="dateCreated datePublished" datetime="2021-07-07T17:17:01+08:00">2021-07-07</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:26" itemprop="dateModified" datetime="2024-07-12T10:34:26+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/java%E5%9F%BA%E7%A1%80/" itemprop="url" rel="index"><span itemprop="name">java基础</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="Jvm垃圾回收器（终结篇）"><a href="#Jvm垃圾回收器（终结篇）" class="headerlink" title="Jvm垃圾回收器（终结篇）"></a><a target="_blank" rel="noopener" href="https://www.cnblogs.com/chenpt/p/9803298.html">Jvm垃圾回收器（终结篇）</a></h2><h2 id="JVM运行原理及优化"><a href="#JVM运行原理及优化" class="headerlink" title="JVM运行原理及优化"></a><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_17164811/article/details/107141112">JVM运行原理及优化</a></h2>
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/07/02/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E9%9B%86%E7%BE%A4/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2021/07/02/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E9%9B%86%E7%BE%A4/" class="post-title-link" itemprop="url">中间件之RabbitMQ集群</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-07-02 16:15:57" itemprop="dateCreated datePublished" datetime="2021-07-02T16:15:57+08:00">2021-07-02</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_40816738/article/details/105704335">集群知识</a></p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+  
+  <nav class="pagination">
+    <span class="page-number current">1</span><a class="page-number" href="/page/2/">2</a><span class="space">&hellip;</span><a class="page-number" href="/page/16/">16</a><a class="extend next" rel="next" href="/page/2/"><i class="fa fa-angle-right" aria-label="Next page"></i></a>
+  </nav>
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

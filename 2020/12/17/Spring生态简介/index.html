@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="作者：2Simple出处：http:&#x2F;&#x2F;www.cnblogs.com&#x2F;nuccch&#x2F; 概述做Java开发的人一提起Spring，首先在脑海中浮现出的就是“IoC”，“AOP”，“Spring MVC”，“Spring Security”等等这些名词，甚至大有“无Spring不Java”的感慨。实际上，时至今日Spring已不再是一个简单的编程框架了，从最初的“SSH框架”发展到今天，Struts">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spring生态简介">
+<meta property="og:url" content="http://example.com/2020/12/17/Spring%E7%94%9F%E6%80%81%E7%AE%80%E4%BB%8B/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="作者：2Simple出处：http:&#x2F;&#x2F;www.cnblogs.com&#x2F;nuccch&#x2F; 概述做Java开发的人一提起Spring，首先在脑海中浮现出的就是“IoC”，“AOP”，“Spring MVC”，“Spring Security”等等这些名词，甚至大有“无Spring不Java”的感慨。实际上，时至今日Spring已不再是一个简单的编程框架了，从最初的“SSH框架”发展到今天，Struts">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/12/17/Spring%E7%94%9F%E6%80%81%E7%AE%80%E4%BB%8B/722072-20190601014708455-34471552.png">
+<meta property="og:image" content="http://example.com/2020/12/17/Spring%E7%94%9F%E6%80%81%E7%AE%80%E4%BB%8B/722072-20190601014737034-413265330.png">
+<meta property="og:image" content="http://example.com/2020/12/17/Spring%E7%94%9F%E6%80%81%E7%AE%80%E4%BB%8B/722072-20190601014801760-484921515.png">
+<meta property="og:image" content="http://example.com/2020/12/17/Spring%E7%94%9F%E6%80%81%E7%AE%80%E4%BB%8B/722072-20190601014836702-2034259504.png">
+<meta property="article:published_time" content="2020-12-17T10:10:46.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:26.908Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="spring">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/12/17/Spring%E7%94%9F%E6%80%81%E7%AE%80%E4%BB%8B/722072-20190601014708455-34471552.png">
+
+
+<link rel="canonical" href="http://example.com/2020/12/17/Spring%E7%94%9F%E6%80%81%E7%AE%80%E4%BB%8B/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Spring生态简介 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E8%BF%B0"><span class="nav-number">1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%A1%B9%E7%9B%AE%E8%AF%B4%E6%98%8E"><span class="nav-number">2.</span> <span class="nav-text">项目说明</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%BB%E8%A6%81%E9%A1%B9%E7%9B%AE"><span class="nav-number">2.1.</span> <span class="nav-text">主要项目</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A4%BE%E5%8C%BA%E9%A1%B9%E7%9B%AE"><span class="nav-number">2.2.</span> <span class="nav-text">社区项目</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%9D%E7%95%99%E9%A1%B9%E7%9B%AE"><span class="nav-number">2.3.</span> <span class="nav-text">保留项目</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%80%E5%90%8E%E6%80%BB%E7%BB%93"><span class="nav-number">3.</span> <span class="nav-text">最后总结</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/17/Spring%E7%94%9F%E6%80%81%E7%AE%80%E4%BB%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spring生态简介
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-12-17 18:10:46" itemprop="dateCreated datePublished" datetime="2020-12-17T18:10:46+08:00">2020-12-17</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:26" itemprop="dateModified" datetime="2024-07-12T10:34:26+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/spring/" itemprop="url" rel="index"><span itemprop="name">spring</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>作者：<a target="_blank" rel="noopener" href="http://www.cnblogs.com/nuccch/">2Simple</a><br>出处：<a target="_blank" rel="noopener" href="http://www.cnblogs.com/nuccch/">http://www.cnblogs.com/nuccch/</a></p>
+<h2 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h2><p>做Java开发的人一提起Spring，首先在脑海中浮现出的就是“IoC”，“AOP”，“Spring MVC”，“Spring Security”等等这些名词，甚至大有“无Spring不Java”的感慨。<br>实际上，时至今日Spring已不再是一个简单的编程框架了，从最初的“SSH框架”发展到今天，Struts和Hibernate都几乎快要从程序员视野中消失了，而Spring却发展成了一个非常庞大且完整的生态。<br>所以说，除非特别指明是Spring生态中的某个具体框架，否则提起“Spring”应该指的是整个Spring生态。<br>说句不夸张的话，Java程序员只要精通了Spring，也就掌握了Java开发的精髓。</p>
+<p>在整个Spring生态中包含了许多应用在特定场景的具体框架，如：“Spring Framework”，“Spring Security”，“Spring Boot”，“Spring Cloud”等等，其中“Spring Framework”框架是整个生态的核心基础，其他框架都需要依赖“Spring Framework”提供的基础功能，而且每个框架都有自己独立的代码仓库。</p>
+<h2 id="项目说明"><a href="#项目说明" class="headerlink" title="项目说明"></a>项目说明</h2><p>Spring生态下的项目分为3类：主要项目（Main Projects），社区项目（Community Projects），已经终止但是目前还保留的项目（Projects in the Attic）。<br>最新的Spring生态项目列表详见：<a target="_blank" rel="noopener" href="https://spring.io/projects">https://spring.io/projects</a> 。</p>
+<h3 id="主要项目"><a href="#主要项目" class="headerlink" title="主要项目"></a>主要项目</h3><p>目前，Spring生态中包含22个主要活跃的项目。<br><img src="/2020/12/17/Spring%E7%94%9F%E6%80%81%E7%AE%80%E4%BB%8B/722072-20190601014708455-34471552.png" alt="Spring生态主要项目"></p>
+<p><strong>1.Spring Framework</strong></p>
+<p>Spring Framework项目是整个Spring生态的基础，包含了Spring最核心的功能，如：IoC，AOP，Spring MVC等，其他项目都需要依赖Spring Framework。<br>另外，还<strong>需要注意</strong>的是Spring Framework项目又包含多个子模块，如：spring-core，spring-beans，spring-context，spring-aop，spring-web，spring-webmvc等等。实际上，Spring Framework项目是一个模块化的架构，各模块之间又存在依赖关系。我们在Java Web后台项目中使用得最多的Spring MVC实际上就是模块spring-webmvc，它与其他模块的依赖关系如下所示：<br><img src="/2020/12/17/Spring%E7%94%9F%E6%80%81%E7%AE%80%E4%BB%8B/722072-20190601014737034-413265330.png" alt="Spring MVC对其他模块的依赖关系"></p>
+<p>显然，<code>spring-webmvc</code>模块依赖<code>spring-context</code>，<code>spring-aop</code>和<code>spring-web</code>。<br><img src="/2020/12/17/Spring%E7%94%9F%E6%80%81%E7%AE%80%E4%BB%8B/722072-20190601014801760-484921515.png" alt="spring-webmvc模块的依赖关系"></p>
+<p><strong>2.Spring Boot</strong></p>
+<p>Spring Boot是一个开发基于Spring的脚手架项目，它默认集成了嵌入式Tomcat，配置注解化，支持快速集成第三方开发组件（如MyBatis），大大降低了使用Spring的门槛，而且内置了许多可以直接用于生产环境的功能，是目前用于开发微服务架构项目的不二选择。<br><strong>值得注意的是：</strong> 许多人刚接触Spring Boot的人把它神话了，固然使用Spring Boot能快速开发一个健壮的、可直接运行的项目，但是它的核心和基础来源于Spring Framework。对于重度依赖Spring的开发人员，应该先去吃透Spring Framework，只要真正掌握了Spring Framework中各个模块的实现原理，对于在实际开发中使用Spring Boot遇到的问题也就迎刃而解了。</p>
+<p><strong>3.Spring Cloud</strong></p>
+<p>Spring Cloud为开发基于微服务架构的软件系统提供了一整套工具集合，其中包含了开发各个微服务组件的具体项目，如：Spring Cloud Config（配置中心），Spring Cloud Netflix（服务注册中心），Spring Cloud Sleuth（服务调用监控），Spring Cloud Gateway（服务网关）等等。<br>Spring Cloud的基础是Spring Boot，基于Spring Boot可以大大简化开发各微服务组件的流程。</p>
+<p><strong>4.Spring Cloud Data Flow</strong></p>
+<p>Spring Cloud Data Flow用于构建在云环境或K8S中基于微服务的实时或批数据处理架构，具体来讲就是支持一系列需要进行数据处理的场景，如：ETL，数据导入/导出，事件流，预测分析等等。</p>
+<p><strong>5.Spring Data</strong></p>
+<p>Spring Data旨在提供一套基于Spring编程模型的数据访问API，是一个数据访问框架集合，其中包含了多个具体的支持不同方式访问特定数据库类型的子模块，如：Spring Data JDBC（使用JDBC方式访问关系型数据库），Spring Data MongoDB（访问MongoDB数据库）等。<br>这个模块的功能类似于<a target="_blank" rel="noopener" href="http://www.mybatis.org/mybatis-3/zh/index.html">MyBatis</a>这样的专门的ORM框架，在实际开发中可以根据需求进行灵活选择。</p>
+<p><strong>6.Spring Integration</strong></p>
+<p>Spring Integration的目的是提供一个简单的模型，用于构建企业级应用集成解决方案。</p>
+<p><strong>7.Spring Batch</strong></p>
+<p>Spring Batch是一个轻量级的批处理框架，旨在开发对企业系统日常运营至关重要的强大批处理应用程序。<br>支持事务管理，提供了基于Web的管理接口。</p>
+<p><strong>8.Spring Security</strong></p>
+<p>Spring Security是用于实现认证和授权，以及访问控制的安全框架，在Java生态与之提供类似的功能还有一个框架：<a target="_blank" rel="noopener" href="https://shiro.apache.org/">Apache Shiro</a>。<br>Spring Security依赖于Spring Framework，也就是说如果要Spring Security，那么应用架构也必须是基于Spring Framework的，这大大限制了Spring Security的使用场景；反之，Shiro就没有这样限制，而且从项目架构上Shiro更加简洁。当然，Spring Security提供了非常丰富的安全控制的功能，在某些方面甚至比Shiro更加完善，与之对应的是掌握的Spring Security的复杂度比较大。因此，对于在应用中是否选择Spring Security需要根据实际需求来决定。</p>
+<p><strong>9.Spring HATEOAS</strong></p>
+<p>如果Web应用基于Spring框架（即：使用了Spring MVC）开发，那么可以直接使用<code>Spring HATEOAS</code>来开发满足<code>HATEOAS</code>约束的RESTFul服务。<br>这里需要理解一个单词简写：“HATEOAS”。HATEOAS（Hypermedia as the engine of application state）是REST架构风格中最复杂的约束，也是构建成熟REST服务的核心。它的重要性在于打破了客户端和服务器之间严格的契约，使得客户端可以更加智能和自适应，而 REST 服务本身的演化和更新也变得更加容易。</p>
+<p><strong>10.Spring REST Docs</strong></p>
+<p>Spring REST Docs是一个文档工具，用于为REST架构风格的Web服务自动生成相应的文档，这样可以解放开发者专门撰写API文档的工作。</p>
+<p><strong>11.Spring AMQP</strong></p>
+<p>Spring AMQP项目旨在将核心的Spring概念应用于基于AMQP的消息传递解决方案的开发中，它提供了一个“模板”的抽象用于发送和接收消息。</p>
+<p><strong>12.Spring Mobile</strong></p>
+<p>Spring Mobile是对Spring MVC的扩展，旨在简化移动Web应用的开发。<br>Spring Mobile可以检测出当前请求使用的设备是PC、还是手机或者是平板以及用户设备是安卓平台还是iOS平台，然后根据请求设备的不同，返回适合该设备的视图。</p>
+<p><strong>13.Spring For Android</strong></p>
+<p>虽然官方的说法是Spring For Android旨在简化原声Android应用的开发，但其实这个有点太过于牵强。<br>Spring For Android提供了2个对原生Android应用开发的支持：<br>(1)提供了一个REST客户端<br>(2)支持访问安全API时的认证</p>
+<p><strong>14.Spring Web Flow</strong></p>
+<p>Spring Web Flow主要应用于需要在Web页面上创建引导用户执行类似“下一步”这样的基于流程的应用场景，该框架构建于Spring MVC之上。</p>
+<p><strong>15.Spring Web Services</strong></p>
+<p>Spring Web Services用于开发WebService服务，类似的框架如：<a target="_blank" rel="noopener" href="https://cxf.apache.org/">Apache CXF</a>，<a target="_blank" rel="noopener" href="http://axis.apache.org/axis2/java/core/">Apache Axis2</a>。</p>
+<p><strong>16.Spring LDAP</strong></p>
+<p>Spring LDAP是一个工具，用于为基于Spring的应用程序使用LDAP（Lightweight Directory Access Protocol）协议。</p>
+<p><strong>17.Spring Session</strong></p>
+<p>Spring Session提供了管理用户Session信息的API和对应实现，Spring Session使得支持集群会话变得简单，而不依赖于特定于应用程序容器的解决方案。<br>简单来讲，传统的Session方案依赖于特定的容器（如：Tomcat），Spring Session就是提供独立于特定容器的Session解决方案。<br>其实，针对Tomcat容器，Session集群化也有一个开源方案：<a target="_blank" rel="noopener" href="https://github.com/jcoleman/tomcat-redis-session-manager">tomcat-redis-session-manager</a>。</p>
+<p><strong>18.Spring Shell</strong></p>
+<p>Spring Shell用于开发基于命令行交互的应用。</p>
+<p><strong>19.Spring FLO</strong></p>
+<p>Spring FLO是一个JavaScript类库，是Spring Cloud Data Flow中流构建器的基础。</p>
+<p><strong>20.Spring Kafka</strong></p>
+<p>Spring Kafka用于在Spring项目中与Kafka交互。</p>
+<p><strong>21.Spring Statemachine</strong></p>
+<p>Spring Statemachine是一个为开发人员在Spring项目中使用状态机的框架，帮助开发者简化状态机的开发过程，让状态机结构更加层次化。</p>
+<p><strong>22.Spring IO Platform</strong></p>
+<p>简单来说，Spring IO Platform是一个对项目依赖进行统一版本管理的工具。本质就是一个pom文件，它记录了Spring项目和其它第三方库对应的版本信息。</p>
+<h3 id="社区项目"><a href="#社区项目" class="headerlink" title="社区项目"></a>社区项目</h3><p>社区项目目前只有2个：Spring ROO，Spring Scala。</p>
+<p>1.Spring ROO：这是一个开发工具包，旨在快速构建一个Java应用。<br>2.Spring Scala：支持在Scala中使用Spring框架。</p>
+<h3 id="保留项目"><a href="#保留项目" class="headerlink" title="保留项目"></a>保留项目</h3><p>某些项目已经终止了，但是仍然保留着，不必赘述。</p>
+<h2 id="最后总结"><a href="#最后总结" class="headerlink" title="最后总结"></a>最后总结</h2><p>Spring是一个生态系统，提供许多有用的编程框架或工具集。<br>本文的目的不在于详细介绍Spring生态的每一个项目，而是通过一个全面的整理，对Spring生态有一个完整的认识，在实际中根据需要灵活选择对应的组件来使用即可。<br>可以明确的是，当下最为流行的Spring项目是这4个：<strong>Spring Framework</strong>，<strong>Spring Security</strong>，<strong>Spring Boot</strong>，<strong>Spring Cloud</strong>。<br>如下图所示，再次对Spring生态做一个概括性总结。<br><img src="/2020/12/17/Spring%E7%94%9F%E6%80%81%E7%AE%80%E4%BB%8B/722072-20190601014836702-2034259504.png" alt="Spring生态概括"></p>
+<p>【参考】<br><a target="_blank" rel="noopener" href="https://www.ibm.com/developerworks/cn/java/j-lo-SpringHATEOAS/index.html">https://www.ibm.com/developerworks/cn/java/j-lo-SpringHATEOAS/index.html</a> 使用 Spring HATEOAS 开发 REST 服务<br><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/f9024eb3f252">https://www.jianshu.com/p/f9024eb3f252</a> 使用Spring Mobile实现网站移动端适配及更换主题<br><a target="_blank" rel="noopener" href="https://blog.csdn.net/csdn_xuexiaoqiang/article/details/65938744">https://blog.csdn.net/csdn_xuexiaoqiang/article/details/65938744</a> Spring学习笔记之Spring Web Flow<br><a target="_blank" rel="noopener" href="https://www.hifreud.com/2015/02/27/08-spring-mvc-spring-web-service/">https://www.hifreud.com/2015/02/27/08-spring-mvc-spring-web-service/</a> Spring 使用笔记之(五) - Spring-ws实现基于契约优先的WebService<br><a target="_blank" rel="noopener" href="https://www.ibm.com/developerworks/cn/web/wa-spring-session-architecture-and-design/index.html">https://www.ibm.com/developerworks/cn/web/wa-spring-session-architecture-and-design/index.html</a> 详解 Spring Session 架构与设计<br><a target="_blank" rel="noopener" href="https://www.ibm.com/developerworks/cn/java/spring-shell-application/index.html">https://www.ibm.com/developerworks/cn/java/spring-shell-application/index.html</a> 使用 Spring Shell 开发 Java 命令行应用<br><a target="_blank" rel="noopener" href="http://blog.didispace.com/spring-statemachine/">http://blog.didispace.com/spring-statemachine/</a> 使用Spring StateMachine框架实现状态机<br><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/dd0baba45f52">https://www.jianshu.com/p/dd0baba45f52</a> Spring IO Platform 简介<br><a target="_blank" rel="noopener" href="https://segmentfault.com/a/1190000012743018">https://segmentfault.com/a/1190000012743018</a> Spring IO Platform项目的介绍和应用<br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/chenpi/p/6295855.html">https://www.cnblogs.com/chenpi/p/6295855.html</a> Spring IO Platform简介及示例</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/spring/" rel="tag"># spring</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/12/16/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E7%9B%91%E6%8E%A7admin%E9%85%8D%E7%BD%AE%E5%B1%9E%E6%80%A7%E8%AF%A6%E8%A7%A3/" rel="prev" title="Spring-boot-admin配置属性详解">
+                  <i class="fa fa-chevron-left"></i> Spring-boot-admin配置属性详解
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/12/17/Spring%E6%B3%A8%E8%A7%A3%E4%B9%8B-Import%E6%B3%A8%E8%A7%A3%E7%9A%84%E4%B8%89%E7%A7%8D%E4%BD%BF%E7%94%A8%E6%96%B9%E5%BC%8F/" rel="next" title="Spring注解之@Import注解的三种使用方式">
+                  Spring注解之@Import注解的三种使用方式 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

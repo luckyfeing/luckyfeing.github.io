@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="&#x2F;&#x2F;redisson    org.redisson    redisson-spring-boot-starter    3.13.6 &#x2F;&#x2F;rocketmq    org.apache.rocketmq    rocketmq-spring-boot-starter    2.1.1 &#x2F;&#x2F;sentry 异常监控平台  Sentry来收集线上错误日志并进行告警、监控及任务分配处理    io.se">
+<meta property="og:type" content="article">
+<meta property="og:title" content="其它">
+<meta property="og:url" content="http://example.com/2021/02/07/%E5%85%B6%E5%AE%83/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="&#x2F;&#x2F;redisson    org.redisson    redisson-spring-boot-starter    3.13.6 &#x2F;&#x2F;rocketmq    org.apache.rocketmq    rocketmq-spring-boot-starter    2.1.1 &#x2F;&#x2F;sentry 异常监控平台  Sentry来收集线上错误日志并进行告警、监控及任务分配处理    io.se">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-02-07T07:42:23.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.224Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/02/07/%E5%85%B6%E5%AE%83/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>其它 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Dubbo-%E9%85%8D%E7%BD%AE%E9%A1%B9"><span class="nav-number">1.</span> <span class="nav-text">Dubbo 配置项</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Spring-Cloud-Alibaba-Dubbo-%E4%B8%93%E5%B1%9E%E9%85%8D%E7%BD%AE"><span class="nav-number">2.</span> <span class="nav-text">Spring Cloud Alibaba Dubbo 专属配置</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Dubbo-%E6%8F%90%E4%BE%9B%E8%80%85%E7%9A%84%E5%8D%8F%E8%AE%AE"><span class="nav-number">3.</span> <span class="nav-text">Dubbo 提供者的协议</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Dubbo-%E6%8F%90%E4%BE%9B%E6%9C%8D%E5%8A%A1%E7%9A%84%E6%89%AB%E6%8F%8F%E5%9F%BA%E7%A1%80%E5%8C%85"><span class="nav-number">4.</span> <span class="nav-text">Dubbo 提供服务的扫描基础包</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Dubbo-%E6%9C%8D%E5%8A%A1%E6%8F%90%E4%BE%9B%E8%80%85%E7%9A%84%E9%85%8D%E7%BD%AE"><span class="nav-number">5.</span> <span class="nav-text">Dubbo 服务提供者的配置</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Dubbo-%E6%9C%8D%E5%8A%A1%E6%B6%88%E8%B4%B9%E8%80%85%E7%9A%84%E9%85%8D%E7%BD%AE"><span class="nav-number">6.</span> <span class="nav-text">Dubbo 服务消费者的配置</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Object-sharedInstance-getSingleton-beanName-%E7%BC%93%E5%AD%98"><span class="nav-number">6.1.</span> <span class="nav-text">Object sharedInstance &#x3D; getSingleton(beanName); &#x2F;&#x2F;缓存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#getSingleton-String-beanName-ObjectFactory-lt-gt-singletonFactory-%E8%8E%B7%E5%8F%96%E5%AF%B9%E8%B1%A1"><span class="nav-number">6.2.</span> <span class="nav-text">getSingleton(String beanName, ObjectFactory&lt;?&gt; singletonFactory) &#x2F;&#x2F;获取对象</span></a></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/02/07/%E5%85%B6%E5%AE%83/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          其它
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-02-07 15:42:23" itemprop="dateCreated datePublished" datetime="2021-02-07T15:42:23+08:00">2021-02-07</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>//redisson<br><dependency><br>    <groupId>org.redisson</groupId><br>    <artifactId>redisson-spring-boot-starter</artifactId><br>    <version>3.13.6</version><br></dependency></p>
+<p>//rocketmq<br><dependency><br>    <groupId>org.apache.rocketmq</groupId><br>    <artifactId>rocketmq-spring-boot-starter</artifactId><br>    <version>2.1.1</version><br></dependency></p>
+<p>//sentry 异常监控平台  Sentry来收集线上错误日志并进行告警、监控及任务分配处理<br><dependency><br>    <groupId>io.sentry</groupId><br>    <artifactId>sentry-spring-boot-starter</artifactId><br></dependency><br><dependency><br>    <groupId>io.sentry</groupId><br>    <artifactId>sentry-logback</artifactId><br></dependency></p>
+<p>@EnableDubbo //使用下面的配置可以不用使用注解，springboot自动配置机制</p>
+<dependency>
+  <groupId>org.apache.dubbo</groupId>
+  <artifactId>dubbo-spring-boot-starter</artifactId>
+  <version>2.7.7</version>
+</dependency>
+
+
+
+<p>@EnableNacosConfig  //使用下面的配置可以不用使用注解，springboot自动配置机制<br>//作用：可以将配置信息注入到environment对象中，方便存取，且可以使用@value注入属性，也可以使用nacos定义的注解注入属性。配置项查看相关的properties<br>//@NacosValue(value = “${alone88.name}”, autoRefreshed = true)<br><dependency><br>  <groupId>com.alibaba.boot</groupId><br>  <artifactId>nacos-config-spring-boot-starter</artifactId><br>  <version>0.2.7</version><br></dependency></p>
+<p>nacos:<br>  config:<br>    server-addr: localhost:8848<br>    namespace: 65711e90-5040-467a-8d59-4c3b2050b9c4<br>    data-id: order-service<br>    bootstrap:<br>      enable: true<br>    type: yaml<br>    auto-refresh: true</p>
+<p>//nacos配置中心定义的注解<br>@Configuration<br>@EnableNacosConfig(globalProperties = @NacosProperties(serverAddr = “127.0.0.1:8848”))<br>@NacosPropertySource(dataId = “example”, autoRefreshed = true)<br>public class NacosConfiguration {</p>
+<p>}</p>
+<p>@NacosValue(value = “${useLocalCache:false}”, autoRefreshed = true)<br>private boolean useLocalCache;</p>
+<p>@EnableNacosDiscovery //使用下面的配置可以不用使用注解，springboot自动配置机制<br>//作用：使用nacos进行服务注册和发现。处理@NacosInjected，注入服务。配置项查看相关的properties<br>//注册 ApplicationContextHolder.class,AnnotationNacosInjectedBeanPostProcessor.class NamingServiceBeanBuilder.class,NamingMaintainServiceBeanBuilder.class<br>//@NacosInjected: An annotation to inject {@link ConfigService} or {@link NamingService} instance into the target Bean.<br><dependency><br>  <groupId>com.alibaba.boot</groupId><br>  <artifactId>nacos-discovery-spring-boot-starter</artifactId><br>  <version>0.2.7</version><br></dependency></p>
+<p>//nacos服务发现定义的注解<br>@Configuration<br>@EnableNacosDiscovery(globalProperties = @NacosProperties(serverAddr = “127.0.0.1:8848”))<br>public class NacosConfiguration {</p>
+<p>}<br>@NacosInjected<br>private NamingService namingService;</p>
+<p>//dubbo和nacos的springboot的starter包都依赖这个包，是一个基于spring的扩展基础包。<br><dependency><br>    <groupId>com.alibaba.spring</groupId><br>    <artifactId>spring-context-support</artifactId><br>    <version>[latest version]</version><br></dependency></p>
+<p>spring cloud 原理是：通过spring-cloud-commons定义了一系列的的api，如服务注册、发现,负载均衡，断路器</p>
+<p>cloud nacos NacosDiscoveryProperties中存放NamingService,实现了DiscoveryClient，实现了服务发现。</p>
+<p>//spring-boot properties属性配置，正规配置就应该这样写<br>@ConfigurationProperties(DUBBO_PREFIX)<br>class DubboConfigurationProperties {<br>    @NestedConfigurationProperty<br>    private Config config = new Config();<br>}</p>
+<p>@AutoConfigureAfter(DubboRelaxedBindingAutoConfiguration.class)<br>@EnableConfigurationProperties(DubboConfigurationProperties.class)<br>@Import(ServiceBeanIdConflictProcessor.class)<br>public class DubboAutoConfiguration {</p>
+<p>}</p>
+<p>dubbo-admin这边默认group都是dubbo<br>dubbo metadata的group是dubbo<br>dubbo registry的group是DEFAULT_GROUP<br>dubbo config-contener是dubbo/dubbo.properties</p>
+<p>doSubscribe(url, listener, serviceNames);<br>notifySubscriber(url, listener, instances);<br>subscribeEventListener(serviceName, url, listener);</p>
+<p> scheduledExecutorService = Executors.newSingleThreadScheduledExecutor();<br>            scheduledExecutorService.scheduleAtFixedRate({}，30，30，TimeUnit.SECONDS）</p>
+<h1 id="Dubbo-配置项"><a href="#Dubbo-配置项" class="headerlink" title="Dubbo 配置项"></a>Dubbo 配置项</h1><p>dubbo:</p>
+<h1 id="Spring-Cloud-Alibaba-Dubbo-专属配置"><a href="#Spring-Cloud-Alibaba-Dubbo-专属配置" class="headerlink" title="Spring Cloud Alibaba Dubbo 专属配置"></a>Spring Cloud Alibaba Dubbo 专属配置</h1><p>  cloud:<br>    subscribed-services: ‘’ # 设置订阅的应用列表，默认为 * 订阅所有应用</p>
+<h1 id="Dubbo-提供者的协议"><a href="#Dubbo-提供者的协议" class="headerlink" title="Dubbo 提供者的协议"></a>Dubbo 提供者的协议</h1><p>  protocol:<br>    name: dubbo<br>    port: -1</p>
+<h1 id="Dubbo-提供服务的扫描基础包"><a href="#Dubbo-提供服务的扫描基础包" class="headerlink" title="Dubbo 提供服务的扫描基础包"></a>Dubbo 提供服务的扫描基础包</h1><p>  scan:<br>    base-packages: cn.iocoder.mall.tradeservice.rpc</p>
+<h1 id="Dubbo-服务提供者的配置"><a href="#Dubbo-服务提供者的配置" class="headerlink" title="Dubbo 服务提供者的配置"></a>Dubbo 服务提供者的配置</h1><p>  provider:<br>    filter: -exception<br>    validation: true # 开启 Provider 参数校验<br>    version: 1.0.0 # 服务的版本号</p>
+<h1 id="Dubbo-服务消费者的配置"><a href="#Dubbo-服务消费者的配置" class="headerlink" title="Dubbo 服务消费者的配置"></a>Dubbo 服务消费者的配置</h1><p>  consumer:<br>    ErrorCodeRpc:<br>      version: 1.0.0<br>    ProductSkuRpc:<br>      version: 1.0.0<br>    UserAddressRpc:<br>      version: 1.0.0<br>    PriceRpc:<br>      version: 1.0.0<br>    CouponCardRpc:<br>      version: 1.0.0<br>    PayTransactionRpc:<br>      version: 1.0.0</p>
+<p>grant all on nacos.* to ‘nacos’@’%’ identified by ‘nacos’ with grant option;</p>
+<p>GRANT ALL PRIVILEGES ON <em>.</em> TO ‘nacos’@’%’ identified by ‘nacos’ WITH GRANT OPTION;</p>
+<p>grant all privileges on <em>.</em> to ‘nacos’@’localhost’ ;</p>
+<p>bean初始化：<br>doGetBean{}</p>
+<h2 id="Object-sharedInstance-getSingleton-beanName-缓存"><a href="#Object-sharedInstance-getSingleton-beanName-缓存" class="headerlink" title="Object sharedInstance = getSingleton(beanName); //缓存"></a>Object sharedInstance = getSingleton(beanName); //缓存</h2><h2 id="getSingleton-String-beanName-ObjectFactory-lt-gt-singletonFactory-获取对象"><a href="#getSingleton-String-beanName-ObjectFactory-lt-gt-singletonFactory-获取对象" class="headerlink" title="getSingleton(String beanName, ObjectFactory&lt;?&gt; singletonFactory) //获取对象"></a>getSingleton(String beanName, ObjectFactory&lt;?&gt; singletonFactory) //获取对象</h2><p>singletonsCurrentlyInCreation.add(beanName) //1.</p>
+<p>调用ObjectFactory的createBean方法</p>
+<p>二种情况<br>Object bean = resolveBeforeInstantiation(beanName, mbdToUse); 对象直接返回<br>Object beanInstance = doCreateBean(beanName, mbdToUse, args);<br>    addSingletonFactory(beanName, () -&gt; getEarlyBeanReference(beanName, mbd, bean));<br>        this.singletonFactories.put(beanName, singletonFactory); //三级<br>        this.earlySingletonObjects.remove(beanName); //二级<br>        this.registeredSingletons.add(beanName);</p>
+<p>singletonsCurrentlyInCreation.remove(beanName) // 最后<br>this.singletonObjects.put(beanName, singletonObject);<br>this.singletonFactories.remove(beanName);<br>this.earlySingletonObjects.remove(beanName);</p>
+<p>通过三级缓存生成二级缓存。</p>
+<p>springboot 增加Filter<br>方案一：<br>1、 @WebFilter(urlPatterns = “/<em>“) public class MemberFilter implements Filter {}<br>2、 @ServletComponentScan(basePackages = {“com.example.controller.filter”})<br>方案二：<br>@Bean<br>public FilterRegistrationBean filterProxy() {<br>    FilterRegistrationBean registrationBean = new FilterRegistrationBean();<br>    DelegatingFilterProxy httpBasicFilter = new DelegatingFilterProxy();<br>    registrationBean.setFilter(httpBasicFilter);<br>    Map&lt;String, String&gt; m = new HashMap&lt;String, String&gt;();<br>    m.put(“targetBeanName”, “memberFilter”);<br>    m.put(“targetFilterLifecycle”, “true”);<br>    registrationBean.setInitParameters(m);<br>    List<String> urlPatterns = new ArrayList<String>();<br>    urlPatterns.add(“/</String></String></em>“);<br>    registrationBean.setUrlPatterns(urlPatterns);<br>    return registrationBean;<br>}</p>
+<p>DelegatingFilterProxyRegistrationBean</p>
+<p>springSecurityFilterChain</p>
+<p>资源服务器<br>@EnableResourceServer -&gt; @Import(ResourceServerConfiguration.class) -&gt;ResourceServerConfiguration extends WebSecurityConfigurerAdapter 类上有@Configuration<br>@EnableResourceServer<br>public class ResourceServerConfig extends ResourceServerConfigurerAdapter{}</p>
+<p>认证服务器逻辑实现<br>@EnableAuthorizationServer-&gt;@Import({AuthorizationServerEndpointsConfiguration.class, AuthorizationServerSecurityConfiguration.class})</p>
+<p>AuthorizationServerEndpointsConfiguration-&gt;@Import(TokenKeyEndpointRegistrar.class)-&gt;注册TokenKeyEndpoint.class<br>AuthorizationServerSecurityConfiguration extends WebSecurityConfigurerAdapter(类上有@Configuration) -&gt;@Import({ ClientDetailsServiceConfiguration.class, AuthorizationServerEndpointsConfiguration.class })</p>
+<p>ClientDetailsServiceConfiguration -&gt; 配置ClientDetailsServiceConfiguration</p>
+<p>@EnableAuthorizationServer<br>public class AuthorizationConfig extends AuthorizationServerConfigurerAdapter{}</p>
+<p>@EnableOAuth2Client -》@Import(OAuth2ClientConfiguration.class)</p>
+<p>spring-security-oauth2-autoconfigure.jar<br>@EnableOAuth2Sso -&gt;@EnableOAuth2Client  @Import({ OAuth2SsoDefaultConfiguration.class, OAuth2SsoCustomConfiguration.class,<br>    ResourceServerTokenServicesConfiguration.class })</p>
+<p>security:<br>  oauth2:<br>    client:<br>      client-id: sso-server<br>      client-secret: deepblueai@2018<br>      user-authorization-uri: ${sso.auth.server}/oauth/authorize<br>      access-token-uri: ${sso.auth.server}/oauth/token<br>      scope: server<br>    resource:<br>      jwt:<br>        key-value: jwt:token:deepblue</p>
+<p>spring bean注入扩展类<br>BeanDefinitionRegistryPostProcessor</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/02/07/spring%E7%9A%84bean%E5%8A%A0%E8%BD%BD%E5%8F%8A%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F/" rel="prev" title="spring的bean加载及生命周期">
+                  <i class="fa fa-chevron-left"></i> spring的bean加载及生命周期
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/02/07/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E6%97%A5%E5%BF%97ELK%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/" rel="next" title="日志之ELK简单使用">
+                  日志之ELK简单使用 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

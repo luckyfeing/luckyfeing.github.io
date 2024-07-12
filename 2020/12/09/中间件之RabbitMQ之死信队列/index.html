@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="死信交换机，死信队列DLX 全称（Dead-Letter-Exchange）,称之为死信交换器，当消息变成一个死信之后，如果这个消息所在的队列存在x-dead-letter-exchange参数，那么它会被发送到x-dead-letter-exchange对应值的交换器上，这个交换器就称之为死信交换器，与这个死信交换器绑定的队列就是死信队列。 延时队列在RabbitMQ中不存在延时队列，但是我们可">
+<meta property="og:type" content="article">
+<meta property="og:title" content="RabbitMQ之死信队列">
+<meta property="og:url" content="http://example.com/2020/12/09/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E4%B9%8B%E6%AD%BB%E4%BF%A1%E9%98%9F%E5%88%97/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="死信交换机，死信队列DLX 全称（Dead-Letter-Exchange）,称之为死信交换器，当消息变成一个死信之后，如果这个消息所在的队列存在x-dead-letter-exchange参数，那么它会被发送到x-dead-letter-exchange对应值的交换器上，这个交换器就称之为死信交换器，与这个死信交换器绑定的队列就是死信队列。 延时队列在RabbitMQ中不存在延时队列，但是我们可">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-12-09T02:36:46.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.210Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2020/12/09/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E4%B9%8B%E6%AD%BB%E4%BF%A1%E9%98%9F%E5%88%97/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>RabbitMQ之死信队列 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AD%BB%E4%BF%A1%E4%BA%A4%E6%8D%A2%E6%9C%BA%EF%BC%8C%E6%AD%BB%E4%BF%A1%E9%98%9F%E5%88%97"><span class="nav-number">1.</span> <span class="nav-text">死信交换机，死信队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BB%B6%E6%97%B6%E9%98%9F%E5%88%97"><span class="nav-number">2.</span> <span class="nav-text">延时队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AD%BB%E4%BF%A1%E6%B6%88%E6%81%AF"><span class="nav-number">3.</span> <span class="nav-text">死信消息</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E8%BF%87%E6%9C%9F"><span class="nav-number">4.</span> <span class="nav-text">消息过期</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%AD%BB%E4%BF%A1%E6%B3%A8%E6%84%8F%E7%82%B9"><span class="nav-number">5.</span> <span class="nav-text">死信注意点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="nav-number">6.</span> <span class="nav-text">解决方案</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="nav-number">7.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/09/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E4%B9%8B%E6%AD%BB%E4%BF%A1%E9%98%9F%E5%88%97/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          RabbitMQ之死信队列
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-12-09 10:36:46" itemprop="dateCreated datePublished" datetime="2020-12-09T10:36:46+08:00">2020-12-09</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="死信交换机，死信队列"><a href="#死信交换机，死信队列" class="headerlink" title="死信交换机，死信队列"></a>死信交换机，死信队列</h2><p>DLX 全称（Dead-Letter-Exchange）,称之为死信交换器，当消息变成一个<strong>死信</strong>之后，如果这个消息所在的队列存在<strong>x-dead-letter-exchange</strong>参数，那么它会被发送到x-dead-letter-exchange对应值的交换器上，这个交换器就称之为死信交换器，与这个死信交换器绑定的队列就是死信队列。</p>
+<h2 id="延时队列"><a href="#延时队列" class="headerlink" title="延时队列"></a>延时队列</h2><p>在RabbitMQ中不存在延时队列，但是我们可以通过设置消息的过期时间和死信队列来模拟出延时队列。消费者监听死信交换器绑定的队列，而不要监听消息发送的队列。</p>
+<h2 id="死信消息"><a href="#死信消息" class="headerlink" title="死信消息"></a><strong>死信消息</strong></h2><ol>
+<li>消息被拒绝（Basic.Reject或Basic.Nack）并且设置 requeue 参数的值为 false</li>
+<li>消息过期了</li>
+<li>队列达到最大的长度(x-max-length)</li>
+</ol>
+<h2 id="消息过期"><a href="#消息过期" class="headerlink" title="消息过期"></a>消息过期</h2><ol>
+<li>创建队列的时候绑定死信参数：</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">params.put(<span class="string">&quot;x-dead-letter-exchange&quot;</span>, <span class="string">&quot;dlx-exchange&quot;</span>);</span><br><span class="line">params.put(<span class="string">&quot;x-dead-letter-routing-key&quot;</span>, <span class="string">&quot;dlK-routingKey&quot;</span>);</span><br><span class="line"><span class="keyword">return</span> <span class="keyword">new</span> Queue(queue, <span class="keyword">true</span>, <span class="keyword">false</span>, <span class="keyword">false</span>, params); <span class="comment">//若不存在应该是会创建Queue</span></span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li><p>设置过期时间（TTL）</p>
+<ul>
+<li><p>设置队列中消息的过期时间（所有消息的过期时间都是一样）<strong>将消息的TTL值设置为0，意味着消息到达队列后将会立即过期不会被队列保存，除非消息能够被立即传递给消费者</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;String, Object&gt; map = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">map.put(<span class="string">&quot;x-message-ttl&quot;</span>, <span class="number">5000</span>);</span><br><span class="line">channel.queueDeclare(q_name, <span class="keyword">false</span>, <span class="keyword">false</span>, <span class="keyword">false</span>, map); <span class="comment">//原生jar</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>设置单个消息的过期时间（可以设置每个消息的过期时间不同）</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//Spring</span></span><br><span class="line"><span class="keyword">this</span>.rabbitTemplate</span><br><span class="line">    .convertAndSend(orderStatusUpdateExchange, orderStatusUpdateKey, orderMessage, message -&gt; &#123;</span><br><span class="line">        message.getMessageProperties().setExpiration(expiration);</span><br><span class="line">        <span class="keyword">return</span> message;</span><br><span class="line">    &#125;);</span><br><span class="line"><span class="comment">//原生jar</span></span><br><span class="line">AMQP.BasicProperties properties = <span class="keyword">new</span> AMQP.BasicProperties.Builder()</span><br><span class="line">                .deliveryMode(<span class="number">2</span>)</span><br><span class="line">                .expiration(<span class="string">&quot;6000&quot;</span>) <span class="comment">//设置TTL 毫秒</span></span><br><span class="line">                .build();</span><br><span class="line">channel.basicPublish(my-exchange, routing-key, properties, <span class="string">&quot;msg&quot;</span>.getBytes());</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>设置队列过期（队列设置TTL过期后会被删除，但是不能保证实时被删除）该值决定了队列不再被使用后直到被自动删除的时长。<strong>不再使用的意思是队列没有订阅的消费者，队列最近没有被重新声明，并且在过期时间basic.get方法没有被调用</strong>。比如，在通过RabbitMQ实现RPC调用时，会生成大量的回复队列。<strong>服务器保证如果队列在最近的过期时间内没有被使用，那么该队列将会被删除。但是不保证在过期后能够以多快的速度删除</strong>。当服务器重启时，队列的租期重新开始计算。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">Map&lt;String, Object&gt; map = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">map.put(<span class="string">&quot;x-expires&quot;</span>, <span class="number">5000</span>);</span><br><span class="line">channel.queueDeclare(q_name, <span class="keyword">false</span>, <span class="keyword">false</span>, <span class="keyword">false</span>, map);</span><br></pre></td></tr></table></figure>
+
+
+</li>
+</ul>
+</li>
+</ol>
+<h2 id="死信注意点"><a href="#死信注意点" class="headerlink" title="死信注意点"></a>死信注意点</h2><blockquote>
+<p>Caveats<br>Queues that had a per-message TTL applied to them retroactively (when they already had messages) will discard the messages when specific events occur. Only when expired messages reach the head of a queue will they actually be discarded (or dead-lettered). Consumers will not have expired messages delivered to them. Keep in mind that there can be a natural race condition between message expiration and consumer delivery, e.g. a message can expire after it was written to the socket but before it has reached a consumer.<br>When setting per-message TTL expired messages can queue up behind non-expired ones until the latter are consumed or expired. Hence resources used by such expired messages will not be freed, and they will be counted in queue statistics (e.g. the number of messages in the queue).<br>When retroactively applying a per-message TTL policy, it is recommended to have consumers online to make sure the messages are discarded quicker.<br>Given this behaviour of per-message TTL settings on existing queues, when the need to delete messages to free up resources arises, queue TTL should be used instead (or queue purging, or queue deletion).</p>
+</blockquote>
+<p><strong>注意事项</strong><br>当队列中已有消息，并设置消息的TTL，那么会追溯设置消息的有效期，当在特定情况下将会丢弃这些消息。**只有当过期消息到达队列的头部时，它们才会被真实地丢弃(或死信路由)**。消费者将不会接收到过期的消息，但是消息的传递和有效期有天然的竞争关系。比如，一个消息在被写入到socket但还未到达消费者时过期。</p>
+<p>当设置了TTL过期时间的消息，可以在未过期消息后面排队，直到后者被消费或者过期。因此，被过期消息使用的资源并不会被释放，它们也会被队列的统计记入(比如，队列中消息的数量)。</p>
+<p>当回溯地设置消息的TTL策略时，建议有消费者同时在线，可以保证消息的尽快丢弃。</p>
+<p>考虑到给已存在的队列设置消息的TTL，来实现删除消息释放资源。设置队列的TTL（或队列清空，队列删除）应该替代这种方式</p>
+<p><strong>测试</strong>：</p>
+<ol>
+<li>可以看出这次是正常发送，正常消费</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">rabbitMqSender.sendMsg(<span class="string">&quot;798&quot;</span>, RabbitMqConfig.EXCHANGE_QUESTION_EXPIRE_DL, RabbitMqConfig.ROUTINGKEY_QUESTION_EXPIRE_DL, <span class="number">1</span> *<span class="number">1000</span>);</span><br><span class="line">rabbitMqSender.sendMsg(<span class="string">&quot;456&quot;</span>, RabbitMqConfig.EXCHANGE_QUESTION_EXPIRE_DL, RabbitMqConfig.ROUTINGKEY_QUESTION_EXPIRE_DL, <span class="number">5</span> *<span class="number">1000</span>);</span><br><span class="line">rabbitMqSender.sendMsg(<span class="string">&quot;123&quot;</span>, RabbitMqConfig.EXCHANGE_QUESTION_EXPIRE_DL, RabbitMqConfig.ROUTINGKEY_QUESTION_EXPIRE_DL, <span class="number">10</span> *<span class="number">1000</span>);</span><br><span class="line"></span><br><span class="line">消息发送时间：<span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span>T15:<span class="number">03</span>:<span class="number">34.036</span>， 消息内容：<span class="number">798</span></span><br><span class="line">消息发送时间：<span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span>T15:<span class="number">03</span>:<span class="number">34.039</span>， 消息内容：<span class="number">456</span></span><br><span class="line">消息发送时间：<span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span>T15:<span class="number">03</span>:<span class="number">34.039</span>， 消息内容：<span class="number">123</span></span><br><span class="line">2020-07-02 15:03:35.116  INFO 15856 --- [ntContainer#0-1] c.e.demo.listener.RabbitMqReceiver : received msg:798 </span><br><span class="line">2020-07-02 15:03:39.054  INFO 15856 --- [ntContainer#0-1] c.e.demo.listener.RabbitMqReceiver : received msg:456 </span><br><span class="line">2020-07-02 15:03:44.055  INFO 15856 --- [ntContainer#0-1] c.e.demo.listener.RabbitMqReceiver : received msg:123 </span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>可以看出消息正常发出，但是过了10s同时被消费</li>
+</ol>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">rabbitMqSender.sendMsg(<span class="string">&quot;123&quot;</span>, RabbitMqConfig.EXCHANGE_QUESTION_EXPIRE_DL, RabbitMqConfig.ROUTINGKEY_QUESTION_EXPIRE_DL, <span class="number">10</span> *<span class="number">1000</span>);</span><br><span class="line">rabbitMqSender.sendMsg(<span class="string">&quot;456&quot;</span>, RabbitMqConfig.EXCHANGE_QUESTION_EXPIRE_DL, RabbitMqConfig.ROUTINGKEY_QUESTION_EXPIRE_DL, <span class="number">5</span> *<span class="number">1000</span>);</span><br><span class="line">rabbitMqSender.sendMsg(<span class="string">&quot;798&quot;</span>, RabbitMqConfig.EXCHANGE_QUESTION_EXPIRE_DL, RabbitMqConfig.ROUTINGKEY_QUESTION_EXPIRE_DL, <span class="number">1</span> *<span class="number">1000</span>);</span><br><span class="line"></span><br><span class="line"><span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span> <span class="number">15</span>:<span class="number">05</span>:<span class="number">45.654</span>  INFO <span class="number">132</span> --- [main] com.example.demo.sender.RabbitMqSender   : 消息发送时间：<span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span>T15:<span class="number">05</span>:<span class="number">45.654</span>， 消息内容：<span class="number">123</span></span><br><span class="line"><span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span> <span class="number">15</span>:<span class="number">05</span>:<span class="number">45.655</span>  INFO <span class="number">132</span> --- [main] com.example.demo.sender.RabbitMqSender   : 消息发送时间：<span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span>T15:<span class="number">05</span>:<span class="number">45.655</span>， 消息内容：<span class="number">456</span></span><br><span class="line"><span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span> <span class="number">15</span>:<span class="number">05</span>:<span class="number">45.655</span>  INFO <span class="number">132</span> --- [main] com.example.demo.sender.RabbitMqSender   : 消息发送时间：<span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span>T15:<span class="number">05</span>:<span class="number">45.655</span>， 消息内容：<span class="number">798</span></span><br><span class="line"></span><br><span class="line">2020-07-02 15:05:55.665  INFO 15856 --- [ntContainer#0-1] c.e.demo.listener.RabbitMqReceiver : received msg:123 </span><br><span class="line">2020-07-02 15:05:55.666  INFO 15856 --- [ntContainer#0-1] c.e.demo.listener.RabbitMqReceiver : received msg:456 </span><br><span class="line">2020-07-02 15:05:55.666  INFO 15856 --- [ntContainer#0-1] c.e.demo.listener.RabbitMqReceiver : received msg:798 </span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>可以看出过了5秒第一次被消费，再过5秒后后两条消息同时被消费</li>
+</ol>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">rabbitMqSender.sendMsg(<span class="string">&quot;456&quot;</span>, RabbitMqConfig.EXCHANGE_QUESTION_EXPIRE_DL, RabbitMqConfig.ROUTINGKEY_QUESTION_EXPIRE_DL, <span class="number">5</span> *<span class="number">1000</span>);</span><br><span class="line">rabbitMqSender.sendMsg(<span class="string">&quot;123&quot;</span>, RabbitMqConfig.EXCHANGE_QUESTION_EXPIRE_DL, RabbitMqConfig.ROUTINGKEY_QUESTION_EXPIRE_DL, <span class="number">10</span> *<span class="number">1000</span>);</span><br><span class="line">rabbitMqSender.sendMsg(<span class="string">&quot;798&quot;</span>, RabbitMqConfig.EXCHANGE_QUESTION_EXPIRE_DL, RabbitMqConfig.ROUTINGKEY_QUESTION_EXPIRE_DL, <span class="number">1</span> *<span class="number">1000</span>);</span><br><span class="line"></span><br><span class="line"><span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span> <span class="number">15</span>:<span class="number">11</span>:<span class="number">26.929</span>  INFO <span class="number">11156</span> --- [main] com.example.demo.sender.RabbitMqSender   : 消息发送时间：<span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span>T15:<span class="number">11</span>:<span class="number">26.929</span>， 消息内容：<span class="number">456</span></span><br><span class="line"><span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span> <span class="number">15</span>:<span class="number">11</span>:<span class="number">26.931</span>  INFO <span class="number">11156</span> --- [main] com.example.demo.sender.RabbitMqSender   : 消息发送时间：<span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span>T15:<span class="number">11</span>:<span class="number">26.931</span>， 消息内容：<span class="number">123</span></span><br><span class="line"><span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span> <span class="number">15</span>:<span class="number">11</span>:<span class="number">26.931</span>  INFO <span class="number">11156</span> --- [main] com.example.demo.sender.RabbitMqSender   : 消息发送时间：<span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span>T15:<span class="number">11</span>:<span class="number">26.931</span>， 消息内容：<span class="number">798</span></span><br><span class="line"></span><br><span class="line">2020-07-02 15:11:31.928  INFO 15856 --- [ntContainer#0-1] c.e.demo.listener.RabbitMqReceiver : received msg:456 </span><br><span class="line">2020-07-02 15:11:36.946  INFO 15856 --- [ntContainer#0-1] c.e.demo.listener.RabbitMqReceiver : received msg:123 </span><br><span class="line">2020-07-02 15:11:36.947  INFO 15856 --- [ntContainer#0-1] c.e.demo.listener.RabbitMqReceiver : received msg:798 </span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>可以看出过了5秒前两条消息同时被消费，再过了5秒最后一条消息被消费</li>
+</ol>
+<figure class="highlight"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">rabbitMqSender.sendMsg(<span class="string">&quot;456&quot;</span>, RabbitMqConfig.EXCHANGE_QUESTION_EXPIRE_DL, RabbitMqConfig.ROUTINGKEY_QUESTION_EXPIRE_DL, <span class="number">5</span> *<span class="number">1000</span>);</span><br><span class="line">rabbitMqSender.sendMsg(<span class="string">&quot;798&quot;</span>, RabbitMqConfig.EXCHANGE_QUESTION_EXPIRE_DL, RabbitMqConfig.ROUTINGKEY_QUESTION_EXPIRE_DL, <span class="number">1</span> *<span class="number">1000</span>);</span><br><span class="line">rabbitMqSender.sendMsg(<span class="string">&quot;123&quot;</span>, RabbitMqConfig.EXCHANGE_QUESTION_EXPIRE_DL, RabbitMqConfig.ROUTINGKEY_QUESTION_EXPIRE_DL, <span class="number">10</span> *<span class="number">1000</span>);</span><br><span class="line"><span class="number">123</span></span><br><span class="line"><span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span> <span class="number">15</span>:<span class="number">12</span>:<span class="number">27.818</span>  INFO <span class="number">10400</span> --- [main] com.example.demo.sender.RabbitMqSender   : 消息发送时间：<span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span>T15:<span class="number">12</span>:<span class="number">27.818</span>， 消息内容：<span class="number">456</span></span><br><span class="line"><span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span> <span class="number">15</span>:<span class="number">12</span>:<span class="number">27.821</span>  INFO <span class="number">10400</span> --- [main] com.example.demo.sender.RabbitMqSender   : 消息发送时间：<span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span>T15:<span class="number">12</span>:<span class="number">27.821</span>， 消息内容：<span class="number">798</span></span><br><span class="line"><span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span> <span class="number">15</span>:<span class="number">12</span>:<span class="number">27.821</span>  INFO <span class="number">10400</span> --- [main] com.example.demo.sender.RabbitMqSender   : 消息发送时间：<span class="number">2020</span>-<span class="number">07</span>-<span class="number">02</span>T15:<span class="number">12</span>:<span class="number">27.821</span>， 消息内容：<span class="number">123</span></span><br><span class="line"></span><br><span class="line">2020-07-02 15:12:32.834  INFO 15856 --- [ntContainer#0-1] c.e.demo.listener.RabbitMqReceiver : received msg:456 </span><br><span class="line">2020-07-02 15:12:32.834  INFO 15856 --- [ntContainer#0-1] c.e.demo.listener.RabbitMqReceiver : received msg:798 </span><br><span class="line">2020-07-02 15:12:37.837  INFO 15856 --- [ntContainer#0-1] c.e.demo.listener.RabbitMqReceiver : received msg:123 </span><br></pre></td></tr></table></figure>
+
+<p><font color="red">可以看出应该就是只有消息队列头的消息被消费后，过期的消息才会被消费。</font></p>
+<h2 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h2><p>安装一个插件即可：<a target="_blank" rel="noopener" href="https://www.rabbitmq.com/community-plugins.html">https://www.rabbitmq.com/community-plugins.html</a> ，下载rabbitmq_delayed_message_exchange插件，然后解压放置到RabbitMQ的插件目录。接下来，进入RabbitMQ的安装目录下的sbin目录，执行下面命令让该插件生效，然后重启RabbitMQ。</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">rabbitmq-plugins enable rabbitmq_delayed_message_exchange</span><br></pre></td></tr></table></figure>
+
+<p><strong>代码实现</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Configuration</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DelayedRabbitMQConfig</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String DELAYED_QUEUE_NAME = <span class="string">&quot;delay.queue.demo.delay.queue&quot;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String DELAYED_EXCHANGE_NAME = <span class="string">&quot;delay.queue.demo.delay.exchange&quot;</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String DELAYED_ROUTING_KEY = <span class="string">&quot;delay.queue.demo.delay.routingkey&quot;</span>;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Queue <span class="title">immediateQueue</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Queue(DELAYED_QUEUE_NAME);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> CustomExchange <span class="title">customExchange</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        Map&lt;String, Object&gt; args = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">        args.put(<span class="string">&quot;x-delayed-type&quot;</span>, <span class="string">&quot;direct&quot;</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> CustomExchange(DELAYED_EXCHANGE_NAME, <span class="string">&quot;x-delayed-message&quot;</span>, <span class="keyword">true</span>, <span class="keyword">false</span>, args);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Binding <span class="title">bindingNotify</span><span class="params">(<span class="meta">@Qualifier(&quot;immediateQueue&quot;)</span> Queue queue,</span></span></span><br><span class="line"><span class="function"><span class="params">                                 <span class="meta">@Qualifier(&quot;customExchange&quot;)</span> CustomExchange customExchange)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> BindingBuilder.bind(queue).to(customExchange).with(DELAYED_ROUTING_KEY).noargs();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>消息生产者的代码</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">sendDelayMsg</span><span class="params">(String msg, Integer delayTime)</span> </span>&#123;</span><br><span class="line">    rabbitTemplate.convertAndSend(DELAYED_EXCHANGE_NAME, DELAYED_ROUTING_KEY, msg, a -&gt;&#123;</span><br><span class="line">        a.getMessageProperties().setDelay(delayTime);</span><br><span class="line">        <span class="keyword">return</span> a;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>消费者的代码</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@RabbitListener(queues = DELAYED_QUEUE_NAME)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">receiveD</span><span class="params">(Message message, Channel channel)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    String msg = <span class="keyword">new</span> String(message.getBody());</span><br><span class="line">    log.info(<span class="string">&quot;当前时间：&#123;&#125;,延时队列收到消息：&#123;&#125;&quot;</span>, <span class="keyword">new</span> Date().toString(), msg);</span><br><span class="line">    channel.basicAck(message.getMessageProperties().getDeliveryTag(), <span class="keyword">false</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/m0_37801313/article/details/107084076">RabbitMq 死信消息的过期时间的不同 会导致消费延时</a></p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/mfrank/p/11260355.html">【RabbitMQ】一文带你搞定RabbitMQ延迟队列</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/12/09/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E4%B9%8B%E6%B6%88%E6%81%AF%E5%8F%AF%E9%9D%A0%E6%80%A7%E5%A4%84%E7%90%86/" rel="prev" title="RabbitMQ之消息可靠性处理">
+                  <i class="fa fa-chevron-left"></i> RabbitMQ之消息可靠性处理
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/12/10/Spring-boot-amqp%E9%87%8D%E8%AF%95%E6%9C%BA%E5%88%B6/" rel="next" title="RabbitMQ之Spring重试机制">
+                  RabbitMQ之Spring重试机制 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

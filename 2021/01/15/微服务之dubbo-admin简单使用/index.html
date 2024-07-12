@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="dubbo-admin组成 配置中心：用于配置dubbo元数据中心和注册中心的配置信息 元数据中心：用于存放接口调用相关的信息，如方法名 注册中心 ：Dubbo 2.6版本所有数据都存在注册中心上，Dubbo 2.7版本分成了注册中心，配置中心，和元数据中心。  原理 重点类ConfigCenter，配置中心自动配置类，创建GovernanceConfiguration对象，初始化nacos的co">
+<meta property="og:type" content="article">
+<meta property="og:title" content="dubbo-admin简单使用">
+<meta property="og:url" content="http://example.com/2021/01/15/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bdubbo-admin%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="dubbo-admin组成 配置中心：用于配置dubbo元数据中心和注册中心的配置信息 元数据中心：用于存放接口调用相关的信息，如方法名 注册中心 ：Dubbo 2.6版本所有数据都存在注册中心上，Dubbo 2.7版本分成了注册中心，配置中心，和元数据中心。  原理 重点类ConfigCenter，配置中心自动配置类，创建GovernanceConfiguration对象，初始化nacos的co">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2021-01-15T01:45:13.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.253Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="dubbo">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2021/01/15/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bdubbo-admin%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>dubbo-admin简单使用 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#dubbo-admin"><span class="nav-number">1.</span> <span class="nav-text">dubbo-admin</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%84%E6%88%90"><span class="nav-number">1.1.</span> <span class="nav-text">组成</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8E%9F%E7%90%86"><span class="nav-number">1.2.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#GROUP%E9%BB%98%E8%AE%A4%E5%80%BC"><span class="nav-number">1.3.</span> <span class="nav-text">GROUP默认值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#application-properties%E9%85%8D%E7%BD%AE%E9%A1%B9%E8%AF%B4%E6%98%8E"><span class="nav-number">1.4.</span> <span class="nav-text">application.properties配置项说明</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dubbo-monitor-simple"><span class="nav-number">2.</span> <span class="nav-text">dubbo-monitor-simple</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E7%94%A8%E6%B3%95"><span class="nav-number">2.0.1.</span> <span class="nav-text">基本用法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86"><span class="nav-number">2.0.2.</span> <span class="nav-text">实现原理</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#dubbo-monitor-simple-1"><span class="nav-number">2.0.2.1.</span> <span class="nav-text">dubbo-monitor-simple</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#Dubbo%E5%BA%94%E7%94%A8"><span class="nav-number">2.0.2.2.</span> <span class="nav-text">Dubbo应用</span></a></li></ol></li></ol></li></ol></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/15/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bdubbo-admin%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          dubbo-admin简单使用
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-01-15 09:45:13" itemprop="dateCreated datePublished" datetime="2021-01-15T09:45:13+08:00">2021-01-15</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="dubbo-admin"><a href="#dubbo-admin" class="headerlink" title="dubbo-admin"></a>dubbo-admin</h2><h3 id="组成"><a href="#组成" class="headerlink" title="组成"></a>组成</h3><ul>
+<li>配置中心：用于配置dubbo元数据中心和注册中心的配置信息</li>
+<li>元数据中心：用于存放接口调用相关的信息，如方法名</li>
+<li>注册中心 ：Dubbo 2.6版本所有数据都存在注册中心上，Dubbo 2.7版本分成了注册中心，配置中心，和元数据中心。</li>
+</ul>
+<h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><ol>
+<li>重点类ConfigCenter，配置中心自动配置类，创建GovernanceConfiguration对象，初始化nacos的configService</li>
+<li>如果配置了配置中心，则加载配置中心的配置，读取注册中心和元数据中心的配置，生成url</li>
+<li>dubbo-admin前后端分离，admin-ui前端使用vue,dubbo-admin-server后端使用spring-boot</li>
+<li>订阅（dubbo-admin，nacos订阅）更改map缓存的数据（服务提供者、消费者）</li>
+</ol>
+<h3 id="GROUP默认值"><a href="#GROUP默认值" class="headerlink" title="GROUP默认值"></a>GROUP默认值</h3><p>dubbo-admin这边默认group都是dubbo</p>
+<h3 id="application-properties配置项说明"><a href="#application-properties配置项说明" class="headerlink" title="application.properties配置项说明"></a>application.properties配置项说明</h3><ul>
+<li><p>admin.config-center</p>
+<ul>
+<li><p>推荐使用，配置中心地址，比如<code>admin.config-center=&quot;zookeeper://127.0.0.1:2181&quot;</code></p>
+</li>
+<li><p>需要在配置中心中，配置注册中心和元数据中心地址配置格式如下：</p>
+</li>
+<li><p>zookeeper</p>
+<ul>
+<li><p>path: <code>/dubbo/config/dubbo/dubbo.properties</code></p>
+</li>
+<li><p>content:</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">dubbo.registry.address</span>=<span class="string">zookeeper://127.0.0.1:2181</span></span><br><span class="line"><span class="meta">dubbo.metadata-report.address</span>=<span class="string">zookeeper://127.0.0.1:2181</span></span><br></pre></td></tr></table></figure>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li><p>admin.registry.address</p>
+<ul>
+<li>不推荐使用，老版本的配置中心地址，比如：<code>admin.registry.address=&quot;zookeeper://127.0.0.1:2181&quot;</code></li>
+<li>如使用该配置，Dubbo Admin会将其作为注册中心和配置中心使用，元数据中心将无法使用，会影响服务测试等功能。</li>
+</ul>
+</li>
+</ul>
+<h2 id="dubbo-monitor-simple"><a href="#dubbo-monitor-simple" class="headerlink" title="dubbo-monitor-simple"></a>dubbo-monitor-simple</h2><h4 id="基本用法"><a href="#基本用法" class="headerlink" title="基本用法"></a>基本用法</h4><ul>
+<li>启动<code>com.alibaba.dubbo.monitor.simple.MonitorStarter#main</code></li>
+<li>需要进行监控的服务，在xml中配置<code>&lt;dubbo:monitor protocol=&quot;registry&quot;/&gt;</code></li>
+<li>打开监控页面<code>http://localhost:8080</code>可以看到服务调用相关的统计</li>
+</ul>
+<h4 id="实现原理"><a href="#实现原理" class="headerlink" title="实现原理"></a>实现原理</h4><h5 id="dubbo-monitor-simple-1"><a href="#dubbo-monitor-simple-1" class="headerlink" title="dubbo-monitor-simple"></a>dubbo-monitor-simple</h5><ul>
+<li>dubbo-monitor-simple启动的时候，发布服务:<code>com.alibaba.dubbo.monitor.MonitorService</code>(实现类：<code>com.alibaba.dubbo.monitor.simple.SimpleMonitorService</code>)，只实现了<code>collect</code>方法，将RPC调用过来的URL存到<code>queue</code>里面</li>
+<li><code>com.alibaba.dubbo.monitor.simple.SimpleMonitorService</code>启动了两个线程，分别执行<code>write</code>和<code>draw</code>方法，<code>write</code>从<code>queue</code>里面取出URL进行统计分析，结果写文件，<code>draw</code>方法把这些结果画成折线图，存本地图片文件</li>
+<li><code>com.alibaba.dubbo.monitor.simple.pages.ChartsPageHandler</code>和<code>com.alibaba.dubbo.monitor.simple.pages.StatisticsPageHandler</code>负责在页面上渲染展示这些数据</li>
+</ul>
+<h5 id="Dubbo应用"><a href="#Dubbo应用" class="headerlink" title="Dubbo应用"></a>Dubbo应用</h5><ul>
+<li>Dubbo服务在配置了<code>&lt;dubbo:monitor protocol=&quot;registry&quot;/&gt;</code>标签后，调用经过<code>com.alibaba.dubbo.monitor.support.MonitorFilter</code>时，会进行结果收集操作。</li>
+<li>最终在调用到<code>com.alibaba.dubbo.monitor.dubbo.DubboMonitor#collect</code>，该方法将调用过程中的统计信息存放在<code>statisticsMap</code>中。并且，有另一个线程定期(默认为60秒)调用dubbo-monitor-simple暴露的com.alibaba.dubbo.monitor.MonitorService服务，将这些信息发送给monitor。</li>
+</ul>
+<p>Dubbo-montitor-simple实现的过程借助了dubbo服务调用：Monitor端暴露服务，Dubbo应用通过配置去消费这些服务，消费的过程就是自身服务数据上报的过程。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/dubbo/" rel="tag"># dubbo</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/01/15/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bdubbo%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/" rel="prev" title="dubbo简单使用">
+                  <i class="fa fa-chevron-left"></i> dubbo简单使用
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/01/15/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bnacos%E7%9B%91%E6%8E%A7/" rel="next" title="nacos监控">
+                  nacos监控 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

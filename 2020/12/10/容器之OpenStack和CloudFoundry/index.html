@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="OpenStackOpenStack 是一个旨在为公共及私有云的建设与管理提供软件的开源项目。它的社区拥有超过130家企业及1350位开发者，这些机构与个人都将OpenStack作为基础设施即服务（简称IaaS）资源的通用前端。OpenStack项目的首要任务是简化云的部署过程并为其带来良好的可扩展性。OpenStack 源码在 Git@OSC 上的镜像：http:&#x2F;&#x2F;git.oschina.ne">
+<meta property="og:type" content="article">
+<meta property="og:title" content="OpenStack和CloudFoundry">
+<meta property="og:url" content="http://example.com/2020/12/10/%E5%AE%B9%E5%99%A8%E4%B9%8BOpenStack%E5%92%8CCloudFoundry/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="OpenStackOpenStack 是一个旨在为公共及私有云的建设与管理提供软件的开源项目。它的社区拥有超过130家企业及1350位开发者，这些机构与个人都将OpenStack作为基础设施即服务（简称IaaS）资源的通用前端。OpenStack项目的首要任务是简化云的部署过程并为其带来良好的可扩展性。OpenStack 源码在 Git@OSC 上的镜像：http:&#x2F;&#x2F;git.oschina.ne">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/12/10/%E5%AE%B9%E5%99%A8%E4%B9%8BOpenStack%E5%92%8CCloudFoundry/001610_vm0P_5189.jpg">
+<meta property="article:published_time" content="2020-12-10T10:24:10.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.243Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="CloudFoundry">
+<meta property="article:tag" content="OpenStack">
+<meta property="article:tag" content="Kubernetes">
+<meta property="article:tag" content="OpenShift">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/12/10/%E5%AE%B9%E5%99%A8%E4%B9%8BOpenStack%E5%92%8CCloudFoundry/001610_vm0P_5189.jpg">
+
+
+<link rel="canonical" href="http://example.com/2020/12/10/%E5%AE%B9%E5%99%A8%E4%B9%8BOpenStack%E5%92%8CCloudFoundry/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>OpenStack和CloudFoundry | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#OpenStack"><span class="nav-number">1.</span> <span class="nav-text">OpenStack</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CloudFoundry"><span class="nav-number">2.</span> <span class="nav-text">CloudFoundry</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kubernetes"><span class="nav-number">3.</span> <span class="nav-text">Kubernetes</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cloud-Foundry%E7%9A%84%E4%BC%98%E5%8A%BF%E5%9C%A8%E4%BA%8E"><span class="nav-number">4.</span> <span class="nav-text">Cloud Foundry的优势在于</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Kubernetes%E7%9A%84%E4%BC%98%E5%8A%BF%E5%9C%A8%E4%BA%8E"><span class="nav-number">5.</span> <span class="nav-text">Kubernetes的优势在于</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Cloud-Foundry%E5%92%8CKubernetes%E7%9B%B8%E4%BC%BC%E7%82%B9"><span class="nav-number">6.</span> <span class="nav-text">Cloud Foundry和Kubernetes相似点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CloudFoundry%E5%92%8CKubernetes%E4%BD%BF%E7%94%A8"><span class="nav-number">7.</span> <span class="nav-text">CloudFoundry和Kubernetes使用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#OpenShift%E5%92%8CCloudFoundry%E6%AF%94%E8%BE%83"><span class="nav-number">8.</span> <span class="nav-text">OpenShift和CloudFoundry比较</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#CloudFoundry%E5%92%8CKubernetes%E7%BB%93%E5%90%88"><span class="nav-number">9.</span> <span class="nav-text">CloudFoundry和Kubernetes结合</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Kubernetes-CPI"><span class="nav-number">9.0.1.</span> <span class="nav-text">Kubernetes CPI</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Cloud-Foundry-Container-Runtime%EF%BC%88CFCR%EF%BC%89"><span class="nav-number">9.0.2.</span> <span class="nav-text">Cloud Foundry Container Runtime（CFCR）</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%B9%E5%99%A8%E5%8C%96Cloud-Foundry"><span class="nav-number">9.0.3.</span> <span class="nav-text">容器化Cloud Foundry</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">10.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="nav-number">11.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/10/%E5%AE%B9%E5%99%A8%E4%B9%8BOpenStack%E5%92%8CCloudFoundry/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          OpenStack和CloudFoundry
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-12-10 18:24:10" itemprop="dateCreated datePublished" datetime="2020-12-10T18:24:10+08:00">2020-12-10</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%BF%90%E7%BB%B4%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">运维技术</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="OpenStack"><a href="#OpenStack" class="headerlink" title="OpenStack"></a>OpenStack</h2><p>OpenStack 是一个旨在为公共及私有云的建设与管理提供软件的开源项目。它的社区拥有超过130家企业及1350位开发者，这些机构与个人都将OpenStack作为基础设施即服务（简称IaaS）资源的通用前端。OpenStack项目的首要任务是简化云的部署过程并为其带来良好的可扩展性。OpenStack 源码在 Git@OSC 上的镜像：<a target="_blank" rel="noopener" href="http://git.oschina.net/openstack">http://git.oschina.net/openstack</a></p>
+<p>开源项目，搭建私有云，公有云，混合云。openStack是偏IaaS层的开源云计算框架</p>
+<p><img src="/2020/12/10/%E5%AE%B9%E5%99%A8%E4%B9%8BOpenStack%E5%92%8CCloudFoundry/001610_vm0P_5189.jpg" alt="img"></p>
+<h2 id="CloudFoundry"><a href="#CloudFoundry" class="headerlink" title="CloudFoundry"></a>CloudFoundry</h2><p>Cloud Foundry是一个独立于云的平台即服务解决方案，也是业界最成功的PaaS平台，是PaaS层的开源框架。。Cloud Foundry提供了一个可轻松运行、扩展和维护应用程序的环境和快速便捷的开发者体验。Cloud Foundry支持Java、NodeJS、Ruby、Python等大多数语言和环境。</p>
+<p>开源的Cloud Foundry由Cloud Foundry基金会开发并支持，基金会包括Pivotal、IBM、VMware以及其它许多厂商。商业版本的Cloud Foundry，如IBM Bluemix和Pivotal Cloud Foundry，是基于开源的Cloud Foundry项目并在其基础上提供企业级的支持。</p>
+<p>Cloud Foundry对容器采用了一个非常固执的方式。它使用了一个叫garden的容器解决方案。PCF的较早版本的原始容器称为warden，它事实上要早于Docker本身。</p>
+<p>Cloud Foundry自身事实上也早于Kubernetes，它的第一个版本始于2011年，而Kubernetes直到2014年才出现。</p>
+<h2 id="Kubernetes"><a href="#Kubernetes" class="headerlink" title="Kubernetes"></a>Kubernetes</h2><p>Kubernetes是一个来源于谷歌Borg项目的开源云平台。它由Cloud Native Computing Foundation发起，该基金会的成员包括了许多行业巨头，如AWS、Azure、Intel、IBM、RedHat、Pivotal等许多公司。</p>
+<p>Cloud Foundry最重要的特点是，它是一个PaaS。Kubernetes则不太像PaaS，有些人把它看做IaaS+ ，甚至Kubernetes 的文档也把自己描述为“不是传统的、包罗万象的PaaS”。</p>
+<p>Kubernetes首要的功能是一个容器编排和容器生命周期的管理。尽管不限于此，但它通常是被用来运行Docker容器，它的受众人群更广泛一些，比如想要构建在容器服务之上的应用和服务开发人员。有一些解决方案基于Kubernetes提供了PaaS体验，比如IBM的Container Service和RedHat的OpenShift等。</p>
+<h2 id="Cloud-Foundry的优势在于"><a href="#Cloud-Foundry的优势在于" class="headerlink" title="Cloud Foundry的优势在于"></a>Cloud Foundry的优势在于</h2><ol>
+<li>成熟的身份验证系统UAA，用户组和multi-tenancy的支持</li>
+<li>方便快捷的cf push</li>
+<li>自带负载均衡Router</li>
+<li>强大的日志和metrics整合</li>
+<li>成熟的部署工具BOSH</li>
+</ol>
+<h2 id="Kubernetes的优势在于"><a href="#Kubernetes的优势在于" class="headerlink" title="Kubernetes的优势在于"></a>Kubernetes的优势在于</h2><ol>
+<li>大量社区和第三方支持，提供强大的扩展性</li>
+<li>完善的容器生命周期和自动伸缩管理</li>
+<li>方便快捷的容器化应用部署</li>
+<li>良好、多样的持久层支持</li>
+<li>多种开源UI支持</li>
+</ol>
+<h2 id="Cloud-Foundry和Kubernetes相似点"><a href="#Cloud-Foundry和Kubernetes相似点" class="headerlink" title="Cloud Foundry和Kubernetes相似点"></a>Cloud Foundry和Kubernetes相似点</h2><p>两者都使用容器的思想来隔离应用和系统其它组件。<br>两者都可以既运行在公有云（AWS、Azure、GCP）上，也可以运行在预置型云平台，如使用Vmware vsphere的云平台上。<br>两者都提供了混合环境上的运行能力，允许你在不同的云平台运行应用以提高可用性，甚至支持应用在公有云和私有云上同时运行。<br>Pivotal Cloud Foundry的最新版本也开始支持Kubernetes作为通用的容器运行时。</p>
+<h2 id="CloudFoundry和Kubernetes使用"><a href="#CloudFoundry和Kubernetes使用" class="headerlink" title="CloudFoundry和Kubernetes使用"></a>CloudFoundry和Kubernetes使用</h2><p>使用Docker，你需要定义一个Dockerfile以支持运行基于Java的应用。你可以用各种不同方式来定义这个容器。你可以选择不同的基础操作系统，不同服务商提供的不同JDK版本，你可以暴露不同的端口，以支持不同安全级别上的访问。没有一个标准说基于Java的Spring Boot应用该长什么样。</p>
+<p>在Cloud Foundry，所有基于Java的应用都有一个基线buildpack，这个buildpack是由供应商提供的。一个buildpack是针对给定语言创建应用运行时的模板。buildpack是由Cloud Foundry自身管理的。</p>
+<p>Cloud Foundry把定义容器的部分工作从开发者手上接了过来。它定了一个标准，基于Java的容器应该长什么样，这样所有开发者，不管是DevOps团队还是IT专家，都可以同步这个模板。你可以确信你的容器将和其他开发者提供的容器一样运行，不管在现有的集群内，还是将来有可能转到的公有云平台上。</p>
+<h2 id="OpenShift和CloudFoundry比较"><a href="#OpenShift和CloudFoundry比较" class="headerlink" title="OpenShift和CloudFoundry比较"></a>OpenShift和CloudFoundry比较</h2><p>具体未来谁流行现在很难说清楚，从现在热度来看红帽子在云方面的力量还是弱于Vmware的，CloudFoundry应该会更加流行。两者关键区别：<br>1.语言方面：基本相同，都支持java，Pythone,php,perl,ruby等。CF多支持Elang<br>2.关系数据库：都支持mysql和PostgreSql<br>3.NoSQL:都支持MongoDB，CF多支持Redis，Neo4j，分布式缓存memcacheD</p>
+<h2 id="CloudFoundry和Kubernetes结合"><a href="#CloudFoundry和Kubernetes结合" class="headerlink" title="CloudFoundry和Kubernetes结合"></a>CloudFoundry和Kubernetes结合</h2><h4 id="Kubernetes-CPI"><a href="#Kubernetes-CPI" class="headerlink" title="Kubernetes CPI"></a>Kubernetes CPI</h4><p>我们知道BOSH是Cloud Foundry官方指定的部署工具，它是一个针对大规模分布式系统的部署和生命周期管理的开源工具。但是BOSH不仅仅局限于部署Cloud Foundry，也可以应用于别的分布式系统，只需要其提供符合要求的Release即可。CPI全称Cloud Provider Interface，是BOSH用来与IaaS通信完成虚拟机实例和模板的创建和管理的一个API接口，CPI目前能够支持Amazon的AWS、微软的Azure、IBM的SoftLayer等IaaS平台，国内阿里云也提供了CPI的支持。BOSH的主控制器Director通过CPI与底层的IaaS层交互，将BOSH manifest.yaml 文件定义任务及组件部署到IaaS层的VM上。</p>
+<p>也就是开发一套Kubernetes的CPI，通过BOSH和manifest.yaml的配置将Cloud Foundry部署到Kubernetes上。现在有一些大的厂商如IBM、SAP在开发相应的Kubernetes CPI，大家可以在GitHub中搜索到。我个人觉得，这种方式虽然容易上手，但还是以IaaS的角度来看待Kubernetes，底层还是通过BOSH来管理的，没能最大地发挥Kubernetes平台的优势的。</p>
+<h4 id="Cloud-Foundry-Container-Runtime（CFCR）"><a href="#Cloud-Foundry-Container-Runtime（CFCR）" class="headerlink" title="Cloud Foundry Container Runtime（CFCR）"></a>Cloud Foundry Container Runtime（CFCR）</h4><p>Cloud Foundry基金会在2017年底宣布把Pivotal和谷歌捐献的Kubo项目改名为CFCR（Cloud Foundry Container Runtime）。总体来说是利用BOSH来部署Cloud Foundry和Kubernetes，并通过Application Runtime管理Cloud Foundry的Application Service；通过Container Runtime管理Kubernetes的Container Service，比如一些无法部署在Cloud Foundry内的服务，如数据库、监控等。然后通过Open Service Broker将两者连接起来</p>
+<h4 id="容器化Cloud-Foundry"><a href="#容器化Cloud-Foundry" class="headerlink" title="容器化Cloud Foundry"></a>容器化Cloud Foundry</h4><p>将Cloud Foundry所有组件容器化，并部署到Kubernetes上是一种比较新型的整合方式。现在有一些大的厂商做这方面的工作，比如SUSE、IBM和SAP。其核心就是通过将Cloud Foundry的BOSH Release转化成Docker镜像，然后通过Kubernetes的部署工具Helm来将Cloud Foundry更加自然地部署到Kubernetes上。只有在生成Cloud Foundry组件的Docker镜像是需要用到BOSH Cli去转化BOSH release，部署及部署之后的管理，都不需要BOSH，而是交给Kubernetes来对所有Cloud Foundry组件的Pod、服务及相应配置资源的生命周期进行管理。这样既享受到了Cloud Foundry带来的良好的开发者体验，又用到了Kubernetes强大的管理和扩展能力</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>当然两者结合的探索工作不止于此，现在越来越多的厂商和开发者加入到两者整合的研究中。其中比较火的有IBM主导的Cloud Foundry孵化项目Eirini，其想法是想将Cloud Foundry中的Diego-cell容器Garden替换成Kubernetes的容器，从而将两者更紧密地连接在一起。</p>
+<p>Kubernetes之于Cloud Foundry的关系不是挑战也不是竞争关系，Cloud Foundry希望与其更好地融合，就像Cloud Foundry Foundation执行董事Abby Kearns说的：“Cloud Foundry是结构化的PaaS平台，其他平台是非结构化的，用户的需求是多元化的，并不是一定要如何容器化，而是希望平台能够更开放、支持更多的类型。”</p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_30154571/article/details/84955097">Cloud Foundry和 Kubernetes 的区别</a></p>
+<p><a target="_blank" rel="noopener" href="http://dockone.io/article/8295">Cloud Foundry和Kubernetes结合的过去与未来</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/CloudFoundry/" rel="tag"># CloudFoundry</a>
+              <a href="/tags/OpenStack/" rel="tag"># OpenStack</a>
+              <a href="/tags/Kubernetes/" rel="tag"># Kubernetes</a>
+              <a href="/tags/OpenShift/" rel="tag"># OpenShift</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/12/10/Spring-boot-amqp%E9%87%8D%E8%AF%95%E6%9C%BA%E5%88%B6/" rel="prev" title="RabbitMQ之Spring重试机制">
+                  <i class="fa fa-chevron-left"></i> RabbitMQ之Spring重试机制
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/12/10/%E5%AE%B9%E5%99%A8%E4%B9%8BCloudFoundry%E7%9A%84%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/" rel="next" title="CloudFoundry的架构设计">
+                  CloudFoundry的架构设计 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

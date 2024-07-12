@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="数据结构 数组（数组、循环数组）查找、更新可以通过下标，时间复杂度为O(1);插入、删除需要移动数据在数组的位置O(n) 基本操作：读取元素，更新元素，插入元素，删除元素（涉及数组元素移动位置，取巧方式：将最后一个元素更新删除元素）  链表（单向链表、双向链表、循环链表）查找需要一直向下查找，时间复杂度为O(n);插入、删除、更新指针变动即可O(1) 基本操作：查找节点，更新节点，插入节点，删除节">
+<meta property="og:type" content="article">
+<meta property="og:title" content="算法（三）之数据结构总章">
+<meta property="og:url" content="http://example.com/2020/11/25/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%89%EF%BC%89%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%AB%A0/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="数据结构 数组（数组、循环数组）查找、更新可以通过下标，时间复杂度为O(1);插入、删除需要移动数据在数组的位置O(n) 基本操作：读取元素，更新元素，插入元素，删除元素（涉及数组元素移动位置，取巧方式：将最后一个元素更新删除元素）  链表（单向链表、双向链表、循环链表）查找需要一直向下查找，时间复杂度为O(n);插入、删除、更新指针变动即可O(1) 基本操作：查找节点，更新节点，插入节点，删除节">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/11/25/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%89%EF%BC%89%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%AB%A0/image-20201201102615715.png">
+<meta property="article:published_time" content="2020-11-25T10:09:52.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.302Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="数据结构">
+<meta property="article:tag" content="算法">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/11/25/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%89%EF%BC%89%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%AB%A0/image-20201201102615715.png">
+
+
+<link rel="canonical" href="http://example.com/2020/11/25/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%89%EF%BC%89%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%AB%A0/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>算法（三）之数据结构总章 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">1.</span> <span class="nav-text">数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#java%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84"><span class="nav-number">2.</span> <span class="nav-text">java数据结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E6%95%B0%E7%BB%84"><span class="nav-number">3.</span> <span class="nav-text">什么是数组</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E9%93%BE%E8%A1%A8"><span class="nav-number">4.</span> <span class="nav-text">什么是链表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E6%A0%88"><span class="nav-number">5.</span> <span class="nav-text">什么是栈</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E9%98%9F%E5%88%97"><span class="nav-number">6.</span> <span class="nav-text">什么是队列</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E6%95%A3%E5%88%97%E8%A1%A8"><span class="nav-number">7.</span> <span class="nav-text">什么是散列表</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E6%A0%91"><span class="nav-number">8.</span> <span class="nav-text">什么是树</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E4%BA%8C%E5%8F%89%E6%A0%91"><span class="nav-number">9.</span> <span class="nav-text">什么是二叉树</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BA%8C%E5%8F%89%E6%A0%91%E7%9A%84%E9%81%8D%E5%8E%86%E6%96%B9%E5%BC%8F%E6%9C%89%E5%87%A0%E7%A7%8D"><span class="nav-number">10.</span> <span class="nav-text">二叉树的遍历方式有几种</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E4%BA%8C%E5%8F%89%E5%A0%86"><span class="nav-number">11.</span> <span class="nav-text">什么是二叉堆</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E4%BC%98%E5%85%88%E9%98%9F%E5%88%97"><span class="nav-number">12.</span> <span class="nav-text">什么是优先队列</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/25/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%89%EF%BC%89%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%AB%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          算法（三）之数据结构总章
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-11-25 18:09:52" itemprop="dateCreated datePublished" datetime="2020-11-25T18:09:52+08:00">2020-11-25</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E7%AE%97%E6%B3%95/" itemprop="url" rel="index"><span itemprop="name">算法</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="数据结构"><a href="#数据结构" class="headerlink" title="数据结构"></a>数据结构</h2><ul>
+<li><p>数组（数组、循环数组）查找、更新可以通过下标，时间复杂度为O(1);插入、删除需要移动数据在数组的位置O(n)</p>
+<p><strong>基本操作</strong>：读取元素，更新元素，插入元素，删除元素（涉及数组元素移动位置，取巧方式：将最后一个元素更新删除元素）</p>
+</li>
+<li><p>链表（单向链表、双向链表、循环链表）查找需要一直向下查找，时间复杂度为O(n);插入、删除、更新指针变动即可O(1)</p>
+<p><strong>基本操作</strong>：查找节点，更新节点，插入节点，删除节点</p>
+<p><img src="/2020/11/25/%E7%AE%97%E6%B3%95%EF%BC%88%E4%B8%89%EF%BC%89%E4%B9%8B%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E6%80%BB%E7%AB%A0/image-20201201102615715.png" alt="image-20201201102615715"></p>
+</li>
+<li><p>栈（Stack）：FILO（First In Last Out，先入后出），最早进入的元素存放的位置叫作栈底（bottom），最后进入的元素存放的位置叫作栈顶（top）。可以使用数组或链表来实现。时间复杂度都是O(1)</p>
+<p><strong>基本操作</strong>：入栈push（从栈顶压入元素），出栈pop（从栈顶弹出元素）</p>
+</li>
+<li><p>队列（queue，单向队列，双端队列，优先队列，堵塞队列）：FIFO（First In First Out，先进先出），队列的出口端叫作队头（front），队列的入口端叫作队尾（rear）。可以使用数组或链表来实现。时间复杂度都是O(1)。数组实现队列会导致空间越来越小，可以使用循环数组。</p>
+<p><strong>基本操作</strong>：入队enqueue（从队尾插入元素），出队dequeue（从对头移出元素）</p>
+<table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>作用及示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>栈的应用</td>
+<td>栈的输出顺序和输入顺序相反，所以栈通常用于对“历史”的回溯，也就是逆流而上追溯“历史”。<br>例如实现递归的逻辑，就可以用栈来代替，因为栈可以回溯方法的调用链。<br>栈还有一个著名的应用场景是面包屑导航，使用户在浏览页面时可以轻松地回溯到上一级或更上一级页面。</td>
+</tr>
+<tr>
+<td>队列的应用</td>
+<td>队列的输出顺序和输入顺序相同，所以队列通常用于对“历史”的回放，也就是按照“历史”顺序，把“历史”重演一遍。<br>例如在多线程中，争夺公平锁的等待队列，就是按照访问顺序来决定线程在队列中的次序的。<br>再如网络爬虫实现网站抓取时，也是把待抓取的网站URL存入队列中，再按照存入队列的顺序来依次抓取和解析的</td>
+</tr>
+</tbody></table>
+<p><font color="red"><strong>双端队列（deque）</strong></font>：既可以先入先出，也可以先入后出。从队头一端可以入队或出队，从队尾一端也可以入队或出队</p>
+<p><font color="red"><strong>优先队列</strong></font>：它遵循的不是先入先出，而是谁的优先级最高，谁先出队。优先队列已经<strong>不属于线性数据结构的范畴</strong>了，它是<strong>基于二叉堆来实现的</strong></p>
+</li>
+<li><p>散列表：也叫哈希表（Hash table），提供了键（Key）和值（Value）的映射关系,只要给出一个Key，就可以高效查找到它所匹配的Value，时间复杂度接近于O(1)。<font color="red">散列表可以说是数组和链表的结合。</font></p>
+<p><strong>基本操作</strong>：写操作put,读操作get,扩容resize</p>
+<p><strong>哈希冲突（哈希碰撞）</strong>解决方法：</p>
+<p>​        <strong>开放寻址法</strong>：当一个Key通过哈希函数获得对应的数组下标已被占用时，我们可以“另谋高就”，寻找下一个空档位置，一直向下找。在Java中，ThreadLocal所使用的就是开放寻址法</p>
+<p>​        <strong>链表法</strong>：应用在了Java的集合类HashMap当中，数组的每一个元素不仅是一个Entry对象，还是一个链表的头节点。每一个Entry对象通过next指针指向它的下一个Entry节点。当新来的Entry映射到与之冲突的数组位置时，只需要插入到对应的链表中即可</p>
+</li>
+<li><p>树（tree,二叉树、二叉查找树（排序树）、平衡二叉树、红黑树、B-树、B+树）是n（n≥0）个节点的有限集。当n=0时，称为空树。</p>
+<p>树–&gt;二叉树–&gt;完全二叉树–&gt;满二叉树–&gt;二叉堆–&gt;二叉查找树（排序树）</p>
+</li>
+<li><p>图（？）</p>
+</li>
+</ul>
+<h2 id="java数据结构"><a href="#java数据结构" class="headerlink" title="java数据结构"></a>java数据结构</h2><p>见java集合文章</p>
+<h2 id="什么是数组"><a href="#什么是数组" class="headerlink" title="什么是数组"></a>什么是数组</h2><p>数组是由有限个相同类型的变量所组成的有序集合，它的物理存储方式是顺序 存储，访问方式是随机访问。利用下标查找数组元素的时间复杂度是O(1)，中间插入、删除数组元素的时间复杂度是O(n)。 </p>
+<h2 id="什么是链表"><a href="#什么是链表" class="headerlink" title="什么是链表"></a>什么是链表</h2><p>链表是一种链式数据结构，由若干节点组成，每个节点包含指向下一节点的指针。链表的物理存储方式是随机存储，访问方式是顺序访问。查找链表节点的时间 复杂度是O(n)，中间插入、删除节点的时间复杂度是O(1)。 </p>
+<h2 id="什么是栈"><a href="#什么是栈" class="headerlink" title="什么是栈"></a>什么是栈</h2><p>栈是一种线性逻辑结构，可以用数组实现，也可以用链表实现。栈包含入栈和 出栈操作，遵循先入后出的原则（FILO）。 </p>
+<h2 id="什么是队列"><a href="#什么是队列" class="headerlink" title="什么是队列"></a>什么是队列</h2><p>队列也是一种线性逻辑结构，可以用数组实现，也可以用链表实现。队列包含入队和出队操作，遵循先入先出的原则（FIFO）。 </p>
+<h2 id="什么是散列表"><a href="#什么是散列表" class="headerlink" title="什么是散列表"></a>什么是散列表</h2><p>散列表也叫哈希表，是存储Key-Value映射的集合。对于某一个Key，散列表可以在接近O(1)的时间内进行读写操作。散列表通过哈希函数实现Key和数组下标的转换，通过开放寻址法和链表法来解决哈希冲突</p>
+<h2 id="什么是树"><a href="#什么是树" class="headerlink" title="什么是树"></a>什么是树</h2><p>树是n个节点的有限集，有且仅有一个特定的称为根的节点。当n&gt;1时，其余节点可分为m个互不相交的有限集，每一个集合本身又是一个树，并称为根的子树。 </p>
+<h2 id="什么是二叉树"><a href="#什么是二叉树" class="headerlink" title="什么是二叉树"></a>什么是二叉树</h2><p>二叉树是树的一种特殊形式，每一个节点最多有两个孩子节点。二叉树包含完全二叉树和满二叉树两种特殊形式。 </p>
+<h2 id="二叉树的遍历方式有几种"><a href="#二叉树的遍历方式有几种" class="headerlink" title="二叉树的遍历方式有几种"></a>二叉树的遍历方式有几种</h2><p>根据遍历节点之间的关系，可以分为前序遍历、中序遍历、后序遍历、层序遍历这4种方式；从更宏观的角度划分，可以划分为深度优先遍历和广度优先遍历两大类。</p>
+<h2 id="什么是二叉堆"><a href="#什么是二叉堆" class="headerlink" title="什么是二叉堆"></a>什么是二叉堆</h2><p>二叉堆是一种特殊的完全二叉树，分为最大堆和最小堆。<br>在最大堆中，任何一个父节点的值，都大于或等于它左、右孩子节点的值。<br>在最小堆中，任何一个父节点的值，都小于或等于它左、右孩子节点的值。 </p>
+<h2 id="什么是优先队列"><a href="#什么是优先队列" class="headerlink" title="什么是优先队列"></a>什么是优先队列</h2><p>优先队列分为最大优先队列和最小优先队列。<br>在最大优先队列中，无论入队顺序如何，当前最大的元素都会优先出队，这是基于最大堆实现的。<br>在最小优先队列中，无论入队顺序如何，当前最小的元素都会优先出队，这是基于最小堆实现的。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/" rel="tag"># 数据结构</a>
+              <a href="/tags/%E7%AE%97%E6%B3%95/" rel="tag"># 算法</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/11/24/%E7%AE%97%E6%B3%95%EF%BC%88%E4%BA%8C%EF%BC%89/" rel="prev" title="算法（二）">
+                  <i class="fa fa-chevron-left"></i> 算法（二）
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/11/27/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80/" rel="next" title="RabbitMQ基础">
+                  RabbitMQ基础 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

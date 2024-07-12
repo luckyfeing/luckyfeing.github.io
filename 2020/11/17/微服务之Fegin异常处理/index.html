@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="作者：xiaomin0322 出处：https:&#x2F;&#x2F;my.oschina.net&#x2F;xiaominmin&#x2F;blog&#x2F;2986631 问题最近在项目开发中，使用 Feign 调用服务，当触发熔断机制时，遇到了以下问题：  异常信息形如：TestService#addRecord(ParamVO) failed and no fallback available.； 获取不到服务提供方抛出的原始异常信息">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Fegin异常处理">
+<meta property="og:url" content="http://example.com/2020/11/17/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFegin%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="作者：xiaomin0322 出处：https:&#x2F;&#x2F;my.oschina.net&#x2F;xiaominmin&#x2F;blog&#x2F;2986631 问题最近在项目开发中，使用 Feign 调用服务，当触发熔断机制时，遇到了以下问题：  异常信息形如：TestService#addRecord(ParamVO) failed and no fallback available.； 获取不到服务提供方抛出的原始异常信息">
+<meta property="og:locale" content="en_US">
+<meta property="article:published_time" content="2020-11-17T08:00:59.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.250Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="Fegin">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="http://example.com/2020/11/17/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFegin%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Fegin异常处理 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%97%AE%E9%A2%98"><span class="nav-number">1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FeignClient%E5%8A%A0%E4%B8%8Afallback%E6%96%B9%E6%B3%95%EF%BC%8C%E5%B9%B6%E8%8E%B7%E5%8F%96%E5%BC%82%E5%B8%B8%E4%BF%A1%E6%81%AF"><span class="nav-number">2.</span> <span class="nav-text">@FeignClient加上fallback方法，并获取异常信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BF%9D%E7%95%99%E5%8E%9F%E5%A7%8B%E5%BC%82%E5%B8%B8%E4%BF%A1%E6%81%AF"><span class="nav-number">3.</span> <span class="nav-text">保留原始异常信息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%8D%E8%BF%9B%E5%85%A5%E7%86%94%E6%96%AD%EF%BC%8C%E7%9B%B4%E6%8E%A5%E6%8A%9B%E5%87%BA%E5%BC%82%E5%B8%B8"><span class="nav-number">4.</span> <span class="nav-text">不进入熔断，直接抛出异常</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/17/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFegin%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Fegin异常处理
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-11-17 16:00:59" itemprop="dateCreated datePublished" datetime="2020-11-17T16:00:59+08:00">2020-11-17</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>作者：<a target="_blank" rel="noopener" href="https://my.oschina.net/xiaominmin">xiaomin0322</a></p>
+<p>出处：<a target="_blank" rel="noopener" href="https://my.oschina.net/xiaominmin/blog/2986631">https://my.oschina.net/xiaominmin/blog/2986631</a></p>
+<h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p>最近在项目开发中，使用 Feign 调用服务，当触发熔断机制时，遇到了以下问题：</p>
+<ul>
+<li>异常信息形如：<code>TestService#addRecord(ParamVO) failed and no fallback available.</code>；</li>
+<li>获取不到服务提供方抛出的原始异常信息；</li>
+<li>实现某些业务方法不进入熔断，直接往外抛出异常；</li>
+</ul>
+<p>接下来将一一解决上述问题。</p>
+<p>对于<code>failed and no fallback available.</code>这种异常信息，是因为项目开启了熔断：</p>
+<figure class="highlight properties"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">feign.hystrix.enabled</span>: <span class="string">true</span></span><br></pre></td></tr></table></figure>
+
+<p>当调用服务时抛出了异常，却没有定义<code>fallback</code>方法，就会抛出上述异常。由此引出了第一个解决方式。</p>
+<h3 id="FeignClient加上fallback方法，并获取异常信息"><a href="#FeignClient加上fallback方法，并获取异常信息" class="headerlink" title="@FeignClient加上fallback方法，并获取异常信息"></a><code>@FeignClient</code>加上<code>fallback</code>方法，并获取异常信息</h3><p>为<code>@FeignClient</code>修饰的接口加上<code>fallback</code>方法有两种方式，由于要获取异常信息，所以使用<code>fallbackFactory</code>的方式：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@FeignClient(name = &quot;serviceId&quot;, fallbackFactory = TestServiceFallback.class)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">TestService</span> </span>&#123;</span><br><span class="line">    <span class="meta">@RequestMapping(value = &quot;/get/&#123;id&#125;&quot;, method = RequestMethod.GET)</span></span><br><span class="line">    <span class="function">Result <span class="title">get</span><span class="params">(<span class="meta">@PathVariable(&quot;id&quot;)</span> Integer id)</span></span>;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在<code>@FeignClient</code>注解中指定<code>fallbackFactory</code>，上面例子中是<code>TestServiceFallback</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> feign.hystrix.FallbackFactory;</span><br><span class="line"><span class="keyword">import</span> org.apache.commons.lang3.StringUtils;</span><br><span class="line"><span class="meta">@Component</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TestServiceFallback</span> <span class="keyword">implements</span> <span class="title">FallbackFactory</span>&lt;<span class="title">TestService</span>&gt; </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger LOG = LoggerFactory.getLogger(TestServiceFallback.class);</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> String ERR_MSG = <span class="string">&quot;Test接口暂时不可用: &quot;</span>;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> TestService <span class="title">create</span><span class="params">(Throwable throwable)</span> </span>&#123;</span><br><span class="line">        String msg = throwable == <span class="keyword">null</span> ? <span class="string">&quot;&quot;</span> : throwable.getMessage();</span><br><span class="line">        <span class="keyword">if</span> (!StringUtils.isEmpty(msg)) &#123;</span><br><span class="line">            LOG.error(msg);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> TestService() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> String <span class="title">get</span><span class="params">(Integer id)</span> </span>&#123;</span><br><span class="line">                <span class="keyword">return</span> ResultBuilder.unsuccess(ERR_MSG + msg);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过实现<code>FallbackFactory</code>,可以在<code>create</code>方法中获取到服务抛出的异常。但是请注意，这里的异常是被<code>Feign</code>封装过的异常，不能直接在异常信息中看出原始方法抛出的异常。这时得到的异常信息形如：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">status 500 reading TestService#addRecord(ParamVO); content:</span><br><span class="line">&#123;<span class="string">&quot;success&quot;</span>:<span class="keyword">false</span>,<span class="string">&quot;resultCode&quot;</span>:<span class="keyword">null</span>,<span class="string">&quot;message&quot;</span>:<span class="string">&quot;/ by zero&quot;</span>,<span class="string">&quot;model&quot;</span>:<span class="keyword">null</span>,<span class="string">&quot;models&quot;</span>:[],<span class="string">&quot;pageInfo&quot;</span>:<span class="keyword">null</span>,<span class="string">&quot;timelineInfo&quot;</span>:<span class="keyword">null</span>,<span class="string">&quot;extra&quot;</span>:<span class="keyword">null</span>,<span class="string">&quot;validationMessages&quot;</span>:<span class="keyword">null</span>,<span class="string">&quot;valid&quot;</span>:<span class="keyword">false</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>说明一下，本例子中，服务提供者的接口返回信息会统一封装在自定义类<code>Result</code>中，内容就是上述的<code>content</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#123;<span class="string">&quot;success&quot;</span>:<span class="keyword">false</span>,<span class="string">&quot;resultCode&quot;</span>:<span class="keyword">null</span>,<span class="string">&quot;message&quot;</span>:<span class="string">&quot;/ by zero&quot;</span>,<span class="string">&quot;model&quot;</span>:<span class="keyword">null</span>,<span class="string">&quot;models&quot;</span>:[],<span class="string">&quot;pageInfo&quot;</span>:<span class="keyword">null</span>,<span class="string">&quot;timelineInfo&quot;</span>:<span class="keyword">null</span>,<span class="string">&quot;extra&quot;</span>:<span class="keyword">null</span>,<span class="string">&quot;validationMessages&quot;</span>:<span class="keyword">null</span>,<span class="string">&quot;valid&quot;</span>:<span class="keyword">false</span>&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因此，异常信息我希望是<code>message</code>的内容：<code>/ by zero</code>，这样打日志时能够方便识别异常。</p>
+<h3 id="保留原始异常信息"><a href="#保留原始异常信息" class="headerlink" title="保留原始异常信息"></a>保留原始异常信息</h3><p>当调用服务时，如果服务返回的状态码不是200，就会进入到<code>Feign</code>的<code>ErrorDecoder</code>中，因此如果我们要解析异常信息，就要重写<code>ErrorDecoder</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> feign.Response;</span><br><span class="line"><span class="keyword">import</span> feign.Util;</span><br><span class="line"><span class="keyword">import</span> feign.codec.ErrorDecoder;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Author</span>: CipherCui</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>: 保留 feign 服务异常信息</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: Created in 1:29 2018/6/2</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">KeepErrMsgConfiguration</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ErrorDecoder <span class="title">errorDecoder</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> UserErrorDecoder();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 自定义错误</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserErrorDecoder</span> <span class="keyword">implements</span> <span class="title">ErrorDecoder</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> Logger logger = LoggerFactory.getLogger(getClass());</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Exception <span class="title">decode</span><span class="params">(String methodKey, Response response)</span> </span>&#123;</span><br><span class="line">            Exception exception = <span class="keyword">null</span>;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// 获取原始的返回内容</span></span><br><span class="line">                String json = Util.toString(response.body().asReader());</span><br><span class="line">                exception = <span class="keyword">new</span> RuntimeException(json);</span><br><span class="line">                <span class="comment">// 将返回内容反序列化为Result，这里应根据自身项目作修改</span></span><br><span class="line">                Result result = JsonMapper.nonEmptyMapper().fromJson(json, Result.class);</span><br><span class="line">                <span class="comment">// 业务异常抛出简单的 RuntimeException，保留原来错误信息</span></span><br><span class="line">                <span class="keyword">if</span> (!result.isSuccess()) &#123;</span><br><span class="line">                    exception = <span class="keyword">new</span> RuntimeException(result.getMessage());</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (IOException ex) &#123;</span><br><span class="line">                logger.error(ex.getMessage(), ex);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> exception;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面是一个例子，原理是根据<code>response.body()</code>反序列化为自定义的<code>Result</code>类，提取出里面的<code>message</code>信息，然后抛出<code>RuntimeException</code>，这样当进入到熔断方法中时，获取到的异常就是我们处理过的<code>RuntimeException</code>。</p>
+<p>注意上面的例子并不是通用的，但原理是相通的，大家要结合自身的项目作相应的修改。</p>
+<p>要使上面代码发挥作用，还需要在<code>@FeignClient</code>注解中指定<code>configuration</code>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@FeignClient(name = &quot;serviceId&quot;, fallbackFactory = TestServiceFallback.class, configuration = &#123;KeepErrMsgConfiguration.class&#125;)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">TestService</span> </span>&#123;</span><br><span class="line">    <span class="meta">@RequestMapping(value = &quot;/get/&#123;id&#125;&quot;, method = RequestMethod.GET)</span></span><br><span class="line">    <span class="function">String <span class="title">get</span><span class="params">(<span class="meta">@PathVariable(&quot;id&quot;)</span> Integer id)</span></span>;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="不进入熔断，直接抛出异常"><a href="#不进入熔断，直接抛出异常" class="headerlink" title="不进入熔断，直接抛出异常"></a>不进入熔断，直接抛出异常</h3><p>有时我们并不希望方法进入熔断逻辑，只是把异常原样往外抛。这种情况我们只需要捉住两个点：<strong>不进入熔断</strong>、<strong>原样</strong>。</p>
+<p>原样就是获取原始的异常，上面已经介绍过了，而不进入熔断，需要把异常封装成<code>HystrixBadRequestException</code>，对于<code>HystrixBadRequestException</code>，<code>Feign</code>会直接抛出，不进入熔断方法。</p>
+<p>因此我们只需要在上述<code>KeepErrMsgConfiguration</code>的基础上作一点修改即可：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Author</span>: CipherCui</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Description</span>: feign 服务异常不进入熔断</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@Date</span>: Created in 1:29 2018/6/2</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">NotBreakerConfiguration</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Bean</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> ErrorDecoder <span class="title">errorDecoder</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> UserErrorDecoder();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 自定义错误</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">UserErrorDecoder</span> <span class="keyword">implements</span> <span class="title">ErrorDecoder</span> </span>&#123;</span><br><span class="line">        <span class="keyword">private</span> Logger logger = LoggerFactory.getLogger(getClass());</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> Exception <span class="title">decode</span><span class="params">(String methodKey, Response response)</span> </span>&#123;</span><br><span class="line">            Exception exception = <span class="keyword">null</span>;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                String json = Util.toString(response.body().asReader());</span><br><span class="line">                exception = <span class="keyword">new</span> RuntimeException(json);</span><br><span class="line">                Result result = JsonMapper.nonEmptyMapper().fromJson(json, Result.class);</span><br><span class="line">                <span class="comment">// 业务异常包装成 HystrixBadRequestException，不进入熔断逻辑</span></span><br><span class="line">                <span class="keyword">if</span> (!result.isSuccess()) &#123;</span><br><span class="line">                    exception = <span class="keyword">new</span> HystrixBadRequestException(result.getMessage());</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (IOException ex) &#123;</span><br><span class="line">                logger.error(ex.getMessage(), ex);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> exception;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>为了更好的达到熔断效果，我们应该为每个接口指定<code>fallback</code>方法。而根据自身的业务特点，可以灵活的配置上述的<code>KeepErrMsgConfiguration</code>和<code>NotBreakerConfiguration</code>，或自己编写<code>Configuration</code>。</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Fegin/" rel="tag"># Fegin</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/11/17/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFegin%E4%B8%8EHystrix%E5%8F%8ARibbon%E5%85%B3%E7%B3%BB/" rel="prev" title="Fegin与Hystrix及Ribbon关系">
+                  <i class="fa fa-chevron-left"></i> Fegin与Hystrix及Ribbon关系
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/11/17/git%E5%9F%BA%E6%9C%AC%E6%93%8D%E4%BD%9C/" rel="next" title="git基本操作">
+                  git基本操作 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

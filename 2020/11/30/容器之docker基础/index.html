@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="Docker提供了一种将应用程序安全，隔离运行的一种方式，能够将应用程序依赖和库文件打包在一个容器中，后续再任何地方运行起来即可，其包含了应用程序所依赖相关环境，一次构建，任意运行（build once，run anywhere） Docker 包括三个基本概念 镜像（Image）：Docker 镜像（Image），就相当于是一个 root 文件系统。比如官方镜像 ubuntu:16.04 就包含">
+<meta property="og:type" content="article">
+<meta property="og:title" content="docker基础">
+<meta property="og:url" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E5%9F%BA%E7%A1%80/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="Docker提供了一种将应用程序安全，隔离运行的一种方式，能够将应用程序依赖和库文件打包在一个容器中，后续再任何地方运行起来即可，其包含了应用程序所依赖相关环境，一次构建，任意运行（build once，run anywhere） Docker 包括三个基本概念 镜像（Image）：Docker 镜像（Image），就相当于是一个 root 文件系统。比如官方镜像 ubuntu:16.04 就包含">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E5%9F%BA%E7%A1%80/6d20ecb467fa6d571d7dd74fe0187f07.png">
+<meta property="og:image" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E5%9F%BA%E7%A1%80/875f955cc9bb7b51036b58e59a2763bb.png">
+<meta property="article:published_time" content="2020-11-30T03:18:22.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.244Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="docker">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E5%9F%BA%E7%A1%80/6d20ecb467fa6d571d7dd74fe0187f07.png">
+
+
+<link rel="canonical" href="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E5%9F%BA%E7%A1%80/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>docker基础 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Docker-%E5%8C%85%E6%8B%AC%E4%B8%89%E4%B8%AA%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5"><span class="nav-number">1.</span> <span class="nav-text">Docker 包括三个基本概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Docker%E5%8E%9F%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">Docker原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%AE%B9%E5%99%A8%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="nav-number">3.</span> <span class="nav-text">容器优缺点</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#docker%E5%AE%B9%E5%99%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">4.</span> <span class="nav-text">docker容器命令</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E5%AE%B9%E5%99%A8"><span class="nav-number">5.</span> <span class="nav-text">创建容器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E5%85%A5%E5%AE%B9%E5%99%A8"><span class="nav-number">6.</span> <span class="nav-text">进入容器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#dockerfile"><span class="nav-number">7.</span> <span class="nav-text">dockerfile</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#docker-compose"><span class="nav-number">8.</span> <span class="nav-text">docker compose</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%91%BD%E4%BB%A4%E8%A1%8C"><span class="nav-number">8.0.1.</span> <span class="nav-text">命令行</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#docker-swarm"><span class="nav-number">9.</span> <span class="nav-text">docker swarm</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E5%AE%9E%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">9.0.1.</span> <span class="nav-text">基本实用命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#docker-service"><span class="nav-number">9.0.2.</span> <span class="nav-text">docker service</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Docker-Stack"><span class="nav-number">9.0.3.</span> <span class="nav-text">Docker Stack</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Swarm-Service%E7%BD%91%E7%BB%9C%E6%A8%A1%E5%9E%8B"><span class="nav-number">9.0.4.</span> <span class="nav-text">Swarm Service网络模型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#swarm%E7%BC%96%E6%8E%92%E5%B7%A5%E5%85%B7%E7%9A%84%E6%8E%A7%E5%88%B6%E5%8F%B0docker-portainer"><span class="nav-number">9.0.5.</span> <span class="nav-text">swarm编排工具的控制台docker portainer</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#docker-compose%E4%B8%8Edocker-swarm%E5%8C%BA%E5%88%AB"><span class="nav-number">10.</span> <span class="nav-text">docker compose与docker swarm区别</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Docker-Machine"><span class="nav-number">11.</span> <span class="nav-text">Docker Machine</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%95%9C%E5%83%8F%E5%8A%A0%E9%80%9F"><span class="nav-number">12.</span> <span class="nav-text">镜像加速</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E5%9F%BA%E7%A1%80/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          docker基础
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-11-30 11:18:22" itemprop="dateCreated datePublished" datetime="2020-11-30T11:18:22+08:00">2020-11-30</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E8%BF%90%E7%BB%B4%E6%8A%80%E6%9C%AF/" itemprop="url" rel="index"><span itemprop="name">运维技术</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>Docker提供了一种将应用程序安全，隔离运行的一种方式，能够将应用程序依赖和库文件打包在一个容器中，后续再任何地方运行起来即可，其包含了应用程序所依赖相关环境，一次构建，任意运行（build once，run anywhere）</p>
+<h2 id="Docker-包括三个基本概念"><a href="#Docker-包括三个基本概念" class="headerlink" title="Docker 包括三个基本概念"></a>Docker 包括三个基本概念</h2><ul>
+<li>镜像（Image）：Docker 镜像（Image），就相当于是一个 root 文件系统。比如官方镜像 ubuntu:16.04 就包含了完整的一套 Ubuntu16.04 最小系统的 root 文件系统。</li>
+<li>容器（Container）：镜像（Image）和容器（Container）的关系，就像是面向对象程序设计中的类和实例一样，镜像是静态的定义，容器是镜像运行时的实体。容器可以被创建、启动、停止、删除、暂停等。</li>
+<li>仓库（Repository）：仓库可看成一个代码控制中心，用来保存镜像。<br>Docker 使用客户端-服务器 (C/S) 架构模式，使用远程API来管理和创建Docker容器。</li>
+</ul>
+<p>Docker容器通过Docker镜像来创建。</p>
+<h2 id="Docker原理"><a href="#Docker原理" class="headerlink" title="Docker原理"></a>Docker原理</h2><img src="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E5%9F%BA%E7%A1%80/6d20ecb467fa6d571d7dd74fe0187f07.png" alt="docker架构" style="zoom: 50%;">
+
+<table>
+<thead>
+<tr>
+<th align="left">概念</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">Docker 镜像(Images)</td>
+<td>Docker 镜像是用于创建 Docker 容器的模板，比如 Ubuntu 系统。</td>
+</tr>
+<tr>
+<td align="left">Docker 容器(Container)</td>
+<td>容器是独立运行的一个或一组应用，是镜像运行时的实体。</td>
+</tr>
+<tr>
+<td align="left">Docker Daemon</td>
+<td>容器管理组件，守护进程，负载容器，镜像，存储，网络等管理</td>
+</tr>
+<tr>
+<td align="left">Docker 客户端(Client)</td>
+<td>Docker客户端通过命令行或者其他工具使用 <a target="_blank" rel="noopener" href="https://docs.docker.com/develop/sdk/">Docker SDK </a> 与Docker的守护进程（Docker Daemon）通信</td>
+</tr>
+<tr>
+<td align="left">Docker 主机(Host)</td>
+<td>一个物理或者虚拟的机器用于执行 Docker 守护进程和容器。</td>
+</tr>
+<tr>
+<td align="left">Docker Registry</td>
+<td>Docker 仓库用来保存镜像，可以理解为代码控制中的代码仓库。容器镜像仓库，负责存储，分发，打包</td>
+</tr>
+<tr>
+<td align="left">Docker Object</td>
+<td>容器对象，主要包含container和images</td>
+</tr>
+<tr>
+<td align="left">Docker Machine</td>
+<td>是一个简化Docker安装的命令行工具，通过一个简单的命令行即可在相应的平台上安装Docker，<br>比如VirtualBox、 Digital Ocean、Microsoft Azure。</td>
+</tr>
+<tr>
+<td align="left">docker swarm</td>
+<td>Swarm 集群中每台 Docker 主机称为一个节点。集群管理，容器编排项目</td>
+</tr>
+<tr>
+<td align="left">docker compose</td>
+<td>容器编排项目，Docker Compose 是一个在单个服务器或主机上创建多个容器的工具</td>
+</tr>
+</tbody></table>
+<p><a target="_blank" rel="noopener" href="https://hub.docker.com/">Docker Hub</a> 提供了庞大的镜像集合供使用。一个 Docker Registry 中可以包含多个仓库（Repository）；每个仓库可以包含多个标签（Tag）；每个标签对应一个镜像。</p>
+<p>通常，一个仓库会包含同一个软件不同版本的镜像，而标签就常用于对应该软件的各个版本。我们可以通过 &lt;仓库名&gt;:&lt;标签&gt; 的格式来指定具体是这个软件哪个版本的镜像。如果不给出标签，将以 latest 作为默认标签。</p>
+<h2 id="容器优缺点"><a href="#容器优缺点" class="headerlink" title="容器优缺点"></a>容器优缺点</h2><p>容器给应用程序开发环境带来很大的便利，从根本上解决了容器的环境依赖，打包等问题，然而，Docker带来的容器打包的便利，同时也带来了以下的挑战：</p>
+<ul>
+<li><p>容器如何调度，分发</p>
+</li>
+<li><p>多台机器如何协同工作</p>
+</li>
+<li><p>Docker主机故障时应用如何恢复</p>
+</li>
+<li><p>如何保障应用高可用，横向扩展，动态伸缩</p>
+</li>
+</ul>
+<img src="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E5%9F%BA%E7%A1%80/875f955cc9bb7b51036b58e59a2763bb.png" alt="容器挑战" style="zoom:50%;">
+
+<h2 id="docker容器命令"><a href="#docker容器命令" class="headerlink" title="docker容器命令"></a>docker容器命令</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker container ls -q </span><br><span class="line">docker container stop|start|rm nginx</span><br></pre></td></tr></table></figure>
+
+<h2 id="创建容器"><a href="#创建容器" class="headerlink" title="创建容器"></a>创建容器</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker run --name nginx-test -p 8080:80 -d nginx</span><br></pre></td></tr></table></figure>
+
+<h2 id="进入容器"><a href="#进入容器" class="headerlink" title="进入容器"></a>进入容器</h2><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker exec -it nginx sh|bash</span><br></pre></td></tr></table></figure>
+
+<h2 id="dockerfile"><a href="#dockerfile" class="headerlink" title="dockerfile"></a>dockerfile</h2><p><a target="_blank" rel="noopener" href="https://www.runoob.com/docker/docker-dockerfile.html" title="dockerfile描述文件细节">如何写dockerfile文件</a></p>
+<h2 id="docker-compose"><a href="#docker-compose" class="headerlink" title="docker compose"></a>docker compose</h2><p>容器编排工具 <a target="_blank" rel="noopener" href="https://www.runoob.com/docker/docker-compose.html" title="docker-compose描述文件细节">如何写docker-compose.yml</a></p>
+<h4 id="命令行"><a href="#命令行" class="headerlink" title="命令行"></a>命令行</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker-compose up</span><br><span class="line">docker-compose up -d //后台运行</span><br><span class="line">docker-compose ps</span><br></pre></td></tr></table></figure>
+
+<h2 id="docker-swarm"><a href="#docker-swarm" class="headerlink" title="docker swarm"></a>docker swarm</h2><p>Swarm 集群中每台 Docker 主机称为一个节点。其中主动初始化一个 Swarm 集群的节点称为管理节点（Manager），加入一个Swarm 集群的节点称为工作节点（Worker Node）。工作节点是任务执行节点，管理节点将任务下发至工作节点执行。管理节点默认也作为工作节点。一个 Swarm 集群可以有多个管理节点，但只有一个管理节点可以成为 leader</p>
+<p>swarm 集群由管理节点（manager）和工作节点（work node）构成。</p>
+<p>swarm mananger：负责整个集群的管理工作包括集群配置、服务管理等所有跟集群有关的工作。<br>work node：即图中的 available node，主要负责运行相应的服务来执行任务（task）。</p>
+<h4 id="基本实用命令"><a href="#基本实用命令" class="headerlink" title="基本实用命令"></a>基本实用命令</h4><ul>
+<li>docker swarm init –advertise-addr 192.168.58.144</li>
+<li>docker swarm join 。。。</li>
+<li>docker swarm leave –f</li>
+<li>docker node ls</li>
+<li>docker node ls –filter role=worker</li>
+<li>docker node ls –filter role=manager</li>
+<li>docker node update swarm02 –role=worker //将swarm02节点降级为worker节点</li>
+<li>docker service inspect mynginx</li>
+<li>docker service create –replicas 3 -p 8888:80 –name mynginx nginx</li>
+<li>docker service rm mynginx</li>
+<li>docker stack rm getstartedlab</li>
+<li>docker stack deploy -c docker-compose.yml getstartedlab</li>
+</ul>
+<h4 id="docker-service"><a href="#docker-service" class="headerlink" title="docker service"></a>docker service</h4><p>与docker swarm一起使用，docker service部署的是单个服务</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker service create --replicas 3 -p 8888:80 --name mynginx nginx</span><br></pre></td></tr></table></figure>
+
+<h4 id="Docker-Stack"><a href="#Docker-Stack" class="headerlink" title="Docker Stack"></a>Docker Stack</h4><p>与docker swarm一起使用，使用docker-compose.yml配置文件，进行多服务编排部署</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker stack  deploy -c docker-compose1.yml phpadmin</span><br><span class="line"></span><br><span class="line">docker stack rm getstartedlab</span><br></pre></td></tr></table></figure>
+
+<h4 id="Swarm-Service网络模型"><a href="#Swarm-Service网络模型" class="headerlink" title="Swarm Service网络模型"></a>Swarm Service网络模型</h4><ul>
+<li><strong>Overlay networks</strong> 管理 Swarm 中 Docker 守护进程间的通信。你可以将服务附加到一个或多个已存在的 overlay 网络上，使得服务与服务之间能够通信。</li>
+<li><strong>ingress network</strong> 是一个特殊的 overlay 网络，用于服务节点间的负载均衡。当任何 Swarm 节点在发布的端口上接收到请求时，它将该请求交给一个名为 IPVS 的模块。IPVS 跟踪参与该服务的所有IP地址，选择其中的一个，并通过 ingress 网络将请求路由到它。<br>初始化或加入 Swarm 集群时会自动创建 ingress 网络，大多数情况下，用户不需要自定义配置，但是 docker 17.05 和更高版本允许你自定义。</li>
+<li><strong>docker_gwbridge</strong>是一种桥接网络，将 overlay 网络（包括 ingress 网络）连接到一个单独的 Docker 守护进程的物理网络。默认情况下，服务正在运行的每个容器都连接到本地 Docker 守护进程主机的 docker_gwbridge 网络。<br>docker_gwbridge 网络在初始化或加入 Swarm 时自动创建。大多数情况下，用户不需要自定义配置，但是 Docker 允许自定义。</li>
+</ul>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">docker network create</span><br><span class="line">docker network connect</span><br><span class="line">docker network ls</span><br><span class="line">docker network rm</span><br><span class="line">docker network disconnect</span><br><span class="line">docker network inspect</span><br><span class="line">docker run --rm --network=host alpine ifconfig</span><br></pre></td></tr></table></figure>
+
+<h4 id="swarm编排工具的控制台docker-portainer"><a href="#swarm编排工具的控制台docker-portainer" class="headerlink" title="swarm编排工具的控制台docker portainer"></a>swarm编排工具的控制台docker portainer</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">docker service create \</span><br><span class="line">--name portainer \</span><br><span class="line">--publish 9000:9000 \</span><br><span class="line">--constraint &#x27;node.role == manager&#x27; \</span><br><span class="line">--mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \</span><br><span class="line">portainer/portainer \</span><br><span class="line">-H unix:///var/run/docker.sock</span><br></pre></td></tr></table></figure>
+
+<h2 id="docker-compose与docker-swarm区别"><a href="#docker-compose与docker-swarm区别" class="headerlink" title="docker compose与docker swarm区别"></a>docker compose与docker swarm区别</h2><p>Docker Swarm 和 Docker Compose 一样，都是 Docker 官方容器编排项目，但不同的是，Docker Compose 是一个在单个服务器或主机上创建多个容器的工具，而 Docker Swarm 则可以在多个服务器或主机上创建容器集群服务，对于微服务的部署，显然 Docker Swarm 会更加适合</p>
+<h2 id="Docker-Machine"><a href="#Docker-Machine" class="headerlink" title="Docker Machine"></a>Docker Machine</h2><p>创建Docker主机（开放远程2375端口 安装docker）</p>
+<ul>
+<li>docker-machine create -d hyperv –hyperv-virtual-switch “myswitch” myvm2</li>
+<li>docker-machine env myvm3</li>
+<li>docker-machine ssh myvm1</li>
+<li>docker-machine ls</li>
+<li>docker-machine stop</li>
+<li>docker-machine start</li>
+<li>docker-machine env</li>
+<li>docker-machine regenerate-certs</li>
+</ul>
+<h2 id="镜像加速"><a href="#镜像加速" class="headerlink" title="镜像加速"></a>镜像加速</h2><p><a target="_blank" rel="noopener" href="http://hub-mirror.c.163.com/">http://hub-mirror.c.163.com</a></p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/docker/" rel="tag"># docker</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/11/27/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BRabbitMQ%E5%9F%BA%E7%A1%80/" rel="prev" title="RabbitMQ基础">
+                  <i class="fa fa-chevron-left"></i> RabbitMQ基础
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/11/30/%E5%AE%B9%E5%99%A8%E4%B9%8Bdocker%E7%BD%91%E7%BB%9C/" rel="next" title="docker网络">
+                  docker网络 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

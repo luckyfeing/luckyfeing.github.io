@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="整体架构分层 第一层：service 层，接口层，给服务提供者和消费者来实现的 第二层：config 层，配置层，主要是对 dubbo 进行各种配置的 第三层：proxy 层，服务代理层，无论是 consumer 还是 provider，dubbo 都会给你生成代理，代理之间进行网络通信 第四层：registry 层，服务注册层，负责服务的注册与发现 第五层：cluster 层，集群层，封装多个服">
+<meta property="og:type" content="article">
+<meta property="og:title" content="dubbo简单使用">
+<meta property="og:url" content="http://example.com/2021/01/15/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bdubbo%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="整体架构分层 第一层：service 层，接口层，给服务提供者和消费者来实现的 第二层：config 层，配置层，主要是对 dubbo 进行各种配置的 第三层：proxy 层，服务代理层，无论是 consumer 还是 provider，dubbo 都会给你生成代理，代理之间进行网络通信 第四层：registry 层，服务注册层，负责服务的注册与发现 第五层：cluster 层，集群层，封装多个服">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2021/01/15/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bdubbo%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/4ec2d5628535e5ddc2c84b48ab2f0cebcc1b62ab.jpeg">
+<meta property="og:image" content="http://example.com/2021/01/15/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bdubbo%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/c75c10385343fbf2472e75616d97618464388f65.jpeg">
+<meta property="og:image" content="http://example.com/2021/01/15/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bdubbo%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/20180831152853913">
+<meta property="article:published_time" content="2021-01-15T01:44:53.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.253Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="dubbo">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2021/01/15/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bdubbo%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/4ec2d5628535e5ddc2c84b48ab2f0cebcc1b62ab.jpeg">
+
+
+<link rel="canonical" href="http://example.com/2021/01/15/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bdubbo%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>dubbo简单使用 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84%E5%88%86%E5%B1%82"><span class="nav-number">1.</span> <span class="nav-text">整体架构分层</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="nav-number">2.</span> <span class="nav-text">工作原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%80%9A%E4%BF%A1%E5%8D%8F%E8%AE%AE"><span class="nav-number">3.</span> <span class="nav-text">通信协议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%BA%8F%E5%88%97%E5%8C%96"><span class="nav-number">4.</span> <span class="nav-text">序列化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Dubbo%E6%9C%8D%E5%8A%A1%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1"><span class="nav-number">5.</span> <span class="nav-text">Dubbo服务负载均衡</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%9B%86%E7%BE%A4%E5%AE%B9%E9%94%99%E7%AD%96%E7%95%A5"><span class="nav-number">6.</span> <span class="nav-text">集群容错策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Dubbo%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86"><span class="nav-number">7.</span> <span class="nav-text">Dubbo动态代理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Dubbo%E7%9A%84SPI%E6%9C%BA%E5%88%B6"><span class="nav-number">8.</span> <span class="nav-text">Dubbo的SPI机制</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%8D%E5%8A%A1%E9%99%8D%E7%BA%A7"><span class="nav-number">9.</span> <span class="nav-text">服务降级</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95%EF%BC%9A"><span class="nav-number">9.0.0.1.</span> <span class="nav-text">解决方法：</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#mock%E9%85%8D%E7%BD%AE%E6%96%B9%E5%BC%8F"><span class="nav-number">9.0.0.2.</span> <span class="nav-text">mock配置方式</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%B1%E8%B4%A5%E9%87%8D%E8%AF%95%E5%92%8C%E8%B6%85%E6%97%B6%E9%87%8D%E8%AF%95"><span class="nav-number">10.</span> <span class="nav-text">失败重试和超时重试</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%B7%AF%E7%94%B1%E8%A7%84%E5%88%99"><span class="nav-number">11.</span> <span class="nav-text">路由规则</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A0%87%E7%AD%BE%E8%B7%AF%E7%94%B1"><span class="nav-number">11.1.</span> <span class="nav-text">标签路由</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E9%99%8D%E7%BA%A7%E7%BA%A6%E5%AE%9A"><span class="nav-number">11.1.0.1.</span> <span class="nav-text">降级约定</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%A0%87%E7%AD%BE%E8%B7%AF%E7%94%B1%E7%9A%84%E5%9D%91"><span class="nav-number">11.1.0.2.</span> <span class="nav-text">标签路由的坑</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%A0%87%E7%AD%BE%E8%B7%AF%E7%94%B1%E7%9A%84%E5%AE%9E%E7%8E%B0"><span class="nav-number">11.1.0.3.</span> <span class="nav-text">标签路由的实现</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9D%A1%E4%BB%B6%E8%B7%AF%E7%94%B1"><span class="nav-number">11.2.</span> <span class="nav-text">条件路由</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E5%90%91%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83%E5%86%99%E5%85%A5%E8%B7%AF%E7%94%B1%E8%A7%84%E5%88%99%EF%BC%9A-%E9%80%9A%E5%B8%B8%E7%94%B1%E7%9B%91%E6%8E%A7%E4%B8%AD%E5%BF%83%E6%88%96%E6%B2%BB%E7%90%86%E4%B8%AD%E5%BF%83%E7%9A%84%E9%A1%B5%E9%9D%A2%E5%AE%8C%E6%88%90"><span class="nav-number">11.2.0.1.</span> <span class="nav-text">向注册中心写入路由规则：(通常由监控中心或治理中心的页面完成)</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9D%A1%E4%BB%B6%E8%B7%AF%E7%94%B1%E8%A7%84%E5%88%99"><span class="nav-number">11.2.1.</span> <span class="nav-text">条件路由规则</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#admin%E4%B8%8A%E9%85%8D%E7%BD%AE%E6%9D%A1%E4%BB%B6%E8%B7%AF%E7%94%B1"><span class="nav-number">11.2.1.1.</span> <span class="nav-text">admin上配置条件路由</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%84%9A%E6%9C%AC%E8%B7%AF%E7%94%B1"><span class="nav-number">11.3.</span> <span class="nav-text">脚本路由</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Dubbo%E6%9C%8D%E5%8A%A1%E9%99%90%E6%B5%81"><span class="nav-number">12.</span> <span class="nav-text">Dubbo服务限流</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#executes%E7%9B%B4%E6%8E%A5%E9%99%90%E6%B5%81%E2%80%93-%E4%BB%85%E6%8F%90%E4%BE%9B%E8%80%85%E7%AB%AF"><span class="nav-number">12.1.</span> <span class="nav-text">executes直接限流– 仅提供者端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#accepts%E9%99%90%E6%B5%81-%E2%80%93-%E4%BB%85%E6%8F%90%E4%BE%9B%E8%80%85%E7%AB%AF"><span class="nav-number">12.2.</span> <span class="nav-text">accepts限流 – 仅提供者端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#tps%E9%99%90%E6%B5%81-%E4%BB%85%E6%9C%8D%E5%8A%A1%E7%AB%AF"><span class="nav-number">12.3.</span> <span class="nav-text">tps限流-仅服务端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#actives%E9%99%90%E6%B5%81-%E2%80%93-%E4%B8%A4%E7%AB%AF"><span class="nav-number">12.4.</span> <span class="nav-text">actives限流 – 两端</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#%E6%8F%90%E4%BE%9B%E8%80%85%E7%AB%AF%E9%99%90%E6%B5%81"><span class="nav-number">12.4.0.1.</span> <span class="nav-text">提供者端限流</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#connections%E9%99%90%E6%B5%81"><span class="nav-number">12.5.</span> <span class="nav-text">connections限流</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%97%B4%E6%8E%A5%E9%99%90%E6%B5%81-%E5%BB%B6%E8%BF%9F%E8%BF%9E%E6%8E%A5-%E2%80%93-%E4%BB%85%E6%B6%88%E8%B4%B9%E8%80%85%E7%AB%AF"><span class="nav-number">12.6.</span> <span class="nav-text">间接限流 延迟连接 – 仅消费者端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%97%B4%E6%8E%A5%E9%99%90%E6%B5%81-%E7%B2%98%E8%BF%9E%E8%BF%9E%E6%8E%A5-%E2%80%93-%E4%BB%85%E6%B6%88%E8%B4%B9%E8%80%85"><span class="nav-number">12.7.</span> <span class="nav-text">间接限流 粘连连接 – 仅消费者</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AB%AF%E5%8F%A3%E7%9B%91%E6%8E%A7"><span class="nav-number">13.</span> <span class="nav-text">端口监控</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B6%E5%AE%83"><span class="nav-number">14.</span> <span class="nav-text">其它</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/01/15/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bdubbo%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          dubbo简单使用
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-01-15 09:44:53" itemprop="dateCreated datePublished" datetime="2021-01-15T09:44:53+08:00">2021-01-15</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/dubbo/" itemprop="url" rel="index"><span itemprop="name">dubbo</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="整体架构分层"><a href="#整体架构分层" class="headerlink" title="整体架构分层"></a>整体架构分层</h2><ul>
+<li>第一层：service 层，接口层，给服务提供者和消费者来实现的</li>
+<li>第二层：config 层，配置层，主要是对 dubbo 进行各种配置的</li>
+<li>第三层：proxy 层，服务代理层，无论是 consumer 还是 provider，dubbo 都会给你生成代理，代理之间进行网络通信</li>
+<li>第四层：registry 层，服务注册层，负责服务的注册与发现</li>
+<li>第五层：cluster 层，集群层，封装多个服务提供者的路由以及负载均衡，将多个实例组合成一个服务</li>
+<li>第六层：monitor 层，监控层，对 rpc 接口的调用次数和调用时间进行监控</li>
+<li>第七层：protocal 层，远程调用层，封装 rpc 调用</li>
+<li>第八层：exchange 层，信息交换层，封装请求响应模式，同步转异步</li>
+<li>第九层：transport 层，网络传输层，抽象 mina 和 netty 为统一接口</li>
+<li>第十层：serialize 层，数据序列化层 </li>
+</ul>
+<p><img src="/2021/01/15/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bdubbo%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/4ec2d5628535e5ddc2c84b48ab2f0cebcc1b62ab.jpeg" alt="img"></p>
+<h2 id="工作原理"><a href="#工作原理" class="headerlink" title="工作原理"></a>工作原理</h2><p><img src="/2021/01/15/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bdubbo%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/c75c10385343fbf2472e75616d97618464388f65.jpeg" alt="img"><br>dubbo工作原理要理解的方向：</p>
+<ul>
+<li>dubbo 工作原理：服务注册、注册中心、消费者、代理通信、负载均衡；</li>
+<li>网络通信、序列化：dubbo 协议、长连接、NIO、hessian 序列化协议；</li>
+<li>负载均衡策略、集群容错策略、动态代理策略</li>
+</ul>
+<h2 id="通信协议"><a href="#通信协议" class="headerlink" title="通信协议"></a>通信协议</h2><ul>
+<li>dubbo协议，基于 hessian2作为序列化协议，单一长连接，使用NIO，使用IO多路复用模型。适用多个消费者如100个，几个服务提供者的场景，建立100个连接就可以一直通信。使用的场景是：传输数据量小（每次请求在 100kb 以内），但是并发量很高。</li>
+<li>rmi 协议，走Java 二进制序列化，多个短连接，适合消费者和提供者数量差不多的情况，适用于文件的传输，一般较少用。</li>
+<li>hessian 协议，走hessian2序列化协议，多个短连接，适用于提供者数量比消费者数量还多的情况，适用于文件的传输，一般较少用。</li>
+<li>http 协议，走 json 序列化。</li>
+<li>webservice协议，走 SOAP 文本。</li>
+<li>grpc协议，与grpc框架提供的接口通信</li>
+<li>injvm协议：jvm进程通信</li>
+<li>memcached：</li>
+<li>Thrift：Thrift框架通信</li>
+<li>redis：</li>
+<li>rest：应该就是指的http协议。</li>
+</ul>
+<h2 id="序列化"><a href="#序列化" class="headerlink" title="序列化"></a>序列化</h2><p>Serialization: java、compactedjava、nativejava、fastjson、fst、hessian2、kryo、gson、avro 、protostuff、protobuf</p>
+<p>其中默认hessian2。其中java、compactedjava、nativejava属于原生java的序列化。</p>
+<p>hessian序列化，java二级制序列化，json序列化，protocol buffer序列化</p>
+<h2 id="Dubbo服务负载均衡"><a href="#Dubbo服务负载均衡" class="headerlink" title="Dubbo服务负载均衡"></a>Dubbo服务负载均衡</h2><p>可以设置在消费者端，亦可设置在提供者端；可以设置在接口级别，亦可设置在方法级别。其限制的是流向，而非流量</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:service</span> <span class="attr">interface</span>=<span class="string">&quot;com.foo.BarService&quot;</span> <span class="attr">loadbalance</span>=<span class="string">&quot;leastactive&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:method</span> <span class="attr">name</span>=<span class="string">&quot;sayHello&quot;</span> <span class="attr">connections</span>=<span class="string">&quot;10&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dubbo:service</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>基于权重随机算法的 RandomLoadBalance  默认路由</li>
+<li>基于加权轮询算法的 RoundRobinLoadBalance</li>
+<li>基于最少活跃调用数算法的 LeastActiveLoadBalance</li>
+<li>基于 hash一致性的 ConsistentHashLoadBalance</li>
+<li>最少响应时间加权算法的ShortestResponseLoadBalance</li>
+</ul>
+<h2 id="集群容错策略"><a href="#集群容错策略" class="headerlink" title="集群容错策略"></a>集群容错策略</h2><ul>
+<li><p>failover cluster 失败自动切换，自动重试其他机器，<strong>默认</strong>就是这个，常见于读操作。（失败重试其它机器）</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:service</span> <span class="attr">retries</span>=<span class="string">&quot;2&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">retries</span>=<span class="string">&quot;2&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:method</span> <span class="attr">name</span>=<span class="string">&quot;findFoo&quot;</span> <span class="attr">retries</span>=<span class="string">&quot;2&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dubbo:reference</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>failfast cluster 一次调用失败就立即失败，常见于非幂等性的写操作，比如新增一条记录（调用失败就立即失败）</p>
+</li>
+<li><p>failsafe cluster 出现异常时忽略掉，常用于不重要的接口调用，比如记录日志。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:service</span> <span class="attr">cluster</span>=<span class="string">&quot;failsafe&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">cluster</span>=<span class="string">&quot;failsafe&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>failback cluster 失败了后台自动记录请求，然后定时重发，比较适合于写消息队列这种。</p>
+</li>
+<li><p>forking cluster <strong>并行调用</strong>多个 provider，只要一个成功就立即返回。常用于实时性要求比较高的读操作，但是会浪费更多的服务资源，可通过 <code>forks=&quot;2&quot;</code> 来设置最大并行数。</p>
+</li>
+<li><p>broadcacst cluster 逐个调用所有的 provider。任何一个 provider 出错则报错（从<code>2.1.0</code> 版本开始支持）。通常用于通知所有提供者更新缓存或日志等本地资源信息。</p>
+</li>
+</ul>
+<h2 id="Dubbo动态代理"><a href="#Dubbo动态代理" class="headerlink" title="Dubbo动态代理"></a>Dubbo动态代理</h2><p>默认使用 javassist 动态字节码生成，创建代理类。但是可以通过 spi 扩展机制配置自己的动态代理策略。</p>
+<h2 id="Dubbo的SPI机制"><a href="#Dubbo的SPI机制" class="headerlink" title="Dubbo的SPI机制"></a>Dubbo的SPI机制</h2><p>SPI全称Service Provider Interface，是Java提供的一套用来被第三方实现或者扩展的接口，它可以用来启用框架扩展和替换组件。 SPI的作用就是为这些被扩展的API寻找服务实现。</p>
+<p>需要在resources目录下新建META-INF/services目录，并且在这个目录下新建一个与上述接口的全限定名一致的文件，在这个文件中写入接口的实现类的全限定名：ServiceLoader<UploadCDN> uploadCDN = ServiceLoader.load(UploadCDN.class);</UploadCDN></p>
+<p>java的spi机制有着如下的弊端：</p>
+<ul>
+<li>只能遍历所有的实现，并全部实例化。</li>
+<li>配置文件中只是简单的列出了所有的扩展实现，而没有给他们命名。导致在程序中很难去准确的引用它们。</li>
+<li>扩展如果依赖其他的扩展，做不到自动注入和装配。</li>
+<li>扩展很难和其他的框架集成，比如扩展里面依赖了一个Spring bean，原生的Java SPI不支持。</li>
+</ul>
+<p>dubbo的spi有如下几个概念：<br>  （1）<strong>扩展点</strong>：一个接口。<br>  （2）<strong>扩展</strong>：扩展（接口）的实现。<br>  （3）<strong>扩展自适应实例：</strong>其实就是一个Extension的代理，它实现了扩展点接口。在调用扩展点的接口方法时，会根据实际的参数来决定要使用哪个扩展。dubbo会根据接口中的参数，自动地决定选择哪个实现。<br>  （4）**@SPI**:该注解作用于扩展点的接口上，表明该接口是一个扩展点。<br>  （5）**@Adaptive：**@Adaptive注解用在扩展接口的方法上。表示该方法是一个自适应方法。Dubbo在为扩展点生成自适应实例时，如果方法有@Adaptive注解，会为该方法生成对应的代码。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Protocol protocol = ExtensionLoader.getExtensionLoader(Protocol.class).getAdaptiveExtension();</span><br></pre></td></tr></table></figure>
+
+<p><code>@SPI(&quot;dubbo&quot;)</code> 说的是，通过 SPI 机制来提供实现类，实现类是通过 dubbo 作为默认 key 去配置文件里找到的，配置文件名称与接口全限定名一样的，通过 dubbo 作为 key 可以找到默认的实现类就是 <code>com.alibaba.dubbo.rpc.protocol.dubbo.DubboProtocol</code>。</p>
+<p>如果想要动态替换掉默认的实现类，需要使用 <code>@Adaptive</code> 接口，Protocol 接口中，有两个方法加了 <code>@Adaptive</code> 注解，就是说那俩接口会被代理实现。</p>
+<p> Protocol 接口搞了俩 <code>@Adaptive</code> 注解标注了方法，在运行的时候会针对 Protocol 生成代理类，这个代理类的那俩方法里面会有代理代码，代理代码会在运行的时候动态根据 url 中的 protocol 来获取那个 key，默认是 dubbo，你也可以自己指定，你如果指定了别的 key，那么就会获取别的实现类的实例了。</p>
+<p>/META_INF/dubbo/internal/com.alibaba.dubbo.rpc.Protocol目录下文件内容为：定义自己的扩展类</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dubbo&#x3D;com.alibaba.dubbo.rpc.protocol.dubbo.DubboProtocol</span><br><span class="line">http&#x3D;com.alibaba.dubbo.rpc.protocol.http.HttpProtocol</span><br><span class="line">hessian&#x3D;com.alibaba.dubbo.rpc.protocol.hessian.HessianProtocol</span><br></pre></td></tr></table></figure>
+
+<h2 id="服务降级"><a href="#服务降级" class="headerlink" title="服务降级"></a>服务降级</h2><p>1）多个服务之间可能由于服务没有启动或者网络不通，调用中会出现远程调用失败;<br>2) 服务请求过大，需要停止部分服务以保证核心业务的正常运行；<br>可以使用Dubbo的服务降级来实现，即在服务宕掉或者并发数太高导致的RpcException异常时，进行友好的处理或者提示，而不是内部报错导致系统不可用。</p>
+<h5 id="解决方法："><a href="#解决方法：" class="headerlink" title="解决方法："></a><strong>解决方法：</strong></h5><p>dubbo提供了mock配置，可以很好的实现dubbo服务降级。</p>
+<h5 id="mock配置方式"><a href="#mock配置方式" class="headerlink" title="mock配置方式"></a>mock配置方式</h5><ul>
+<li>服务返回固定值：配置了mock参数之后，假设在调用服务的时候，远程服务没有启动，或者各种网络异常了，那远程服务会把这个mock配置的值返回，也就是会返回123456…通过这种方式就可以避免了因为服务调用不了而出现异常错误而带来的程序不可用(起码是有值返回的，然后可以根据值进行业务逻辑处理判断等等)。</li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">id</span>=<span class="string">&quot;xxxService&quot;</span> <span class="attr">interface</span>=<span class="string">&quot;com.x..service.xxxxService&quot;</span> <span class="attr">check</span>=<span class="string">&quot;false&quot;</span> <span class="attr">mock</span>=<span class="string">&quot;return 123456...&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>服务返回true：配置了mock参数之后，假设在调用服务的时候，远程服务没有启动，或者各种网络异常了，那远程服务会去寻找自定义的mock业务处理类进行业务处理。需要配置自定义的mock业务处理类进行业务处理。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">id</span>=<span class="string">&quot;xxxService&quot;</span> <span class="attr">interface</span>=<span class="string">&quot;com.x..service.xxxxService&quot;</span> <span class="attr">check</span>=<span class="string">&quot;false&quot;</span> <span class="attr">mock</span>=<span class="string">&quot;true&quot;</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//服务类上增加Mock，实现服务，重写方法，返回降级之后的返回值</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">xxxxServiceMock</span> <span class="keyword">implements</span> <span class="title">xxxxService</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> String <span class="title">getXXXX</span><span class="params">(<span class="keyword">int</span> id)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="string">&quot;this is exception 自定义....&quot;</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>管理界面手动配置：</p>
+</li>
+</ul>
+<p><img src="/2021/01/15/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bdubbo%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/20180831152853913" alt="img"></p>
+<p><strong>屏蔽：force.mock</strong> （即：屏蔽请求，直接返回某个值，如上面的字符串，*mock=”return 123456…”*）;</p>
+<p><strong>容错：fail.mock</strong> （即：允许请求，在请求失败的时候，再返回某个值，如：*mock=”fail:return 123456…”*）;</p>
+<h2 id="失败重试和超时重试"><a href="#失败重试和超时重试" class="headerlink" title="失败重试和超时重试"></a>失败重试和超时重试</h2><p>失败重试，就是 consumer 调用 provider 要是失败了，比如抛异常了，此时应该是可以重试的，或者调用超时也可以重试。配置如下：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">id</span>=<span class="string">&quot;xxxx&quot;</span> <span class="attr">interface</span>=<span class="string">&quot;xx&quot;</span> <span class="attr">check</span>=<span class="string">&quot;true&quot;</span> <span class="attr">async</span>=<span class="string">&quot;false&quot;</span> <span class="attr">retries</span>=<span class="string">&quot;3&quot;</span> <span class="attr">timeout</span>=<span class="string">&quot;2000&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><code>timeout</code>：一般设置为 <code>200ms</code>，我们认为不能超过 <code>200ms</code> 还没返回。</li>
+<li><code>retries</code>：设置 retries，一般是在读请求的时候，比如你要查询个数据，你可以设置个 retries，如果第一次没读到，报错，重试指定的次数，尝试再次读取。</li>
+</ul>
+<h2 id="路由规则"><a href="#路由规则" class="headerlink" title="路由规则"></a>路由规则</h2><ul>
+<li>标签路由TagRouter：以Provider应用为粒度配置路由规则。</li>
+<li>条件路由ConditionRouter：支持以服务或Consumer应用为粒度配置路由规则。</li>
+<li>脚本路由ScriptRouter：</li>
+</ul>
+<h3 id="标签路由"><a href="#标签路由" class="headerlink" title="标签路由"></a>标签路由</h3><p>标签路由通过将某一个或多个服务的提供者划分到同一个分组，约束流量只在指定分组中流转，从而实现流量隔离的目的，可以作为蓝绿发布、灰度发布等场景的能力基础。</p>
+<p>标签主要是指对Provider端应用实例的分组，目前有两种方式可以完成实例分组，分别是动态规则打标和静态规则打标，其中动态规则相较于静态规则优先级更高，而当两种规则同时存在且出现冲突时，将以动态规则为准。</p>
+<p>请求标签的作用域为每一次 invocation，使用 attachment 来传递请求标签，注意保存在 attachment 中的值将会在一次完整的远程调用中持续传递，得益于这样的特性，我们只需要在起始调用时，通过一行代码的设置，达到标签的持续传递。</p>
+<h5 id="降级约定"><a href="#降级约定" class="headerlink" title="降级约定"></a>降级约定</h5><blockquote>
+<p>consumer携带request.tag=tag1 时优先选择 标记了tag=tag1 的 provider。若集群中不存在与请求标记对应的服务，默认将降级请求 tag为空的provider；如果要改变这种默认行为，即找不到匹配tag1的provider返回异常，需设置request.tag.force=true。</p>
+</blockquote>
+<blockquote>
+<p>comsumer侧request.tag未设置时，只会匹配tag为空的provider。即使集群中存在可用的服务，若tag不匹配也就无法调用，这与约定1不同，携带标签的请求可以降级访问到无标签的服务，但不携带标签/携带其他种类标签的请求永远无法访问到其他标签的服务。</p>
+</blockquote>
+<h5 id="标签路由的坑"><a href="#标签路由的坑" class="headerlink" title="标签路由的坑"></a>标签路由的坑</h5><p>dubbo的consumer侧的Filter对象ConsumerContextFilter每次请求后都会清空Attachments，导致再次发起请求就无法找到tag，所以需要在整个生命周期内保存tag。一般通过线程的ThreadLocal进行实现。</p>
+<h5 id="标签路由的实现"><a href="#标签路由的实现" class="headerlink" title="标签路由的实现"></a>标签路由的实现</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** 实现逻辑为：</span></span><br><span class="line"><span class="comment"> * 1. 对于 Consumer 方，在调用 Provider 时，&#123;<span class="doctag">@link</span> DubboConsumerRouterTagClusterInterceptor&#125; 会将 &#123;<span class="doctag">@link</span> DubboRouterTagContextHolder&#125; 中的 Tag 通过 Dubbo 隐式传参。</span></span><br><span class="line"><span class="comment"> *      同时，Dubbo 自带 &#123;<span class="doctag">@link</span> TagRouter&#125;，会根据该参数，会选择符合该 Tag 的 Provider。</span></span><br><span class="line"><span class="comment"> * 2. 对于 Provider 方，在通过 Dubbo 隐式传参获得到 Tag 时，会设置到 &#123;<span class="doctag">@link</span> DubboRouterTagContextHolder&#125; 中。</span></span><br><span class="line"><span class="comment"> *      这样，在 Provider 作为 Consumer 角色时，调用其它 Provider 时，可以继续实现标签路由的功能。</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Activate(group = &#123;CommonConstants.PROVIDER, CommonConstants.CONSUMER&#125;, order = -1000)</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DubboProviderRouterTagFilter</span> <span class="keyword">implements</span> <span class="title">Filter</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Result <span class="title">invoke</span><span class="params">(Invoker&lt;?&gt; invoker, Invocation invocation)</span> <span class="keyword">throws</span> RpcException </span>&#123;</span><br><span class="line">       <span class="comment">// 从 Dubbo 隐式传参获得 Dubbo Tag</span></span><br><span class="line">        String dubboTag = invocation.getAttachment(CommonConstants.TAG_KEY);</span><br><span class="line">        <span class="keyword">boolean</span> hasDubboTag = StringUtils.hasText(dubboTag);</span><br><span class="line">        <span class="keyword">if</span> (hasDubboTag) &#123;</span><br><span class="line">            invocation.setAttachment(CommonConstants.TAG_KEY, dubboTag);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 继续调用</span></span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> invoker.invoke(invocation);</span><br><span class="line">        &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">            <span class="comment">// 清理</span></span><br><span class="line">            <span class="keyword">if</span> (hasDubboTag) &#123;</span><br><span class="line">                DubboRouterTagContextHolder.clear();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="条件路由"><a href="#条件路由" class="headerlink" title="条件路由"></a>条件路由</h3><p>[服务消费者匹配条件] =&gt; [服务提供者匹配条件]  如 host = 10.20.153.10 =&gt; host = 10.20.153.11</p>
+<h5 id="向注册中心写入路由规则：-通常由监控中心或治理中心的页面完成"><a href="#向注册中心写入路由规则：-通常由监控中心或治理中心的页面完成" class="headerlink" title="向注册中心写入路由规则：(通常由监控中心或治理中心的页面完成)"></a>向注册中心写入路由规则：(通常由监控中心或治理中心的页面完成)</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">RegistryFactory registryFactory = ExtensionLoader.getExtensionLoader(RegistryFactory.class).getAdaptiveExtension();</span><br><span class="line">Registry registry = registryFactory.getRegistry(URL.valueOf(<span class="string">&quot;zookeeper://10.20.153.10:2181&quot;</span>));</span><br><span class="line">registry.register(URL.valueOf(<span class="string">&quot;condition://0.0.0.0/com.foo.BarService?category=routers&amp;dynamic=false&amp;rule=&quot;</span> + URL.encode(<span class="string">&quot;http://10.20.160.198/wiki/display/dubbo/host = 10.20.153.10 =&gt; host = 10.20.153.11&quot;</span>) + <span class="string">&quot;));</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>condition:// 表示路由规则的类型，支持条件路由规则和脚本路由规则，可扩展，必填。</li>
+<li>0.0.0.0 表示对所有IP地址生效，如果只想对某个IP的生效，请填入具体IP，必填。</li>
+<li>com.foo.BarService 表示只对指定服务生效，必填。</li>
+<li>category=routers 表示该数据为动态配置类型，必填。</li>
+<li>dynamic=false 表示该数据为持久数据，当注册方退出时，数据依然保存在注册中心，必填。</li>
+<li>enabled=true 覆盖规则是否生效，可不填，缺省生效。</li>
+<li>force=false 当路由结果为空时，是否强制执行，如果不强制执行，路由结果为空的路由规则将自动失效，可不填，缺省为flase。</li>
+<li>runtime=false 是否在每次调用时执行路由规则，否则只在提供者地址列表变更时预先执行并缓存结果，调用时直接从缓存中获取路由结果。 如果用了参数路由，必须设为true，需要注意设置会影响调用的性能，可不填，缺省为flase。</li>
+<li>priority=1 路由规则的优先级，用于排序，优先级越大越靠前执行，可不填，缺省为0。</li>
+<li>rule=URL.encode(“host = 10.20.153.10 =&gt; host = 10.20.153.11”) 表示路由规则的内容，必填。</li>
+</ul>
+<h4 id="条件路由规则"><a href="#条件路由规则" class="headerlink" title="条件路由规则"></a>条件路由规则</h4><p>基于条件表达式的路由规则，如：<code>host = 10.20.153.10 =&gt; host = 10.20.153.11</code></p>
+<p>规则：</p>
+<ul>
+<li>“=&gt;”之前的为消费者匹配条件，所有参数和消费者的URL进行对比，当消费者满足匹配条件时，对该消费者执行后面的过滤规则。</li>
+<li>“=&gt;”之后为提供者地址列表的过滤条件，所有参数和提供者的URL进行对比，消费者最终只拿到过滤后的地址列表。</li>
+<li>如果匹配条件为空，表示对所有消费方应用，如：=&gt; host != 10.20.153.11</li>
+<li>如果过滤条件为空，表示禁止访问，如：host = 10.20.153.10 =&gt;</li>
+</ul>
+<p>表达式：</p>
+<ul>
+<li>参数支持：<ul>
+<li>服务调用信息，如：method, argument 等 (暂不支持参数路由)</li>
+<li>URL本身的字段，如：protocol, host, port 等</li>
+<li>以及URL上的所有参数，如：application, organization 等</li>
+</ul>
+</li>
+<li>条件支持：<ul>
+<li>等号 <code>=</code> 表示”匹配”，如：host = 10.20.153.10</li>
+<li>不等号 <code>!=</code> 表示”不匹配”，如：host != 10.20.153.10</li>
+</ul>
+</li>
+<li>值支持：<ul>
+<li>以逗号 <code>,</code> 分隔多个值，如：host != 10.20.153.10,10.20.153.11</li>
+<li>以星号 <code>*</code> 结尾，表示通配，如：host != 10.20.*</li>
+<li>以美元符 <code>$</code> 开头，表示引用消费者参数，如：host = $host</li>
+</ul>
+</li>
+</ul>
+<p>示例：</p>
+<ol>
+<li><p>排除预发布机：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x3D;&gt; host !&#x3D; 172.22.3.91</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>白名单： 注意：一个服务只能有一条白名单规则，否则两条规则交叉，就都被筛选掉了)</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">host !&#x3D; 10.20.153.10,10.20.153.11 &#x3D;&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>黑名单：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">host &#x3D; 10.20.153.10,10.20.153.11 &#x3D;&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>服务寄宿在应用上，只暴露一部分的机器，防止整个集群挂掉：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x3D;&gt; host &#x3D; 172.22.3.1*,172.22.3.2*</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>为重要应用提供额外的机器：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">application !&#x3D; kylin &#x3D;&gt; host !&#x3D; 172.22.3.95,172.22.3.96</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>读写分离：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">method &#x3D; find*,list*,get*,is* &#x3D;&gt; host &#x3D; 172.22.3.94,172.22.3.95,172.22.3.96</span><br><span class="line">method !&#x3D; find*,list*,get*,is* &#x3D;&gt; host &#x3D; 172.22.3.97,172.22.3.98</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>前后台分离：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">application &#x3D; bops &#x3D;&gt; host &#x3D; 172.22.3.91,172.22.3.92,172.22.3.93</span><br><span class="line">application !&#x3D; bops &#x3D;&gt; host &#x3D; 172.22.3.94,172.22.3.95,172.22.3.96</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>隔离不同机房网段：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">host !&#x3D; 172.22.3.* &#x3D;&gt; host !&#x3D; 172.22.3.*</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>提供者与消费者部署在同集群内，本机只访问本机的服务：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x3D;&gt; host &#x3D; $host</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<h5 id="admin上配置条件路由"><a href="#admin上配置条件路由" class="headerlink" title="admin上配置条件路由"></a>admin上配置条件路由</h5><h3 id="脚本路由"><a href="#脚本路由" class="headerlink" title="脚本路由"></a>脚本路由</h3><p>支持JDK脚本引擎的所有脚本，比如：javascript, jruby, groovy 等，通过 type=javascript 参数设置脚本类型，缺省为javascript。</p>
+<p>脚本没有沙箱约束，可执行任意代码，存在后门风险。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">(&quot;script:&#x2F;&#x2F;0.0.0.0&#x2F;com.foo.BarService?category&#x3D;routers&amp;dynamic&#x3D;false&amp;rule&#x3D;&quot; + URL.encode(&quot;function route(invokers) &#123; ... &#125; (invokers)&quot;);</span><br><span class="line"></span><br><span class="line">function route(invokers) &#123;</span><br><span class="line">    var result &#x3D; new java.util.ArrayList(invokers.size());</span><br><span class="line">    for (i &#x3D; 0; i &lt; invokers.size(); i ++) &#123;</span><br><span class="line">        if (&quot;http:&#x2F;&#x2F;10.20.160.198&#x2F;wiki&#x2F;display&#x2F;dubbo&#x2F;10.20.153.10&quot;.equals(invokers.get(i).getUrl().getHost())) &#123;</span><br><span class="line">            result.add(invokers.get(i));</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    return result;</span><br><span class="line">&#125; (invokers); &#x2F;&#x2F; 表示立即执行方法</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="Dubbo服务限流"><a href="#Dubbo服务限流" class="headerlink" title="Dubbo服务限流"></a>Dubbo服务限流</h2><p>为了防止某个消费者的QPS或是所有消费者的QPS总和突然飙升而导致的重要服务的失效，系统可以对访问流量进行控制，这种对集群的保护措施称为服务限流。<br>Dubbo中能够实现服务限流的方式较多，可以划分为两类：<strong>直接限流</strong>与<strong>间接限流</strong></p>
+<ul>
+<li><p>直接限流：通过对连接数量直接进行限制来达到限流的目的。（官方方案汇总）</p>
+<ul>
+<li><p>服务提供者executes：指定并发执行数量</p>
+</li>
+<li><p>服务提供者accepts，协议级全局范围:指定连接数量</p>
+</li>
+<li><p>二端可以配置actives：长连接，最多可以处理或提交的请求个数。短连接，可以同时处理或提交的短连接数量。</p>
+</li>
+<li><p>二端可以配置connections：长连接，限定连接的个数。短连接，可以同时处理或提交的短连接数量。</p>
+</li>
+<li><p>会使connectons与actives联用，让connections限制长连接个数，让actives限制一个长连接中可以处理的请求个数。联用前提：使用默认的Dubbo服务暴露协议</p>
+</li>
+</ul>
+</li>
+<li><p>间接限流：通过一些非连接数量设置来达到限制流量的目的。</p>
+<ul>
+<li><p>延迟连接 – 仅消费者端，lazy=”true”，不能设置为方法级别，仅作用于Dubbo服务暴露协议。将长连接的建立推迟到消费者真正调用提供者时</p>
+</li>
+<li><p>粘连连接 – 仅消费者，sticky=”true”，使客户端尽量向同一个提供者发起调用，只要启用了粘连连接，其就会自动启用延迟连接</p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 id="executes直接限流–-仅提供者端"><a href="#executes直接限流–-仅提供者端" class="headerlink" title="executes直接限流– 仅提供者端"></a>executes直接限流– 仅提供者端</h3><p>该属性仅能设置在提供者端。可以设置为接口级别，也可以设置为方法级别。限制的是服务（方法）并发执行数量。一旦超出指定的数目直接报错 其实是指在服务端的并行度【需要注意这些都是指的是在单台服务上而不是整个服务集群】</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!-- 类级别，服务器端并发执行（或占用线程池线程数）不能超过 10 个 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dubbo:service</span> <span class="attr">interface</span>=<span class="string">&quot;com.foo.BarService&quot;</span> <span class="attr">executes</span>=<span class="string">&quot;10&quot;</span> /&gt;</span></span><br><span class="line"><span class="comment">&lt;!-- 方法级别，服务器端并发执行（或占用线程池线程数）不能超过 10 个 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dubbo:service</span> <span class="attr">interface</span>=<span class="string">&quot;com.foo.BarService&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:method</span> <span class="attr">name</span>=<span class="string">&quot;sayHello&quot;</span> <span class="attr">executes</span>=<span class="string">&quot;10&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dubbo:service</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="accepts限流-–-仅提供者端"><a href="#accepts限流-–-仅提供者端" class="headerlink" title="accepts限流 – 仅提供者端"></a>accepts限流 – 仅提供者端</h3><p>该属性仅可设置在提供者端的<a href="dubbo:provider/">dubbo:provider/</a>与<a href="dubbo:protocol/">dubbo:protocol/</a>。用于对指定协议的连接数量进行限制。拦截器类为</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!--限制当前提供者在使用dubbo协议时最多可以接受10个消费者链接 --&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dubbo:provider</span> <span class="attr">protocol</span>=<span class="string">&quot;dubbo&quot;</span> <span class="attr">accepts</span>=<span class="string">&quot;10&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dubbo:protocol</span> <span class="attr">name</span>=<span class="string">&quot;dubbo&quot;</span> <span class="attr">port</span>=<span class="string">&quot;20880&quot;</span> <span class="attr">accepts</span>=<span class="string">&quot;10&quot;</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="tps限流-仅服务端"><a href="#tps限流-仅服务端" class="headerlink" title="tps限流-仅服务端"></a>tps限流-仅服务端</h3><p>该属性仅可以配置在服务端，拦截器类为TpsLimitFilter。获取tps允许调用次数和tps.interval请求间隔。使用AtomicInteger表示允许调用的次数 每次调用减少1次当结果小于0之后返回不允许调用</p>
+<h3 id="actives限流-–-两端"><a href="#actives限流-–-两端" class="headerlink" title="actives限流 – 两端"></a>actives限流 – 两端</h3><p>该限流方式与前两种不同的是，其可以设置在提供者端，也可以设置在消费者端。可以设置为接口级别，也可以设置为方法级别。拦截器类为ActiveLimitFilter。很明显当超过了指定的active值之后该请求将等待前面的请求完成【何时结束呢？依赖于该方法的timeout 如果没有设置timeout的话可能就是多个请求一直被阻塞然后等待随机唤醒吧……】。因此要搭配timeout一起使用噢！</p>
+<h5 id="提供者端限流"><a href="#提供者端限流" class="headerlink" title="提供者端限流"></a><strong>提供者端限流</strong></h5><p>根据消费者与提供者间建立的连接类型的不同，其意义也不同</p>
+<ul>
+<li>长连接：表示当前长连接最多可以处理的请求个数。与长连接的数量没有关系</li>
+<li>短连接：表示当前服务可以同时处理的短连接数量</li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!--类级别--&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dubbo:service</span> <span class="attr">interface</span>=<span class="string">&quot;com.foo.BarService&quot;</span> <span class="attr">actives</span>=<span class="string">&quot;10&quot;</span> /&gt;</span></span><br><span class="line"><span class="comment">&lt;!--方法级别--&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dubbo:service</span> <span class="attr">interface</span>=<span class="string">&quot;com.foo.BarService&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:method</span> <span class="attr">name</span>=<span class="string">&quot;sayHello&quot;</span> <span class="attr">actives</span>=<span class="string">&quot;10&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dubbo:service</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>消费者端限流</strong></p>
+<p>根据消费者与提供者间建立的连接类型的不同，其意义也不同：</p>
+<ul>
+<li>长连接：表示当前消费者所发出的长连接中最多可以提交的请求个数。与长连接的数量没有关系。</li>
+<li>短连接：表示当前消费者可以提交的短连接数量</li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!--类级别--&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">interface</span>=<span class="string">&quot;com.foo.BarService&quot;</span> <span class="attr">actives</span>=<span class="string">&quot;10&quot;</span> /&gt;</span></span><br><span class="line"><span class="comment">&lt;!--方法级别--&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">interface</span>=<span class="string">&quot;com.foo.BarService&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:method</span> <span class="attr">name</span>=<span class="string">&quot;sayHello&quot;</span> <span class="attr">actives</span>=<span class="string">&quot;10&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dubbo:service</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="connections限流"><a href="#connections限流" class="headerlink" title="connections限流"></a>connections限流</h3><p>可以设置在提供者端，也可以设置在消费者端。限定连接的个数。对于短连接，该属性效果与actives相同。但对于长连接，其限制的是长连接的个数。一般情况下，会使connectons与actives联用，让connections限制长连接个数，让actives限制一个长连接中可以处理的请求个数。联用前提：使用默认的Dubbo服务暴露协议</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">dubbo:service</span> <span class="attr">interface</span>=<span class="string">&quot;com.foo.BarService&quot;</span> <span class="attr">connections</span>=<span class="string">&quot;10&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:method</span> <span class="attr">name</span>=<span class="string">&quot;sayHello&quot;</span> <span class="attr">connections</span>=<span class="string">&quot;10&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dubbo:service</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">interface</span>=<span class="string">&quot;com.foo.BarService&quot;</span> <span class="attr">connections</span>=<span class="string">&quot;10&quot;</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">dubbo:method</span> <span class="attr">name</span>=<span class="string">&quot;sayHello&quot;</span> <span class="attr">connections</span>=<span class="string">&quot;10&quot;</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">dubbo:service</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="间接限流-延迟连接-–-仅消费者端"><a href="#间接限流-延迟连接-–-仅消费者端" class="headerlink" title="间接限流 延迟连接 – 仅消费者端"></a>间接限流 <strong>延迟连接 – 仅消费者端</strong></h3><p>仅可设置在消费者端，且不能设置为方法级别。仅作用于Dubbo服务暴露协议。将长连接的建立推迟到消费者真正调用提供者时。<br>可以减少长连接的数量</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">&lt;!--设置当前消费者对接口中的每个方法发出链接采用延迟加载--&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dubbo:reference</span> <span class="attr">id</span>=<span class="string">&quot;userService&quot;</span>  <span class="attr">lazy</span>=<span class="string">&quot;true&quot;</span> <span class="attr">interface</span>=<span class="string">&quot;com.dubbo.service.UserService&quot;</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">dubbo:consumer</span> <span class="attr">lazy</span>=<span class="string">&quot;true&quot;</span>&gt;</span><span class="tag">&lt;/<span class="name">dubbo:consumer</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="间接限流-粘连连接-–-仅消费者"><a href="#间接限流-粘连连接-–-仅消费者" class="headerlink" title="间接限流 粘连连接 – 仅消费者"></a>间接限流 <strong>粘连连接 – 仅消费者</strong></h3><p>仅能设置在消费者端，其可以设置为接口级别，也可以设置为方法级别。仅作用于Dubbo服务暴露协议。其会使客户端尽量向同一个提供者发起调用，除非该提供者挂了，其会连接另一台。只要启用了粘连连接，其就会自动启用延迟连接其限制的是流向，而非流量</p>
+<h2 id="端口监控"><a href="#端口监控" class="headerlink" title="端口监控"></a>端口监控</h2><p>netstat -an |grep 18220 | wc -l</p>
+<p>netstat -an |grep 18220</p>
+<h2 id="其它"><a href="#其它" class="headerlink" title="其它"></a>其它</h2><p>连接个数：单连接<br>连接方式：长连接</p>
+<p>传输协议：TCP<br>传输方式：NIO 异步传输</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/dubbo/" rel="tag"># dubbo</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/01/06/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E6%97%A5%E5%BF%97Logstash%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/" rel="prev" title="Logstash简单使用">
+                  <i class="fa fa-chevron-left"></i> Logstash简单使用
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/01/15/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8Bdubbo-admin%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/" rel="next" title="dubbo-admin简单使用">
+                  dubbo-admin简单使用 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

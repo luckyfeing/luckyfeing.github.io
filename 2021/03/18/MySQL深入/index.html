@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="分享思路： 会先从一个简单的update语句入手，分析它在被执行时是如何与InnoDB存储引擎的各种机制结合起来的，并依次完成整个update语句的执行，在本次分享开始前可以先尝试思考如下面试题： 1.数据页和缓存页是什么？如何知道哪些缓存页是空闲的，哪些缓存页是可被清除的？ 2.mysql预读机制了解过吗，什么情况下会触发它？mysql是为了应对什么样的场景才设计预读机制？ 3.类比redis在">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MySQL深入">
+<meta property="og:url" content="http://example.com/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="分享思路： 会先从一个简单的update语句入手，分析它在被执行时是如何与InnoDB存储引擎的各种机制结合起来的，并依次完成整个update语句的执行，在本次分享开始前可以先尝试思考如下面试题： 1.数据页和缓存页是什么？如何知道哪些缓存页是空闲的，哪些缓存页是可被清除的？ 2.mysql预读机制了解过吗，什么情况下会触发它？mysql是为了应对什么样的场景才设计预读机制？ 3.类比redis在">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318144719056.png">
+<meta property="og:image" content="http://example.com/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318144742613.png">
+<meta property="og:image" content="http://example.com/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318144815867.png">
+<meta property="og:image" content="http://example.com/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318144830908.png">
+<meta property="og:image" content="http://example.com/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318144904374.png">
+<meta property="og:image" content="http://example.com/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318144925987.png">
+<meta property="og:image" content="http://example.com/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318144959394.png">
+<meta property="og:image" content="http://example.com/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318145057335.png">
+<meta property="article:published_time" content="2021-03-18T06:46:41.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:26.796Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318144719056.png">
+
+
+<link rel="canonical" href="http://example.com/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>MySQL深入 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-overview-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MySQL深入
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-03-18 14:46:41" itemprop="dateCreated datePublished" datetime="2021-03-18T14:46:41+08:00">2021-03-18</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:26" itemprop="dateModified" datetime="2024-07-12T10:34:26+08:00">2024-07-12</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>分享思路： 会先从一个简单的update语句入手，分析它在被执行时是如何与InnoDB存储引擎的各种机制结合起来的，并依次完成整个update语句的执行，在本次分享开始前可以先尝试思考如下面试题：</p>
+<p>1.数据页和缓存页是什么？如何知道哪些缓存页是空闲的，哪些缓存页是可被清除的？</p>
+<p>2.mysql预读机制了解过吗，什么情况下会触发它？mysql是为了应对什么样的场景才设计预读机制？</p>
+<p>3.类比redis在内存中也存在冷热数据共存的场景，如何考虑利用lru链表解决预读机制的思想、来对redis缓存的设计进行优化？</p>
+<p>4.内存极度不够用情况下，可能每当要加载一个数据页时就要先把一个缓存页刷到磁盘中，出现双倍IO的性能问题，对于这种现象如何考虑优化Mysql内核参数来尽量避免该情况的性能损耗？</p>
+<p><img src="/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318144719056.png" alt="image-20210318144719056"></p>
+<p>先来思考一个问题。磁盘数据如何加载到mysql中？</p>
+<p>一般我们要更新一条数据，数据一开始肯定是存放在磁盘中的，用到时才会被加载到mysql，存放的数据在逻辑概念上我们称为表，物理层面上在磁盘中是按数据页形式存放的，那么加载到mysql中的就称为缓存页。</p>
+<p>每个缓存页都有对应的一份描述信息，存放了缓存页的一些元数据相关的一些信息，通过描述信息可以快速定位到缓存页，最开始描述信息指向的缓存页当然都是空闲没有数据的，从磁盘加载数据页信息流程如下图所示：</p>
+<img src="/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318144742613.png" alt="image-20210318144742613" style="zoom:33%;">
+
+<p>那么从磁盘中加载一个数据页到mysql中真的就这么简单吗？<br>会不会同一份数据页加载到mysql中出现重复加载的情况？<br>如何快速知道当前数据页是否已经加载到mysql中了？</p>
+<p>这时候可能很多人已经想到了：缓存。对于已经加载到mysql中的数据页，我们大可以设计一个缓存将加载过的数据页信息缓存一下，一方面可以防止同一份数据页重复加载到mysql，另一方面当我们需要使用到数据页的信息时，可以通过缓存信息快速定位mysql中对应的缓存页，没错，InnoDB存储引擎中就是按照这样的思路设计了一个数据页缓存：</p>
+<p>这时候可能很多人已经想到了：缓存。对于已经加载到mysql中的数据页，我们大可以设计一个缓存将加载过的数据页信息缓存一下，一方面可以防止同一份数据页重复加载到mysql，另一方面当我们需要使用到数据页的信息时，可以通过缓存信息快速定位mysql中对应的缓存页，没错，InnoDB存储引擎中就是按照这样的思路设计了一个数据页缓存：</p>
+<p><img src="/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318144815867.png" alt="image-20210318144815867"></p>
+<p>这个时候又有一个问题，既然现在我们已经知道磁盘中的数据页是加载到buffer pool缓冲池中的，那么我们怎么样才能知道哪些缓存页是空闲的？</p>
+<p>哪些缓存页是没有被加载过数据页信息的呢？毕竟加载过的数据的缓存页和没加载过数据的缓存页混在一起，倘若此时想找一个空闲的缓存页肯定也是一件很麻烦的事。InnoDB存储引擎在设计时当然也考虑到了这点，这里它引入了free链表这个数据结构，将那些还没有被使用的缓存页的描述信息用双向循环链表给组合在一起，需要用到时就卸一个节点出来存放数据页信息，如下图所示：</p>
+<p><img src="/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318144830908.png" alt="image-20210318144830908"></p>
+<p>lru链表实现的目的就是为让哪些被访问的缓存页能够尽量排到靠前位置，那么此时如果此时内存不够需要淘汰掉一些缓存页时，此时就可以到lru链表尾部，将哪些最近最少被访问的尾部节点给刷盘释放缓存页腾出内存来。</p>
+<p>到这里为此，为了更新一个sql，我们已经把该sql所需要的数据、通过InnoDB存储引擎的各种底层机制，给加载到了Buffer Pool缓冲池中了，接下来就是在InnoDB中执行更新操作。</p>
+<p>我们在来看看。 在InnoDB中执行更新操作是怎么回事？</p>
+<p>此时我们需要的数据已经从磁盘中加载到缓冲池中了，下一步当然就是执行更新操作了：先对需要更新的那行数据加锁、原始数据写一份到redo log中便于可能的回滚操作、执行update操作，此时缓存页的数据就被更新了，当然就和磁盘中的数据页的数据就不一致了，这样的缓存页我们称之为脏页，如下图所示：</p>
+<p><img src="/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318144904374.png" alt="image-20210318144904374"></p>
+<p>那么，如何才能知道缓冲池中，那些缓存页是脏页呢？如果能把脏页和空闲缓存页分离出来，我们就可以把那些脏页的数据及时给刷到磁盘中、再释放掉脏页内存，在内存不够的情况下不就可以重复利用了吗？<br>这里InnoDB的设计方法类似free链表，设计了一个flush链表，也就是那些在缓冲池中被更新过数据的缓存页，这些缓存页的描述信息都会被添加到flush链表中（这里提到的free链表、lru链表、flush链表都是双向循环链表，且节点都为缓存页的描述信息，其中flush链表的节点同时也在lru链表中），如下图所示：</p>
+<p><img src="/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318144925987.png" alt="image-20210318144925987"></p>
+<p>然后的话。有了这种机制，会不会导致缓冲池内存不足触发脏页刷盘？</p>
+<p>经过以上流程执行了一段时间后，直到InnoDB缓冲池中的内存即将不够用了，此时如果再来一条sql语句的更新操作，要想成功把磁盘中的数据加载到缓存页中，就需要先清理下内存中的缓存页了。通过之前提到的lru链表，可以找到lru链表表尾的节点，这些节点之所以在表尾，是因为基本上没什么人访问它们，那它们在内存不够用的场景下，当然要被优先给清理掉啊；</p>
+<p>因为flush链表的节点也在lru链表中，此时在缓存页清理时需要做一个简单的判断：若缓存页既在lru表尾的节点同时也在flush链表中，就需要先把脏页给刷盘了，然后再释放掉缓存页的内存，保证那些事务修改的数据能够落库；若缓存页不在flush链表，那更简单直接释放缓存页内存，然后将这些释放完内存缓存页的描述信息，重现给添加到free链表中，完成一次大的循环（free链表-&gt;lru链表-&gt;flush链表-&gt;free链表），如下图所示：</p>
+<p><img src="/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318144959394.png" alt="image-20210318144959394"></p>
+<p>最后一个就是存在的问题就是： mysql的预读机制带来的问题以及优化后的lru链表对该问题的解决方案</p>
+<p>mysql预读机制可能会扰乱我们之前设想的lru链表的处理逻辑。当一个数据页被加载到缓冲池中时，可能顺带会把其他无关紧要的数据页也加载到缓冲池中，这些顺带加载到内存的数据页，它们往往被访问的频率是非常低的，但是由于lru链表的特点，新加入的总是会优先被排在lru的链表头，导致这些顺带进来的、访问频率比较低的缓存页排在比较靠前的位置，导致free链表不够时，lru链表反而会把那些本来访问频率较高、但是此时被排挤到lru链表尾的缓存页给刷盘清理了，这是很不合理的。</p>
+<p>优化后的lru链表主要引入了冷热数据分离的思想解决了mysql预读机制带来的问题。把lru链表分为热数据区和冷数据区，热数据区主要存放那些访问频率高的缓存页，冷数据区存放访问频率较低的缓存页；从磁盘加载数据到lru链表时，首先会将加载到的缓存页直接先放到冷数据链的表头，如果1000ms（默认，可配置）后冷数据的缓存页又被访问了，此时就认为这些1000ms之后被访问的缓存页，在不久的未来可能还会被访问，可以认为它们是热数据了，就会把这些缓存页从冷数据区的链表给移动到热数据区链表的表头，通过该步骤可以将热数据从冷数据堆中给巧妙的分离出来，如下图所示</p>
+<p><img src="/2021/03/18/MySQL%E6%B7%B1%E5%85%A5/image-20210318145057335.png" alt="image-20210318145057335"></p>
+<p>此时如果要加载其他数据页发现缓冲池内存不够，实际上后台一直会有一个线程开启的一个定时任务，不断的从lru链表的尾部将缓存页给刷到磁盘中并释放缓存页，lru链表冷热数据分离的设计，确保了定时任务从lru链表尾部回收的缓存页都是访问频率很低的数据，对性能的影响也就降到了最低。</p>
+<p>1.数据页和缓存页是什么？如何知道哪些缓存页是空闲的，哪些缓存页是可被清除的？</p>
+<p>2.mysql预读机制了解过吗，什么情况下会触发它？mysql是为了应对什么样的场景才设计预读机制？</p>
+<p>3.类比redis在内存中也存在冷热数据共存的场景，如何考虑利用lru链表解决预读机制的思想、来对redis缓存的设计进行优化？</p>
+<p>4.内存极度不够用情况下，可能每当要加载一个数据页时就要先把一个缓存页刷到磁盘中，出现双倍IO的性能问题，对于这种现象如何考虑优化Mysql内核参数来尽量避免该情况的性能损耗？</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/03/12/%E6%80%BB%E7%BB%93-%E9%9D%A2%E8%AF%95%E7%B3%BB%E5%88%97%E6%96%87%E7%AB%A0/" rel="prev" title="总结-面试系列文章">
+                  <i class="fa fa-chevron-left"></i> 总结-面试系列文章
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/04/20/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E7%9B%91%E6%8E%A7%E4%B9%8BSkywalking%E7%9A%84UI%E8%AF%A6%E8%A7%A3/" rel="next" title="监控之Skywalking的UI详解">
+                  监控之Skywalking的UI详解 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

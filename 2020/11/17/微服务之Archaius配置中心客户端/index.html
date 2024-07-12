@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="ArchaiusNetflix只是开源了其配置中心（Archaius变色龙）的客户端部分，没有开源配套的服务器端。Archaius其实是配置源实现无关的，可以对接各种配置中心作为数据源。 Archaius在Netflix的用例场景 根据请求上下文开启或关闭某项功能。 某个页面缺省显示10个商品，在某些情况下，可以通过Archaius调整配置，只显示5个商品。 动态调整Hystrix熔断器的行为。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Archaius配置中心客户端">
+<meta property="og:url" content="http://example.com/2020/11/17/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BArchaius%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E5%AE%A2%E6%88%B7%E7%AB%AF/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="ArchaiusNetflix只是开源了其配置中心（Archaius变色龙）的客户端部分，没有开源配套的服务器端。Archaius其实是配置源实现无关的，可以对接各种配置中心作为数据源。 Archaius在Netflix的用例场景 根据请求上下文开启或关闭某项功能。 某个页面缺省显示10个商品，在某些情况下，可以通过Archaius调整配置，只显示5个商品。 动态调整Hystrix熔断器的行为。">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/11/17/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BArchaius%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E5%AE%A2%E6%88%B7%E7%AB%AF/%E6%9E%B6%E6%9E%84%E5%9B%BE.png">
+<meta property="og:image" content="http://example.com/2020/11/17/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BArchaius%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E5%AE%A2%E6%88%B7%E7%AB%AF/%E9%9B%86%E6%88%90%E5%9B%BE.png">
+<meta property="article:published_time" content="2020-11-17T05:56:25.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.249Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="配置中心">
+<meta property="article:tag" content="Archaius">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/11/17/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BArchaius%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E5%AE%A2%E6%88%B7%E7%AB%AF/%E6%9E%B6%E6%9E%84%E5%9B%BE.png">
+
+
+<link rel="canonical" href="http://example.com/2020/11/17/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BArchaius%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E5%AE%A2%E6%88%B7%E7%AB%AF/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Archaius配置中心客户端 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Archaius"><span class="nav-number">1.</span> <span class="nav-text">Archaius</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Archaius%E5%9C%A8Netflix%E7%9A%84%E7%94%A8%E4%BE%8B%E5%9C%BA%E6%99%AF"><span class="nav-number">2.</span> <span class="nav-text">Archaius在Netflix的用例场景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Archaius%E7%9A%84%E7%89%B9%E6%80%A7%E5%92%8C%E8%AE%BE%E8%AE%A1"><span class="nav-number">3.</span> <span class="nav-text">Archaius的特性和设计</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E7%BA%A7%E9%85%8D%E7%BD%AE%E6%A1%88%E4%BE%8B"><span class="nav-number">4.</span> <span class="nav-text">分级配置案例</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Archaius%E5%92%8CApollo%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E9%9B%86%E6%88%90"><span class="nav-number">5.</span> <span class="nav-text">Archaius和Apollo配置中心集成</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BB%93%E8%AE%BA"><span class="nav-number">6.</span> <span class="nav-text">结论</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8A%9F%E8%83%BD"><span class="nav-number">7.</span> <span class="nav-text">功能</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E6%BA%90"><span class="nav-number">8.</span> <span class="nav-text">配置源</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%99%84%E5%BD%95"><span class="nav-number">9.</span> <span class="nav-text">附录</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/11/17/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BArchaius%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E5%AE%A2%E6%88%B7%E7%AB%AF/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Archaius配置中心客户端
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-11-17 13:56:25" itemprop="dateCreated datePublished" datetime="2020-11-17T13:56:25+08:00">2020-11-17</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h2 id="Archaius"><a href="#Archaius" class="headerlink" title="Archaius"></a>Archaius</h2><p>Netflix只是开源了其配置中心（Archaius变色龙）的客户端部分，没有开源配套的服务器端。Archaius其实是配置源实现无关的，可以对接各种配置中心作为数据源。</p>
+<h2 id="Archaius在Netflix的用例场景"><a href="#Archaius在Netflix的用例场景" class="headerlink" title="Archaius在Netflix的用例场景"></a>Archaius在Netflix的用例场景</h2><ul>
+<li>根据请求上下文开启或关闭某项功能。</li>
+<li>某个页面缺省显示10个商品，在某些情况下，可以通过Archaius调整配置，只显示5个商品。</li>
+<li>动态调整Hystrix熔断器的行为。</li>
+<li>调整服务调用客户端的连接和请求超时参数。</li>
+<li>如果某个线上服务产生出错告警，可以动态调整日志输出级别(粒度可以细到包或者组件级别)，这样可以通过详细日志排查问题。问题定位以后，再将日志输出级别恢复到默认级别。</li>
+<li>对于多区域或者多国家部署的应用，通过动态配置，可以根据不同区域和国家开启不同的功能。</li>
+<li>可以根据用户的实际访问模式动态调整一些基础中间件的配置，例如缓存的存活时间TTL(Time To Live)。</li>
+<li>数据库访问客户端的连接池配置，可以对不同服务配不同的值。例如，一个请求频率RPS(Request Per Second)小的服务，可以配置较小的连接数，而一个请求频率大的服务，可以配置较大的连接数。</li>
+<li>运行期配置的变更可以在不同维度生效，例如集群中的单个实例维度，多区域部署下的某个区域维度，某个服务栈维度，或者某个应用集群维度。</li>
+<li>功能开关(Feature Flag)发布，有些功能虽然上线，但是并不马上启用，而是通过配置开关动态启用，这样可以根据情况灵活开启或者关闭某项线上功能。</li>
+<li>金丝雀发布(Canary Release)，新功能上线时，让新老集群同时并存一段时间，通过配置将到老集群的流量逐步动态调整到新集群，如果监控显示无异常，则完成新集群的上线，如异常，则快速切回老集群。</li>
+</ul>
+<h2 id="Archaius的特性和设计"><a href="#Archaius的特性和设计" class="headerlink" title="Archaius的特性和设计"></a>Archaius的特性和设计</h2><p>Archaius实际上是对Apache Common Configuration Library的一个封装和扩展，提供了一组基于Java的配置API，主要的特性包括：</p>
+<ul>
+<li>配置可动态调整。</li>
+<li>配置支持类型(Int, Long, Boolean等)。</li>
+<li>高性能和线程安全。</li>
+<li>提供一个拉(pulling)配置的框架，可以从配置源动态拉取变更的配置。</li>
+<li>支持回调(callback)机制，在配置变更时自动调用。</li>
+<li>支持JMX MBean，可以通过JConsole查看配置和修改配置。</li>
+</ul>
+<p>下图是Archaius的总体设计：</p>
+<p><img src="/2020/11/17/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BArchaius%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E5%AE%A2%E6%88%B7%E7%AB%AF/%E6%9E%B6%E6%9E%84%E5%9B%BE.png"></p>
+<p>Achaius的核心是一个称为**组合配置(Composite Configuration)**的概念，简单可以理解为一个分层级的配置，层级有优先级，高优先级的层级的配置会覆盖低优先级的配置。每一个层级可以从某个配置源获取配置，例如本地配置文件，JDBC数据源，远程REST API等。配置源还可以在运行时动态拉取变更，例如在上图中，持久化数据库配置(Persisted DB Configuration)是指将配置存在关系数据库中，相应的配置源会定期从数据库拉取变更)。配置的最终值由顶级配置决定，例如，如果多个层级都含有某个配置项，那么应用最终见到的值是配置层级中最顶层的值。配置分层的顺序是可以调整的。</p>
+<h2 id="分级配置案例"><a href="#分级配置案例" class="headerlink" title="分级配置案例"></a>分级配置案例</h2><p>假设你开发了一个叫myapp的应用，在本地开发环境，一般你希望用本地配置，不依赖于远程的配置中心，这个时候你只需为应用写一个本地配置文件：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">myapp.properties</span><br><span class="line">1</span><br></pre></td></tr></table></figure>
+
+<p>这个配置文件里头包含myapp的所有缺省配置。</p>
+<p>当你的应用开发完成，需要分别部署到测试TEST, UAT和生产PROD环境，如果你希望在不同的环境重载某些缺省值，那么你可以为不同环境分别添加本地配置文件，在相关文件中重载缺省值：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">myapp-test.properties</span><br><span class="line">myapp-uat.properties</span><br><span class="line">myapp-prod.properties</span><br><span class="line">123</span><br></pre></td></tr></table></figure>
+
+<p>例如，在<code>myapp.properties</code>中<code>timeout</code>配置值是<code>500</code>，在<code>myapp-prod.properties</code>中<code>timeout</code>配置值是<code>200</code>，那么应用在生产环境中将使用重载值<code>timeout=200</code>，其它没有重载则使用<code>myapp.properties</code>中的缺省值。</p>
+<p>在Archaius中，可以通过设置<code>archaius.deployment.environment</code>启动参数，来激活不同环境的配置。</p>
+<p>如果你还希望应用上线后，可以通过配置中心动态调整配置值，那么你可以将Achaius和某个配置中心(比如Apollo)进行对接，对接后配置中心中的配置具有最高优先级，其中的配置可以覆盖应用本地配置文件中的配置。例如，应用上线后你发现<code>timeout=200</code>设置太小了，想调大到<code>timeout=1000</code>，可以通过配置中心一键搞定。</p>
+<h2 id="Archaius和Apollo配置中心集成"><a href="#Archaius和Apollo配置中心集成" class="headerlink" title="Archaius和Apollo配置中心集成"></a>Archaius和Apollo配置中心集成</h2><p>Archaius是一款非常优秀的生产级配置客户端组件，比较可惜的是Netflix没有开源它的配置中心的服务器端，幸好业界已经有Apollo这样优秀的配置中心开源产品。Archaius本身是配置源无关的，它提供的拉(pulling)框架可以支持对接各种数据源，而Apollo本身也正好提供基于HTTP REST的配置拉取接口，使得Archaius和Apollo的对接非常简单。</p>
+<p>另外，当你想要使用某些Netflix的组件，比如Zuul网关，它原生是支持Archaius进行动态配置的，如果你又想要使用Apollo配置中心支持集中式动态配置，这个时候你用Apollo客户端去改造Zuul的话，工作量不小。其实不需要这么麻烦，这三者可以简单完美实现集成，如下图所示：</p>
+<p><img src="/2020/11/17/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BArchaius%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E5%AE%A2%E6%88%B7%E7%AB%AF/%E9%9B%86%E6%88%90%E5%9B%BE.png"></p>
+<p>集成要点：</p>
+<ul>
+<li>通过设置<code>archaius.configurationSource.additionalUrls</code>启动参数，设置为Apollo的配置文件拉取端点，激活Archaius的远程配置数据源。</li>
+<li>Apollo的配置文件拉取端点为：<code>&#123;config_server_url&#125;/configfiles/&#123;appId&#125;/&#123;clusterName&#125;/&#123;namespaceName&#125;</code>，其中：<code>config_server_url</code>是配置中心地址，<code>appId</code>是应用(例如Zuul)在Apollo中的唯一标识，<code>clusterName</code>是应用在Apollo中的集群名，一般用缺省<code>default</code>，<code>namespaceName</code>是应用在Apollo中的名字空间，一般用缺省<code>application</code>。</li>
+<li>注意，对于不同的环境(TEST，UAT，PROD等)，Apollo配置中心的地址一般不同</li>
+<li>Archaius动态拉取配置的周期缺省是60秒，可以调整。</li>
+</ul>
+<h2 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h2><ol>
+<li>根据不同上下文动态调整应用的行为逻辑，是现代互联网应用的刚需，配置中心应运而生，它是微服务架构必不可少的组件。</li>
+<li>Archaius是Netflix开源的生产级配置中心客户端组件，它的亮点是支持多维度、分层级的和动态的配置。</li>
+<li>Archaius可以和Apollo配置中可以简单无缝集成，让很多Netflix的开源组件(Zuul，Hystrix，Ribbon等)可以简单接入Apollo。波波2018年在极客时间上的课程《微服务架构和实践160讲》，7月份推出了第3模块：《微服务网关Zuul架构和实践》，其中会通过实验详细分析Archaius和Apollo的集成，通过Apollo+Archaius实现Zuul网关的动态配置，欢迎大家关注。</li>
+<li>关于Archaius的更多技术细节，可以参考其在github上的站点[附录1]，另外拍拍贷框架团队的技术专家<strong>尹作龙</strong>也写了一篇文章《微服务动态配置组件netflix archaius》[附录2]，对Archaius的实现细节、使用案例以及如何与Spring Boot集成进行了深入细致的剖析，欢迎大家学习。</li>
+</ol>
+<h2 id="功能"><a href="#功能" class="headerlink" title="功能"></a>功能</h2><p>Archaius 包含一系列配置管理API，提供动态类型化属性、线程安全配置操作、轮询框架、回调机制等等功能。</p>
+<h2 id="配置源"><a href="#配置源" class="headerlink" title="配置源"></a>配置源</h2><p>Archaius 支持配置源包括：文件、URLs、JDBC 以及 Amazon DynamoDB</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// create a property whose value is type long and use 1000 as the default </span></span><br><span class="line">  <span class="comment">// if the property is not defined</span></span><br><span class="line">  DynamicLongProperty timeToWait = </span><br><span class="line">      DynamicPropertyFactory.getInstance().getLongProperty(<span class="string">&quot;lock.waitTime&quot;</span>, <span class="number">1000</span>);</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">  ReentrantLock lock = ...;</span><br><span class="line">  <span class="comment">// ...</span></span><br><span class="line">  lock.tryLock(timeToWait.get(), TimeUnit.MILLISECONDS); <span class="comment">// timeToWait.get() returns up-to-date value of the property</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="附录"><a href="#附录" class="headerlink" title="附录"></a>附录</h2><ol>
+<li><a target="_blank" rel="noopener" href="https://github.com/netflix/archaius">Netflix Archaius</a></li>
+<li><a target="_blank" rel="noopener" href="http://techblog.ppdai.com/2018/05/08/20180508/">微服务动态配置组件netflix archaius</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83/" rel="tag"># 配置中心</a>
+              <a href="/tags/Archaius/" rel="tag"># Archaius</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/11/17/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E9%85%8D%E7%BD%AE%E4%B8%AD%E5%BF%83%E5%AF%B9%E6%AF%94/" rel="prev" title="配置中心对比">
+                  <i class="fa fa-chevron-left"></i> 配置中心对比
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/11/17/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8BFegin/" rel="next" title="Fegin">
+                  Fegin <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="作者：程序员内点事链接：https:&#x2F;&#x2F;juejin.cn&#x2F;post&#x2F;6899645923024355336 分布式事务由来当系统的体量很小时，单体架构完全可以满足现有业务需求，所有的业务共用一个数据库，整个下单流程或许只用在一个方法里同一个事务下操作数据库即可。此时做到所有操作要么全部提交 或 要么全部回滚很容易。  分库分表、SOA可随着业务量的不断增长，单体架构渐渐扛不住巨大的流量，此时就需">
+<meta property="og:type" content="article">
+<meta property="og:title" content="分布式事务之Seata简单使用">
+<meta property="og:url" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="作者：程序员内点事链接：https:&#x2F;&#x2F;juejin.cn&#x2F;post&#x2F;6899645923024355336 分布式事务由来当系统的体量很小时，单体架构完全可以满足现有业务需求，所有的业务共用一个数据库，整个下单流程或许只用在一个方法里同一个事务下操作数据库即可。此时做到所有操作要么全部提交 或 要么全部回滚很容易。  分库分表、SOA可随着业务量的不断增长，单体架构渐渐扛不住巨大的流量，此时就需">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/1ec31a8cda8745c9bf7793b7bd092616~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/7d920f9dedcf454faa0b9313bd17df43~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/5d98e869a3d14c9da4ff308899222309~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/a34f0af5f47a4ea686dae570643a019e~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/08a0d09a1f684ac89d058ed599c5cb93~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/55a8781c22844f1794a3edaadac37765~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/f84a66ad84ea4db0bb3970d4a430a8df~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/c78f6b5488ac4602acd18e3c9a978d5b~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/c195e1ddd8fb4621a9b8ea35077f35ec~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/1b4c7bad77e9441a89e47f530ef505cb~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/592fc4836e8a4f9a9c4c1de690ba166d~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/1c40b2c8a80b45acae157850f58cac79~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/136f615cd12e4e21a0c8ac8c41f6f2a2~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/2119d406e05e42268ac3536fa64866dc~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/40a44673f4c84450b2a29154accf7b1c~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/d091e25fac5346dc92d1875df942e6de~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/9048853aec764d86a116473450270347~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/d13de839fd2a4db2af5f5e535d13e41a~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/d5d73832fae544828d2bc33d67cd160b~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/7307262d393244f890211618ec315630~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="og:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/6b06cf8edcfe4bd997e57206b578a3e0~tplv-k3u1fbpfcp-zoom-1.image">
+<meta property="article:published_time" content="2020-12-22T05:33:18.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.258Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="分布式事务">
+<meta property="article:tag" content="Seata">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/1ec31a8cda8745c9bf7793b7bd092616~tplv-k3u1fbpfcp-zoom-1.image">
+
+
+<link rel="canonical" href="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>分布式事务之Seata简单使用 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E7%94%B1%E6%9D%A5"><span class="nav-number">1.</span> <span class="nav-text">分布式事务由来</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%86%E5%BA%93%E5%88%86%E8%A1%A8%E3%80%81SOA"><span class="nav-number">1.1.</span> <span class="nav-text">分库分表、SOA</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Seata-%E4%BC%98%E5%8A%BF"><span class="nav-number">2.</span> <span class="nav-text">Seata 优势</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2PC"><span class="nav-number">2.1.</span> <span class="nav-text">2PC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3PC"><span class="nav-number">2.2.</span> <span class="nav-text">3PC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#TCC"><span class="nav-number">2.3.</span> <span class="nav-text">TCC</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E4%BA%8B%E5%8A%A1%EF%BC%88%E6%9C%80%E7%BB%88%E4%B8%80%E8%87%B4%E6%80%A7%EF%BC%89"><span class="nav-number">2.4.</span> <span class="nav-text">消息事务（最终一致性）</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Seata"><span class="nav-number">2.5.</span> <span class="nav-text">Seata</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%B8%80%E4%B8%AA%E9%98%B6%E6%AE%B5"><span class="nav-number">2.6.</span> <span class="nav-text">第一个阶段</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AC%AC%E4%BA%8C%E4%B8%AA%E9%98%B6%E6%AE%B5"><span class="nav-number">2.7.</span> <span class="nav-text">第二个阶段</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Seata-%E5%AE%9E%E8%B7%B5"><span class="nav-number">3.</span> <span class="nav-text">Seata 实践</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Seata-Server"><span class="nav-number">3.1.</span> <span class="nav-text">Seata Server</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#file-conf"><span class="nav-number">3.2.</span> <span class="nav-text">file.conf</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#registry-conf"><span class="nav-number">3.3.</span> <span class="nav-text">registry.conf</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Seata-Client"><span class="nav-number">3.4.</span> <span class="nav-text">Seata Client</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B5%8B%E8%AF%95-Seata"><span class="nav-number">4.</span> <span class="nav-text">测试 Seata</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          分布式事务之Seata简单使用
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-12-22 13:33:18" itemprop="dateCreated datePublished" datetime="2020-12-22T13:33:18+08:00">2020-12-22</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/%E5%BE%AE%E6%9C%8D%E5%8A%A1/" itemprop="url" rel="index"><span itemprop="name">微服务</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>作者：程序员内点事<br>链接：<a target="_blank" rel="noopener" href="https://juejin.cn/post/6899645923024355336">https://juejin.cn/post/6899645923024355336</a></p>
+<h2 id="分布式事务由来"><a href="#分布式事务由来" class="headerlink" title="分布式事务由来"></a>分布式事务由来</h2><p>当系统的体量很小时，单体架构完全可以满足现有业务需求，所有的业务共用一个数据库，整个下单流程或许只用在一个方法里同一个事务下操作数据库即可。此时做到所有操作要么全部提交 或 要么全部回滚很容易。</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/1ec31a8cda8745c9bf7793b7bd092616~tplv-k3u1fbpfcp-zoom-1.image" alt="img"></p>
+<h3 id="分库分表、SOA"><a href="#分库分表、SOA" class="headerlink" title="分库分表、SOA"></a>分库分表、SOA</h3><p>可随着业务量的不断增长，单体架构渐渐扛不住巨大的流量，此时就需要对数据库、表做 <code>分库分表</code>处理，将应用 <code>SOA</code> 服务化拆分。也就产生了订单中心、用户中心、库存中心等，由此带来的问题就是业务间相互隔离，每个业务都维护着自己的数据库，数据的交换只能进行 <code>RPC</code> 调用。</p>
+<p>当用户再次下单时，需同时对订单库 <code>order</code>、库存库 <code>storage</code>、用户库 <code>account</code> 进行操作，可此时我们只能保证自己本地的数据一致性，无法保证调用其他服务的操作是否成功，所以为了保证整个下单流程的数据一致性，就需要分布式事务介入。</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/7d920f9dedcf454faa0b9313bd17df43~tplv-k3u1fbpfcp-zoom-1.image" alt="img"></p>
+<h2 id="Seata-优势"><a href="#Seata-优势" class="headerlink" title="Seata 优势"></a>Seata 优势</h2><p>实现分布式事务的方案比较多，常见的比如基于 <code>XA</code> 协议的 <code>2PC</code>、<code>3PC</code>，基于业务层的 <code>TCC</code>，还有应用消息队列 + 消息表实现的最终一致性方案，还有今天要说的 <code>Seata</code> 中间件，下边看看各个方案的优缺点。</p>
+<h3 id="2PC"><a href="#2PC" class="headerlink" title="2PC"></a><code>2PC</code></h3><p>基于 XA 协议实现的分布式事务，XA 协议中分为两部分：事务管理器和本地资源管理器。其中本地资源管理器往往由数据库实现，比如 Oracle、MYSQL 这些数据库都实现了 XA 接口，而事务管理器则作为一个全局的调度者。</p>
+<p>两阶段提交（<code>2PC</code>），对业务侵⼊很小，它最⼤的优势就是对使⽤⽅透明，用户可以像使⽤本地事务⼀样使⽤基于 XA 协议的分布式事务，能够严格保障事务 ACID 特性。</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/5d98e869a3d14c9da4ff308899222309~tplv-k3u1fbpfcp-zoom-1.image" alt="img"></p>
+<p>可 <code>2PC</code>的缺点也是显而易见，它是一个强一致性的同步阻塞协议，事务执⾏过程中需要将所需资源全部锁定，也就是俗称的 <code>刚性事务</code>。所以它比较适⽤于执⾏时间确定的短事务，整体性能比较差。</p>
+<p>一旦事务协调者宕机或者发生网络抖动，会让参与者一直处于锁定资源的状态或者只有一部分参与者提交成功，导致数据的不一致。因此，在⾼并发性能⾄上的场景中，基于 XA 协议的分布式事务并不是最佳选择。</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/a34f0af5f47a4ea686dae570643a019e~tplv-k3u1fbpfcp-zoom-1.image" alt="img"></p>
+<h3 id="3PC"><a href="#3PC" class="headerlink" title="3PC"></a><code>3PC</code></h3><p>三段提交（<code>3PC</code>）是二阶段提交（<code>2PC</code>）的一种改进版本 ，为解决两阶段提交协议的阻塞问题，上边提到两段提交，当协调者崩溃时，参与者不能做出最后的选择，就会一直保持阻塞锁定资源。</p>
+<p><code>2PC</code> 中只有协调者有超时机制，<code>3PC</code> 在协调者和参与者中都引入了超时机制，协调者出现故障后，参与者就不会一直阻塞。而且在第一阶段和第二阶段中又插入了一个准备阶段（如下图，看着有点啰嗦），保证了在最后提交阶段之前各参与节点的状态是一致的。</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/08a0d09a1f684ac89d058ed599c5cb93~tplv-k3u1fbpfcp-zoom-1.image" alt="img"></p>
+<p>虽然 <code>3PC</code> 用超时机制，解决了协调者故障后参与者的阻塞问题，但与此同时却多了一次网络通信，性能上反而变得更差，也不太推荐。</p>
+<h3 id="TCC"><a href="#TCC" class="headerlink" title="TCC"></a>TCC</h3><p>所谓的 <code>TCC</code> 编程模式，也是两阶段提交的一个变种，不同的是 <code>TCC</code> 为在业务层编写代码实现的两阶段提交。<code>TCC</code> 分别指 <code>Try</code>、<code>Confirm</code>、<code>Cancel</code> ，一个业务操作要对应的写这三个方法。必须引入一款 TCC 分布式事务框架，比如国内开源的 ByteTCC、himly、tcc-transaction。否则的话，感知各个阶段的执行情况以及推进执行下一个阶段的这些事情，不太可能自己手写实现，太复杂了。</p>
+<p>以下单扣库存为例，<code>Try</code> 阶段去占库存，<code>Confirm</code> 阶段则实际扣库存，如果库存扣减失败 <code>Cancel</code> 阶段进行回滚，释放库存。</p>
+<p>TCC 不存在资源阻塞的问题，因为每个方法都直接进行事务的提交，一旦出现异常通过则 <code>Cancel</code> 来进行回滚补偿，这也就是常说的补偿性事务。</p>
+<p>原本一个方法，现在却需要三个方法来支持，可以看到 TCC 对业务的侵入性很强，而且这种模式并不能很好地被复用，会导致开发量激增。还要考虑到网络波动等原因，为保证请求一定送达都会有重试机制，所以考虑到接口的幂等性。</p>
+<h3 id="消息事务（最终一致性）"><a href="#消息事务（最终一致性）" class="headerlink" title="消息事务（最终一致性）"></a>消息事务（最终一致性）</h3><p>消息事务其实就是基于消息中间件的两阶段提交，将本地事务和发消息放在同一个事务里，保证本地操作和发送消息同时成功。 下单扣库存原理图：</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/55a8781c22844f1794a3edaadac37765~tplv-k3u1fbpfcp-zoom-1.image" alt="img"></p>
+<ul>
+<li>订单系统向 <code>MQ</code> 发送一条预备扣减库存消息，<code>MQ</code> 保存预备消息并返回成功 <code>ACK</code></li>
+<li>接收到预备消息执行成功 <code>ACK</code>，订单系统执行本地下单操作，为防止消息发送成功而本地事务失败，订单系统会实现 <code>MQ</code> 的回调接口，其内不断的检查本地事务是否执行成功，如果失败则 <code>rollback</code> 回滚预备消息；成功则对消息进行最终 <code>commit</code> 提交。</li>
+<li>库存系统消费扣减库存消息，执行本地事务，如果扣减失败，消息会重新投，一旦超出重试次数，则本地表持久化失败消息，并启动定时任务做补偿。</li>
+</ul>
+<p>基于消息中间件的两阶段提交方案，通常用在高并发场景下使用，牺牲数据的强一致性换取性能的大幅提升，不过实现这种方式的成本和复杂度是比较高的，还要看实际业务情况。</p>
+<h3 id="Seata"><a href="#Seata" class="headerlink" title="Seata"></a>Seata</h3><p><code>Seata</code> 也是从两段提交演变而来的一种分布式事务解决方案，提供了 <code>AT</code>、<code>TCC</code>、<code>SAGA</code> 和 <code>XA</code> 等事务模式，这里重点介绍 <code>AT</code>模式。</p>
+<p>既然 <code>Seata</code> 是两段提交，那我们看看它在每个阶段都做了点啥？下边我们还以下单扣库存、扣余额举例。</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/f84a66ad84ea4db0bb3970d4a430a8df~tplv-k3u1fbpfcp-zoom-1.image" alt="img"></p>
+<p>先介绍 <code>Seata</code> 分布式事务的几种角色：</p>
+<ul>
+<li><code>Transaction Coordinator(TC)</code>:  全局事务协调者，用来协调全局事务和各个分支事务（不同服务）的状态， 驱动全局事务和各个分支事务的回滚或提交。</li>
+<li><code>Transaction Manager(TM) </code>:  事务管理者，业务层中用来开启/提交/回滚一个整体事务（在调用服务的方法中用注解开启事务）。</li>
+<li><code>Resource Manager(RM)</code>:  资源管理者，一般指业务数据库代表了一个分支事务（<code>Branch Transaction</code>），管理分支事务与 <code>TC</code> 进行协调注册分支事务并且汇报分支事务的状态，驱动分支事务的提交或回滚。</li>
+</ul>
+<blockquote>
+<p>Seata 实现分布式事务，设计了一个关键角色 <code>UNDO_LOG</code> （回滚日志记录表），我们在每个应用分布式事务的业务库中创建这张表，这个表的核心作用就是，将业务数据在更新前后的数据镜像组织成回滚日志，备份在 <code>UNDO_LOG</code> 表中，以便业务异常能随时回滚。</p>
+</blockquote>
+<h3 id="第一个阶段"><a href="#第一个阶段" class="headerlink" title="第一个阶段"></a>第一个阶段</h3><p>比如：下边我们更新 <code>user</code> 表的 <code>name</code> 字段。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">update</span> <span class="keyword">user</span> <span class="keyword">set</span> <span class="keyword">name</span> = <span class="string">&#x27;小富最帅&#x27;</span> <span class="keyword">where</span> <span class="keyword">name</span> = <span class="string">&#x27;程序员内点事&#x27;</span></span><br><span class="line">复制代码</span><br></pre></td></tr></table></figure>
+
+<p>首先 Seata 的 <code>JDBC</code> 数据源代理通过对业务 SQL 解析，提取 SQL 的元数据，也就是得到 SQL 的类型（<code>UPDATE</code>），表（<code>user</code>），条件（<code>where name = &#39;程序员内点事&#39;</code>）等相关的信息。</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/c78f6b5488ac4602acd18e3c9a978d5b~tplv-k3u1fbpfcp-zoom-1.image" alt="第一个阶段的流程图"></p>
+<p>先查询数据前镜像，根据解析得到的条件信息，生成查询语句，定位一条数据。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span>  <span class="keyword">name</span> <span class="keyword">from</span> <span class="keyword">user</span> <span class="keyword">where</span> <span class="keyword">name</span> = <span class="string">&#x27;程序员内点事&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/c195e1ddd8fb4621a9b8ea35077f35ec~tplv-k3u1fbpfcp-zoom-1.image" alt="数据前镜像"></p>
+<p>紧接着执行业务 SQL，根据前镜像数据主键查询出后镜像数据</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> <span class="keyword">name</span> <span class="keyword">from</span> <span class="keyword">user</span> <span class="keyword">where</span> <span class="keyword">id</span> = <span class="number">1</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/1b4c7bad77e9441a89e47f530ef505cb~tplv-k3u1fbpfcp-zoom-1.image" alt="数据后镜像"></p>
+<p>把业务数据在更新前后的数据镜像组织成回滚日志，将业务数据的更新和回滚日志在同一个本地事务中提交，分别插入到业务表和 <code>UNDO_LOG</code> 表中。</p>
+<p>回滚记录数据格式如下：包括 <code>afterImage</code> 前镜像、<code>beforeImage</code> 后镜像、 <code>branchId</code> 分支事务ID、<code>xid</code> 全局事务ID</p>
+<figure class="highlight json"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;branchId&quot;</span>:<span class="number">641789253</span>,</span><br><span class="line">    <span class="attr">&quot;xid&quot;</span>:<span class="string">&quot;xid:xxx&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;undoItems&quot;</span>:[</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="attr">&quot;afterImage&quot;</span>:&#123;</span><br><span class="line">                <span class="attr">&quot;rows&quot;</span>:[</span><br><span class="line">                    &#123;</span><br><span class="line">                        <span class="attr">&quot;fields&quot;</span>:[</span><br><span class="line">                            &#123;</span><br><span class="line">                                <span class="attr">&quot;name&quot;</span>:<span class="string">&quot;id&quot;</span>,</span><br><span class="line">                                <span class="attr">&quot;type&quot;</span>:<span class="number">4</span>,</span><br><span class="line">                                <span class="attr">&quot;value&quot;</span>:<span class="number">1</span></span><br><span class="line">                            &#125;</span><br><span class="line">                        ]</span><br><span class="line">                    &#125;</span><br><span class="line">                ],</span><br><span class="line">                <span class="attr">&quot;tableName&quot;</span>:<span class="string">&quot;product&quot;</span></span><br><span class="line">            &#125;,</span><br><span class="line">            <span class="attr">&quot;beforeImage&quot;</span>:&#123;</span><br><span class="line">                <span class="attr">&quot;rows&quot;</span>:[</span><br><span class="line">                    &#123;</span><br><span class="line">                        <span class="attr">&quot;fields&quot;</span>:[</span><br><span class="line">                            &#123;</span><br><span class="line">                                <span class="attr">&quot;name&quot;</span>:<span class="string">&quot;id&quot;</span>,</span><br><span class="line">                                <span class="attr">&quot;type&quot;</span>:<span class="number">4</span>,</span><br><span class="line">                                <span class="attr">&quot;value&quot;</span>:<span class="number">1</span></span><br><span class="line">                            &#125;</span><br><span class="line">                        ]</span><br><span class="line">                    &#125;</span><br><span class="line">                ],</span><br><span class="line">                <span class="attr">&quot;tableName&quot;</span>:<span class="string">&quot;product&quot;</span></span><br><span class="line">            &#125;,</span><br><span class="line">            <span class="attr">&quot;sqlType&quot;</span>:<span class="string">&quot;UPDATE&quot;</span></span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样就可以保证，任何提交的业务数据的更新一定有相应的回滚日志。</p>
+<blockquote>
+<p>在本地事务提交前，各分支事务需向 <code>全局事务协调者</code> TC 注册分支 ( <code>Branch Id</code>) ，为要修改的记录申请 <strong>全局锁</strong> ，要为这条数据加锁，利用 <code>SELECT FOR UPDATE</code> 语句。而如果一直拿不到锁那就需要回滚本地事务。TM 开启事务后会生成全局唯一的 <code>XID</code>，会在各个调用的服务间进行传递。</p>
+</blockquote>
+<p>有了这样的机制，本地事务分支（<code>Branch Transaction</code>）便可以在全局事务的第一阶段提交，并马上释放本地事务锁定的资源。相比于传统的 <code>XA</code> 事务在第二阶段释放资源，<code>Seata</code> 降低了锁范围提高效率，即使第二阶段发生异常需要回滚，也可以快速 从<code>UNDO_LOG</code> 表中找到对应回滚数据并反解析成 SQL 来达到回滚补偿。</p>
+<p>最后本地事务提交，业务数据的更新和前面生成的 UNDO LOG 数据一并提交，并将本地事务提交的结果上报给全局事务协调者 TC。</p>
+<h3 id="第二个阶段"><a href="#第二个阶段" class="headerlink" title="第二个阶段"></a>第二个阶段</h3><p>第二阶段是根据各分支的决议做提交或回滚：</p>
+<p>如果决议是全局提交，此时各分支事务已提交并成功，这时 <code>全局事务协调者（TC）</code> 会向分支发送第二阶段的请求。收到 TC 的分支提交请求，该请求会被放入一个异步任务队列中，并马上返回提交成功结果给 TC。异步队列中会异步和批量地根据 <code>Branch ID</code> 查找并删除相应 <code>UNDO LOG</code> 回滚记录。</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/592fc4836e8a4f9a9c4c1de690ba166d~tplv-k3u1fbpfcp-zoom-1.image" alt="img"></p>
+<p>如果决议是全局回滚，过程比全局提交麻烦一点，<code>RM</code> 服务方收到 <code>TC</code> 全局协调者发来的回滚请求，通过 <code>XID</code> 和 <code>Branch ID</code> 找到相应的回滚日志记录，通过回滚记录生成反向的更新 SQL 并执行，以完成分支的回滚。</p>
+<blockquote>
+<p>注意：这里删除回滚日志记录操作，一定是在本地业务事务执行之后</p>
+</blockquote>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/1c40b2c8a80b45acae157850f58cac79~tplv-k3u1fbpfcp-zoom-1.image" alt="img"></p>
+<p>上边说了几种分布式事务各自的优缺点，下边实践一下分布式事务中间 Seata 感受一下。</p>
+<h2 id="Seata-实践"><a href="#Seata-实践" class="headerlink" title="Seata 实践"></a>Seata 实践</h2><p>Seata 是一个需独立部署的中间件，所以先搭 Seata Server，这里以最新的 <code>seata-server-1.4.0</code> 版本为例，下载地址：<code>https://seata.io/en-us/blog/download.html</code></p>
+<p>解压后的文件我们只需要关心 <code>\seata\conf</code> 目录下的 <code>file.conf</code> 和  <code>registry.conf</code> 文件。</p>
+<h3 id="Seata-Server"><a href="#Seata-Server" class="headerlink" title="Seata Server"></a>Seata Server</h3><h3 id="file-conf"><a href="#file-conf" class="headerlink" title="file.conf"></a>file.conf</h3><p><code>file.conf</code> 文件用于配置持久化事务日志的模式，目前提供 <code>file</code>、<code>db</code>、<code>redis</code> 三种方式。</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/136f615cd12e4e21a0c8ac8c41f6f2a2~tplv-k3u1fbpfcp-zoom-1.image" alt="file.conf 文件配置"></p>
+<p><strong>注意</strong>：在选择 <code>db</code> 方式后，需要在对应数据库创建 <code>globalTable</code>（持久化全局事务）、<code>branchTable</code>（持久化各提交分支的事务）、 <code>lockTable</code>（持久化各分支锁定资源事务）三张表。</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- the table to store GlobalSession data</span></span><br><span class="line"><span class="comment">-- 持久化全局事务</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> <span class="string">`global_table`</span></span><br><span class="line">(</span><br><span class="line">    <span class="string">`xid`</span>                       <span class="built_in">VARCHAR</span>(<span class="number">128</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">    <span class="string">`transaction_id`</span>            <span class="built_in">BIGINT</span>,</span><br><span class="line">    <span class="string">`status`</span>                    <span class="built_in">TINYINT</span>      <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">    <span class="string">`application_id`</span>            <span class="built_in">VARCHAR</span>(<span class="number">32</span>),</span><br><span class="line">    <span class="string">`transaction_service_group`</span> <span class="built_in">VARCHAR</span>(<span class="number">32</span>),</span><br><span class="line">    <span class="string">`transaction_name`</span>          <span class="built_in">VARCHAR</span>(<span class="number">128</span>),</span><br><span class="line">    <span class="string">`timeout`</span>                   <span class="built_in">INT</span>,</span><br><span class="line">    <span class="string">`begin_time`</span>                <span class="built_in">BIGINT</span>,</span><br><span class="line">    <span class="string">`application_data`</span>          <span class="built_in">VARCHAR</span>(<span class="number">2000</span>),</span><br><span class="line">    <span class="string">`gmt_create`</span>                DATETIME,</span><br><span class="line">    <span class="string">`gmt_modified`</span>              DATETIME,</span><br><span class="line">    PRIMARY <span class="keyword">KEY</span> (<span class="string">`xid`</span>),</span><br><span class="line">    <span class="keyword">KEY</span> <span class="string">`idx_gmt_modified_status`</span> (<span class="string">`gmt_modified`</span>, <span class="string">`status`</span>),</span><br><span class="line">    <span class="keyword">KEY</span> <span class="string">`idx_transaction_id`</span> (<span class="string">`transaction_id`</span>)</span><br><span class="line">) <span class="keyword">ENGINE</span> = <span class="keyword">InnoDB</span></span><br><span class="line">  <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span> = utf8;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- the table to store BranchSession data</span></span><br><span class="line"><span class="comment">-- 持久化各提交分支的事务</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> <span class="string">`branch_table`</span></span><br><span class="line">(</span><br><span class="line">    <span class="string">`branch_id`</span>         <span class="built_in">BIGINT</span>       <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">    <span class="string">`xid`</span>               <span class="built_in">VARCHAR</span>(<span class="number">128</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">    <span class="string">`transaction_id`</span>    <span class="built_in">BIGINT</span>,</span><br><span class="line">    <span class="string">`resource_group_id`</span> <span class="built_in">VARCHAR</span>(<span class="number">32</span>),</span><br><span class="line">    <span class="string">`resource_id`</span>       <span class="built_in">VARCHAR</span>(<span class="number">256</span>),</span><br><span class="line">    <span class="string">`branch_type`</span>       <span class="built_in">VARCHAR</span>(<span class="number">8</span>),</span><br><span class="line">    <span class="string">`status`</span>            <span class="built_in">TINYINT</span>,</span><br><span class="line">    <span class="string">`client_id`</span>         <span class="built_in">VARCHAR</span>(<span class="number">64</span>),</span><br><span class="line">    <span class="string">`application_data`</span>  <span class="built_in">VARCHAR</span>(<span class="number">2000</span>),</span><br><span class="line">    <span class="string">`gmt_create`</span>        DATETIME(<span class="number">6</span>),</span><br><span class="line">    <span class="string">`gmt_modified`</span>      DATETIME(<span class="number">6</span>),</span><br><span class="line">    PRIMARY <span class="keyword">KEY</span> (<span class="string">`branch_id`</span>),</span><br><span class="line">    <span class="keyword">KEY</span> <span class="string">`idx_xid`</span> (<span class="string">`xid`</span>)</span><br><span class="line">) <span class="keyword">ENGINE</span> = <span class="keyword">InnoDB</span></span><br><span class="line">  <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span> = utf8;</span><br><span class="line"></span><br><span class="line"><span class="comment">-- the table to store lock data</span></span><br><span class="line"><span class="comment">-- 持久化每个分支锁表事务</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> <span class="string">`lock_table`</span></span><br><span class="line">(</span><br><span class="line">    <span class="string">`row_key`</span>        <span class="built_in">VARCHAR</span>(<span class="number">128</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">    <span class="string">`xid`</span>            <span class="built_in">VARCHAR</span>(<span class="number">96</span>),</span><br><span class="line">    <span class="string">`transaction_id`</span> <span class="built_in">BIGINT</span>,</span><br><span class="line">    <span class="string">`branch_id`</span>      <span class="built_in">BIGINT</span>       <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">    <span class="string">`resource_id`</span>    <span class="built_in">VARCHAR</span>(<span class="number">256</span>),</span><br><span class="line">    <span class="string">`table_name`</span>     <span class="built_in">VARCHAR</span>(<span class="number">32</span>),</span><br><span class="line">    <span class="string">`pk`</span>             <span class="built_in">VARCHAR</span>(<span class="number">36</span>),</span><br><span class="line">    <span class="string">`gmt_create`</span>     DATETIME,</span><br><span class="line">    <span class="string">`gmt_modified`</span>   DATETIME,</span><br><span class="line">    PRIMARY <span class="keyword">KEY</span> (<span class="string">`row_key`</span>),</span><br><span class="line">    <span class="keyword">KEY</span> <span class="string">`idx_branch_id`</span> (<span class="string">`branch_id`</span>)</span><br><span class="line">) <span class="keyword">ENGINE</span> = <span class="keyword">InnoDB</span></span><br><span class="line">  <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span> = utf8;</span><br></pre></td></tr></table></figure>
+
+<h3 id="registry-conf"><a href="#registry-conf" class="headerlink" title="registry.conf"></a>registry.conf</h3><p><code>registry.conf</code> 文件设置 注册中心 和 配置中心：</p>
+<p>目前注册中心支持 <code>nacos</code> 、<code>eureka</code>、<code>redis</code>、<code>zk</code>、<code>consul</code>、<code>etcd3</code>、<code>sofa</code> 七种，这里我使用的 <code>eureka</code>作为注册中心 ； 配置中心支持 <code>nacos</code> 、<code>apollo</code>、<code>zk</code>、<code>consul</code>、<code>etcd3</code> 五种方式。</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/2119d406e05e42268ac3536fa64866dc~tplv-k3u1fbpfcp-zoom-1.image" alt="registry.conf 文件配置"></p>
+<p>配置完以后在 <code>\seata\bin</code> 目录下启动 <code>seata-server</code> 即可，到这 <code>Seata</code> 的服务端就搭建好了。</p>
+<h3 id="Seata-Client"><a href="#Seata-Client" class="headerlink" title="Seata Client"></a>Seata Client</h3><p><code>Seata Server</code> 环境搭建完，接下来我们新建三个服务 <code>order-server</code>（下单服务）、<code>storage-server</code>（扣减库存服务）、<code>account-server</code>（账户金额服务），分别服务注册到 <code>eureka</code>。</p>
+<p>每个服务的大体核心配置如下：</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">spring:</span></span><br><span class="line">    <span class="attr">application:</span></span><br><span class="line">        <span class="attr">name:</span> <span class="string">storage-server</span></span><br><span class="line">    <span class="attr">cloud:</span></span><br><span class="line">        <span class="attr">alibaba:</span></span><br><span class="line">            <span class="attr">seata:</span></span><br><span class="line">                <span class="attr">tx-service-group:</span> <span class="string">my_test_tx_group</span></span><br><span class="line">    <span class="attr">datasource:</span></span><br><span class="line">        <span class="attr">driver-class-name:</span> <span class="string">com.mysql.jdbc.Driver</span></span><br><span class="line">        <span class="attr">url:</span> <span class="string">jdbc:mysql://47.93.6.1:3306/seat-storage</span></span><br><span class="line">        <span class="attr">username:</span> <span class="string">root</span></span><br><span class="line">        <span class="attr">password:</span> <span class="string">root</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># eureka 注册中心</span></span><br><span class="line"><span class="attr">eureka:</span></span><br><span class="line">    <span class="attr">client:</span></span><br><span class="line">        <span class="attr">serviceUrl:</span></span><br><span class="line">            <span class="attr">defaultZone:</span> <span class="string">http://$&#123;eureka.instance.hostname&#125;:8761/eureka/</span></span><br><span class="line">    <span class="attr">instance:</span></span><br><span class="line">        <span class="attr">hostname:</span> <span class="number">47.93</span><span class="number">.6</span><span class="number">.5</span></span><br><span class="line">        <span class="attr">prefer-ip-address:</span> <span class="literal">true</span></span><br></pre></td></tr></table></figure>
+
+<p>业务大致流程：用户发起下单请求，本地 order 订单服务创建订单记录，并通过 <code>RPC</code> 远程调用 <code>storage</code> 扣减库存服务和 <code>account</code> 扣账户余额服务，只有三个服务同时执行成功，才是一个完整的下单流程。如果某个服执行失败，则其他服务全部回滚。</p>
+<p>Seata 对业务代码的侵入性非常小，代码中使用只需用 <code>@GlobalTransactional</code> 注解开启一个全局事务即可。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="meta">@GlobalTransactional(name = &quot;create-order&quot;, rollbackFor = Exception.class)</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">create</span><span class="params">(Order order)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    String xid = RootContext.getXID();</span><br><span class="line"></span><br><span class="line">    LOGGER.info(<span class="string">&quot;-------&gt;交易开始&quot;</span>);</span><br><span class="line">    <span class="comment">//本地方法</span></span><br><span class="line">    orderDao.create(order);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//远程方法 扣减库存</span></span><br><span class="line">    storageApi.decrease(order.getProductId(), order.getCount());</span><br><span class="line"></span><br><span class="line">    <span class="comment">//远程方法 扣减账户余额</span></span><br><span class="line">    LOGGER.info(<span class="string">&quot;-------&gt;扣减账户开始order中&quot;</span>);</span><br><span class="line">    accountApi.decrease(order.getUserId(), order.getMoney());</span><br><span class="line">    LOGGER.info(<span class="string">&quot;-------&gt;扣减账户结束order中&quot;</span>);</span><br><span class="line"></span><br><span class="line">    LOGGER.info(<span class="string">&quot;-------&gt;交易结束&quot;</span>);</span><br><span class="line">    LOGGER.info(<span class="string">&quot;全局事务 xid： &#123;&#125;&quot;</span>, xid);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>前边说过 Seata AT 模式实现分布式事务，必须在相关的业务库中创建 <code>undo_log</code> 表来存数据回滚日志，表结构如下：</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- for AT mode you must to init this sql for you business database. the seata server not need it.</span></span><br><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="keyword">IF</span> <span class="keyword">NOT</span> <span class="keyword">EXISTS</span> <span class="string">`undo_log`</span></span><br><span class="line">(</span><br><span class="line">    <span class="string">`id`</span>            <span class="built_in">BIGINT</span>(<span class="number">20</span>)   <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT <span class="keyword">COMMENT</span> <span class="string">&#x27;increment id&#x27;</span>,</span><br><span class="line">    <span class="string">`branch_id`</span>     <span class="built_in">BIGINT</span>(<span class="number">20</span>)   <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">&#x27;branch transaction id&#x27;</span>,</span><br><span class="line">    <span class="string">`xid`</span>           <span class="built_in">VARCHAR</span>(<span class="number">100</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">&#x27;global transaction id&#x27;</span>,</span><br><span class="line">    <span class="string">`context`</span>       <span class="built_in">VARCHAR</span>(<span class="number">128</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">&#x27;undo_log context,such as serialization&#x27;</span>,</span><br><span class="line">    <span class="string">`rollback_info`</span> LONGBLOB     <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">&#x27;rollback info&#x27;</span>,</span><br><span class="line">    <span class="string">`log_status`</span>    <span class="built_in">INT</span>(<span class="number">11</span>)      <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">&#x27;0:normal status,1:defense status&#x27;</span>,</span><br><span class="line">    <span class="string">`log_created`</span>   DATETIME     <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">&#x27;create datetime&#x27;</span>,</span><br><span class="line">    <span class="string">`log_modified`</span>  DATETIME     <span class="keyword">NOT</span> <span class="literal">NULL</span> <span class="keyword">COMMENT</span> <span class="string">&#x27;modify datetime&#x27;</span>,</span><br><span class="line">    PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>),</span><br><span class="line">    <span class="keyword">UNIQUE</span> <span class="keyword">KEY</span> <span class="string">`ux_undo_log`</span> (<span class="string">`xid`</span>, <span class="string">`branch_id`</span>)</span><br><span class="line">) <span class="keyword">ENGINE</span> = <span class="keyword">InnoDB</span></span><br><span class="line">  AUTO_INCREMENT = <span class="number">1</span></span><br><span class="line">  <span class="keyword">DEFAULT</span> <span class="keyword">CHARSET</span> = utf8 <span class="keyword">COMMENT</span> =<span class="string">&#x27;AT transaction mode undo table&#x27;</span>;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>到这环境搭建的工作就完事了，完整案例会在后边贴出 <code>GitHub</code> 地址，就不在这占用篇幅了。</p>
+</blockquote>
+<h2 id="测试-Seata"><a href="#测试-Seata" class="headerlink" title="测试 Seata"></a>测试 Seata</h2><p>项目中的服务调用过程如下图：</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/40a44673f4c84450b2a29154accf7b1c~tplv-k3u1fbpfcp-zoom-1.image" alt="服务调用过程"></p>
+<p>启动各个服务后，我们直接请求下单接口看看效果，只要 <code>order</code> 订单表创建记录成功，<code>storage</code> 库存表 <code>used</code> 字段数量递增、<code>account</code> 余额表 <code>used</code> 字段数量递增则表示下单流程成功。</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/d091e25fac5346dc92d1875df942e6de~tplv-k3u1fbpfcp-zoom-1.image" alt="原始数据"></p>
+<p>请求后正向流程是没问题的，数据和预想的一样</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/9048853aec764d86a116473450270347~tplv-k3u1fbpfcp-zoom-1.image" alt="下单数据"></p>
+<p>而且发现 <code>TM</code> 事务管理者 <code>order-server</code> 服务的控制台也打印出了两阶段提交的日志</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/d13de839fd2a4db2af5f5e535d13e41a~tplv-k3u1fbpfcp-zoom-1.image" alt="控制台两次提交"></p>
+<p>那么再看看如果其中一个服务异常，会不会正常回滚呢？在 <code>account-server</code> 服务中模拟超时异常，看能否实现全局事务回滚。</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/d5d73832fae544828d2bc33d67cd160b~tplv-k3u1fbpfcp-zoom-1.image" alt="全局事务回滚"></p>
+<p>发现数据全没执行成功，说明全局事务回滚也成功了</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/7307262d393244f890211618ec315630~tplv-k3u1fbpfcp-zoom-1.image" alt="img"></p>
+<p>那看一下 <code>undo_log</code> 回滚记录表的变化情况，由于 <code>Seata</code> 删除回滚日志的速度很快，所以要想在表中看见回滚日志，必须要在某一个服务上打断点才看的更明显。</p>
+<p><img src="/2020/12/22/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E4%B9%8B%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1%E4%B9%8BSeata%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/6b06cf8edcfe4bd997e57206b578a3e0~tplv-k3u1fbpfcp-zoom-1.image" alt="回滚记录"></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>上边简单介绍了 <code>2PC</code>、<code>3PC</code>、<code>TCC</code>、<code>MQ</code>、<code>Seata</code> 这五种分布式事务解决方案，还详细的实践了 <code>Seata</code> 中间件。但不管我们选哪一种方案，在项目中应用都要谨慎再谨慎，除特定的数据强一致性场景外，能不用尽量就不要用，因为无论它们性能如何优越，一旦项目套上分布式事务，整体效率会几倍的下降，在高并发情况下弊端尤为明显。</p>
+<blockquote>
+<p>本案例 github 地址：<a target="_blank" rel="noopener" href="https://github.com/chengxy-nds/Springboot-Notebook/tree/master/springboot-seata-transaction">https://github.com/chengxy-nds/Springboot-Notebook/tree/master/springboot-seata-transaction</a></p>
+</blockquote>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/%E5%88%86%E5%B8%83%E5%BC%8F%E4%BA%8B%E5%8A%A1/" rel="tag"># 分布式事务</a>
+              <a href="/tags/Seata/" rel="tag"># Seata</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/12/22/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BZookeeper%E4%B9%8B%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/" rel="prev" title="Zookeeper之简单使用">
+                  <i class="fa fa-chevron-left"></i> Zookeeper之简单使用
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/12/22/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BMQTT%E4%B9%8B%E5%9F%BA%E7%A1%80/" rel="next" title="MQTT之基础">
+                  MQTT之基础 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

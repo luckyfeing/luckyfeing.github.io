@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="作者：程序锅出处：https:&#x2F;&#x2F;zhuanlan.zhihu.com&#x2F;p&#x2F;80203905 1. MQTT中的QoS等级MQTT设计了一套保证消息稳定传输的机制，包括消息应答、存储和重传。在这套机制下，提供了三种不同层次QoS（Quality of Service）：  QoS0，At most once，至多一次； QoS1，At least once，至少一次； QoS2，Exactly o">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MQTT之Qos详解">
+<meta property="og:url" content="http://example.com/2020/12/22/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BMQTT%E4%B9%8BQos%E8%AF%A6%E8%A7%A3/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="作者：程序锅出处：https:&#x2F;&#x2F;zhuanlan.zhihu.com&#x2F;p&#x2F;80203905 1. MQTT中的QoS等级MQTT设计了一套保证消息稳定传输的机制，包括消息应答、存储和重传。在这套机制下，提供了三种不同层次QoS（Quality of Service）：  QoS0，At most once，至多一次； QoS1，At least once，至少一次； QoS2，Exactly o">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2020/12/22/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BMQTT%E4%B9%8BQos%E8%AF%A6%E8%A7%A3/v2-c707d4103db77637e352e20f445f728c_r.jpg">
+<meta property="og:image" content="http://example.com/2020/12/22/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BMQTT%E4%B9%8BQos%E8%AF%A6%E8%A7%A3/v2-600d6162bdb9e17430437ce58bfcda8f_720w.jpg">
+<meta property="og:image" content="http://example.com/2020/12/22/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BMQTT%E4%B9%8BQos%E8%AF%A6%E8%A7%A3/v2-f9be4b4af808507942cad20984b1d0d8_720w.jpg">
+<meta property="article:published_time" content="2020-12-22T08:59:29.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:27.208Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="MQ">
+<meta property="article:tag" content="EMQTT">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2020/12/22/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BMQTT%E4%B9%8BQos%E8%AF%A6%E8%A7%A3/v2-c707d4103db77637e352e20f445f728c_r.jpg">
+
+
+<link rel="canonical" href="http://example.com/2020/12/22/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BMQTT%E4%B9%8BQos%E8%AF%A6%E8%A7%A3/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>MQTT之Qos详解 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-MQTT%E4%B8%AD%E7%9A%84QoS%E7%AD%89%E7%BA%A7"><span class="nav-number">1.</span> <span class="nav-text">1. MQTT中的QoS等级</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-1-QoS0"><span class="nav-number">1.1.</span> <span class="nav-text">1.1. QoS0</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-QoS1"><span class="nav-number">1.2.</span> <span class="nav-text">1.2. QoS1</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-QoS2"><span class="nav-number">1.3.</span> <span class="nav-text">1.3. QoS2</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-QoS%E9%99%8D%E7%BA%A7"><span class="nav-number">2.</span> <span class="nav-text">2. QoS降级</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-QoS%E5%92%8C%E4%BC%9A%E8%AF%9D"><span class="nav-number">3.</span> <span class="nav-text">3. QoS和会话</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-QoS%E7%AD%89%E7%BA%A7%E4%BD%BF%E7%94%A8%E5%BB%BA%E8%AE%AE"><span class="nav-number">4.</span> <span class="nav-text">4. QoS等级使用建议</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%9C%AC%E6%96%87%E5%8F%82%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">本文参考</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2020/12/22/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BMQTT%E4%B9%8BQos%E8%AF%A6%E8%A7%A3/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          MQTT之Qos详解
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2020-12-22 16:59:29" itemprop="dateCreated datePublished" datetime="2020-12-22T16:59:29+08:00">2020-12-22</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:27" itemprop="dateModified" datetime="2024-07-12T10:34:27+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/MQ/" itemprop="url" rel="index"><span itemprop="name">MQ</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>作者：<a target="_blank" rel="noopener" href="https://www.zhihu.com/people/zero-50-79">程序锅</a><br>出处：<a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/80203905">https://zhuanlan.zhihu.com/p/80203905</a></p>
+<h2 id="1-MQTT中的QoS等级"><a href="#1-MQTT中的QoS等级" class="headerlink" title="1. MQTT中的QoS等级"></a>1. MQTT中的QoS等级</h2><p>MQTT设计了一套保证消息稳定传输的机制，包括消息应答、存储和重传。在这套机制下，提供了三种不同层次QoS（Quality of Service）：</p>
+<ul>
+<li>QoS0，At most once，至多一次；</li>
+<li>QoS1，At least once，至少一次；</li>
+<li>QoS2，Exactly once，确保只有一次。</li>
+</ul>
+<p>QoS 是消息的发送方（Sender）和接受方（Receiver）之间达成的一个协议：</p>
+<ul>
+<li>QoS0 代表，Sender 发送的一条消息，Receiver 最多能收到一次，也就是说 Sender 尽力向 Receiver 发送消息，如果发送失败，也就算了；</li>
+<li>QoS1 代表，Sender 发送的一条消息，Receiver 至少能收到一次，也就是说 Sender 向 Receiver 发送消息，如果发送失败，会继续重试，直到 Receiver 收到消息为止，但是因为重传的原因，Receiver 有可能会收到重复的消息；</li>
+<li>QoS2 代表，Sender 发送的一条消息，Receiver 确保能收到而且只收到一次，也就是说 Sender 尽力向 Receiver 发送消息，如果发送失败，会继续重试，直到 Receiver 收到消息为止，同时保证 Receiver 不会因为消息重传而收到重复的消息。</li>
+</ul>
+<blockquote>
+<p>注意：<br>QoS是Sender和Receiver之间的协议，而不是Publisher和Subscriber之间的协议。换句话说，Publisher发布了一条QoS1的消息，只能保证Broker能至少收到一次这个消息；而对于Subscriber能否至少收到一次这个消息，还要取决于Subscriber在Subscibe的时候和Broker协商的QoS等级。</p>
+</blockquote>
+<h3 id="1-1-QoS0"><a href="#1-1-QoS0" class="headerlink" title="1.1. QoS0"></a>1.1. QoS0</h3><p>QoS0等级下，Sender和Receiver之间一次消息的传递流程如下：</p>
+<p><img src="/2020/12/22/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BMQTT%E4%B9%8BQos%E8%AF%A6%E8%A7%A3/v2-c707d4103db77637e352e20f445f728c_r.jpg" alt="preview"></p>
+<p>Sender向Receiver发送一个包含消息数据的PUBLISH包，然后不管结果如何，丢掉已发送的PUBLISH包，一条消息的发送完成。</p>
+<h3 id="1-2-QoS1"><a href="#1-2-QoS1" class="headerlink" title="1.2. QoS1"></a>1.2. QoS1</h3><p>QoS1要保证消息至少到达一次，所以有一个应答的机制。Sender和Receiver的一次消息的传递流程如下：</p>
+<p><img src="/2020/12/22/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BMQTT%E4%B9%8BQos%E8%AF%A6%E8%A7%A3/v2-600d6162bdb9e17430437ce58bfcda8f_720w.jpg" alt="img"></p>
+<ol>
+<li>Sender向Receiver发送一个带有数据的PUBLISH包，并在本地保存这个PUBLISH包；</li>
+<li>Receiver收到PUBLISH包以后，向Sender发送一个PUBACK数据包，PUBACK数据包没有消息体（Payload），在可变头中有一个包标识（Packet Identifier），和它收到的PUBLISH包中的Packet Identifier一致。</li>
+<li>Sender收到PUBACK之后，根据PUBACK包中的Packet Identifier找到本地保存的PUBLISH包，然后丢弃掉，一次消息的发送完成。</li>
+</ol>
+<p>但是消息传递流程中可能会出现问题：</p>
+<ul>
+<li>如果Sender在一段时间内没有收到PUBLISH包对应的PUBACK，它将该PUBLISH包的DUP标识设为1（代表是重新发送的PUBLISH包），然后重新发送该PUBLISH包。</li>
+<li>Receiver可能会重复收到消息，需自行去重。</li>
+</ul>
+<h3 id="1-3-QoS2"><a href="#1-3-QoS2" class="headerlink" title="1.3. QoS2"></a>1.3. QoS2</h3><p>相比QoS0和QoS1,QoS2不仅要确保Receiver能收到Sender发送的消息，还需要确保消息不重复。它的重传和应答机制就要复杂一些，同时开销也是最大的。QoS2下，一次消息的传递流程如下所示：</p>
+<p><img src="/2020/12/22/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BMQTT%E4%B9%8BQos%E8%AF%A6%E8%A7%A3/v2-f9be4b4af808507942cad20984b1d0d8_720w.jpg" alt="img"></p>
+<ol>
+<li>Sender发送QoS为2的PUBLISH数据包，数据包 Packet Identifier 为 P，并在本地保存该PUBLISH包；</li>
+<li>Receiver收到PUBLISH数据包后，<strong>在本地保存PUBLISH包的Packet Identifier P</strong>，并回复Sender一个PUBREC数据包，PUBREC数据包可变头中的Packet Identifier为P，没有消息体（Payload）；</li>
+<li>当Sender收到PUBREC，它就可以安全的丢弃掉初始Packet Identifier为P的PUBLISH数据包。同时保存该PUBREC数据包，并回复Receiver一个PUBREL数据包，PUBREL数据包可变头中的Packet Identifier为P，没有消息体；</li>
+<li>当Receiver收到PUBREL数据包，它可以丢掉保存的PUBLISH包的Packet Identifier P，并回复Sender一个可变头中 Packet Identifier 为 P，没有消息体（Payload）的PUBCOMP数据包；</li>
+<li>当Sender收到PUBCOMP包，那么认为传输已完成，则丢掉对应的PUBREC数据包；</li>
+</ol>
+<p>上面是一次完整无误的传输过程，然而传输过程中可能会出现以下情况：</p>
+<ul>
+<li>情况1：Sender发送PUBLISH数据包给Receiver的时候，发送失败；</li>
+<li>情况2：Sender已经成功发送PUBLISH数据包给Receiver了，但是Receiver发送PUBREC数据包失败；</li>
+<li>情况3：Sender已经成功收到了PUBREC数据包，但是PUBREL数据包发送失败；</li>
+<li>情况4：Receiver已经收到了PUBREL数据包，但是发送PUBCOMP数据包时发送失败</li>
+</ul>
+<p>针对上述的问题，较为详细的处理方法如下：</p>
+<ul>
+<li>不管是情况1还是情况2，因为Sender在一定时间内没有收到PUBREC，那么它会把PUBLISH包的DUP标识设为1，重新发送该PUBLISH数据包；</li>
+<li>不管是情况3还是情况4，因为Sender在一定时间内没有收到PUBCOMP包，那么它会重新发送PUBREL数据包；</li>
+<li>针对情况2，Receiver可能会收到多个重复的PUBLISH包，更加完善的处理如下：<br>Receiver在收到PUBLISH数据包之后，马上回复一个PUBREC数据包。并会在本地保存PUBLISH包的Packet Identifier P，不管之后因为重传多少次这个Packet Identifier 为P的数据包，Receiver都认为是重复的，丢弃。同时Receiver接收到QoS为2的PUBLISH数据包后，<strong>并不马上投递给上层，</strong>而是在本地做持久化，将消息保存起来（这里需要是持久化而不是保存在内存）。</li>
+<li>针对情况4，更加完善的处理如下：<br>Receiver收到PUBREL数据包后，正式将消息递交给上层应用层，投递之后销毁Packet Identifier P，并发送PUBCOMP数据包，销毁之前的持久化消息。之后不管接收到多少个PUBREL数据包，因为没有Packet Identifier P，直接回复PUBCOMP数据包即可。</li>
+</ul>
+<h2 id="2-QoS降级"><a href="#2-QoS降级" class="headerlink" title="2. QoS降级"></a>2. QoS降级</h2><p>在 MQTT 协议中，从 Broker 到 Subscriber 这段消息传递的实际 QoS 等于：Publisher 发布消息时指定的 QoS 等级和 Subscriber 在订阅时与 Broker 协商的 QoS 等级，这两个 QoS 等级中的最小那一个。</p>
+<blockquote>
+<p><strong>Actual Subscribe QoS = MIN(Publish QoS, Subscribe QoS)</strong></p>
+</blockquote>
+<p>如下面代码所示：</p>
+<p>该subscriber订阅消息时指定的QoS为1</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> paho.mqtt.client <span class="keyword">as</span> mqtt</span><br><span class="line"></span><br><span class="line"><span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"><span class="string">当代理响应订阅请求时被调用</span></span><br><span class="line"><span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">on_subscribe</span>(<span class="params">client, userdata, mid, granted_qos</span>):</span></span><br><span class="line">    print(<span class="string">&quot;granted_qos:&quot;</span>, granted_qos)</span><br><span class="line"></span><br><span class="line"><span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"><span class="string">当收到关于客户订阅的主题的消息时调用</span></span><br><span class="line"><span class="string">&#x27;&#x27;&#x27;</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">on_message</span>(<span class="params">client, userdata, message</span>):</span></span><br><span class="line">    print(<span class="string">&quot;message qos&quot;</span>, message.qos)</span><br><span class="line">    print(<span class="string">&quot;message topic&quot;</span>, message.topic)</span><br><span class="line">    print(<span class="string">&quot;message payload&quot;</span>, message.payload)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">on_connect</span>(<span class="params">client, userdata, flags, rc</span>):</span></span><br><span class="line">    <span class="keyword">if</span> rc == <span class="number">0</span> :</span><br><span class="line">        print(<span class="string">&quot;subscribing&quot;</span>)</span><br><span class="line">        client.subscribe(<span class="string">&quot;test&quot;</span>, <span class="number">1</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        print(<span class="string">&quot;connection failed &quot;</span>, rc)</span><br><span class="line"></span><br><span class="line">mqtt_client = mqtt.Client(client_id=<span class="string">&quot;demo_mqtt_sub&quot;</span>, clean_session=<span class="literal">False</span>)</span><br><span class="line">mqtt_client.on_connect = on_connect</span><br><span class="line">mqtt_client.on_subscribe = on_subscribe</span><br><span class="line">mqtt_client.on_message = on_message</span><br><span class="line"></span><br><span class="line">mqtt_client.connect(<span class="string">&quot;192.168.10.239&quot;</span>, <span class="number">1883</span>)</span><br><span class="line">mqtt_client.loop_forever()</span><br></pre></td></tr></table></figure>
+
+<p>运行上述代码输出的结果为：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">subscribing</span><br><span class="line">granted_qos: (1,)</span><br></pre></td></tr></table></figure>
+
+<p>之后运行下面的publisher代码，指定发送的PUBLISH数据包的QoS等级为0</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> paho.mqtt.client <span class="keyword">as</span> mqtt</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">on_connect</span>(<span class="params">client, userdata, flags, rc</span>):</span></span><br><span class="line">    <span class="keyword">if</span> rc == <span class="number">0</span>:</span><br><span class="line">        client.publish(<span class="string">&quot;test&quot;</span>, payload=<span class="string">&quot;hello world&quot;</span>, qos=<span class="number">0</span>)</span><br><span class="line">    <span class="keyword">else</span>:</span><br><span class="line">        print(<span class="string">&quot;connection failed &quot;</span>, rc)</span><br><span class="line"></span><br><span class="line">mqtt_client = mqtt.Client(client_id=<span class="string">&quot;demo_mqtt_pub&quot;</span>, clean_session=<span class="literal">False</span>)</span><br><span class="line">mqtt_client.on_connect = on_connect</span><br><span class="line"></span><br><span class="line">mqtt_client.connect(<span class="string">&quot;192.168.10.239&quot;</span>, <span class="number">1883</span>)</span><br><span class="line">mqtt_client.loop_forever()</span><br></pre></td></tr></table></figure>
+
+<p>结果上面运行subscriber代码的终端输出如下内容：</p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">message qos 0</span><br><span class="line">message topic <span class="built_in">test</span></span><br><span class="line">message payload b<span class="string">&#x27;hello world&#x27;</span></span><br></pre></td></tr></table></figure>
+
+<p>上述的结果表示，订阅者收到的消息的qos等级为0。同样如果修改subscriber中的订阅主题的QoS等级为0，publisher中发布的PUBLISH包的QoS为1，那么输出结果同上。</p>
+<h2 id="3-QoS和会话"><a href="#3-QoS和会话" class="headerlink" title="3. QoS和会话"></a>3. QoS和会话</h2><p>如果 Client 想接收离线消息，必须使用持久化的会话（Clean Session = 0）连接到 Broker，这样 Broker 才会存储 Client 在离线期间没有确认接收的 QoS 大于 等于1 的消息。</p>
+<blockquote>
+<p>在发送QoS为1或2的情况，Broker（此时为Sender）会将发送的PUBLISH数据包保存到本地，直到收到一系列回复的数据包，然而Client（此时为Receiver）在离线期间无法回复相应的数据包，所以会一直存储。</p>
+</blockquote>
+<h2 id="4-QoS等级使用建议"><a href="#4-QoS等级使用建议" class="headerlink" title="4. QoS等级使用建议"></a>4. QoS等级使用建议</h2><p><strong>在以下情况下你可以选择 QoS0</strong>：</p>
+<ul>
+<li>Client 和 Broker 之间的网络连接非常稳定，例如一个通过有线网络连接到 Broker 的测试用 Client；</li>
+<li>可以接受丢失部分消息，比如你有一个传感器以非常短的间隔发布状态数据，所以丢一些也可以接受；</li>
+<li>你不需要离线消息。</li>
+</ul>
+<p><strong>在以下情况下你应该选择 QoS1：</strong></p>
+<ul>
+<li>你需要接收所有的消息，而且你的应用可以接受并处理重复的消息；</li>
+<li>你无法接受 QoS2 带来的额外开销，QoS1 发送消息的速度比 QoS2 快很多。</li>
+</ul>
+<p><strong>在以下情况下你应该选择 QoS2：</strong></p>
+<ul>
+<li>你的应用必须接收到所有的消息，而且你的应用在重复的消息下无法正常工作，同时你也能接受 QoS2 带来的额外开销。</li>
+</ul>
+<h2 id="本文参考"><a href="#本文参考" class="headerlink" title="本文参考"></a><strong>本文参考</strong></h2><ol>
+<li><a href="https://link.zhihu.com/?target=https://blog.csdn.net/zerooffdate/article/details/78950907">MQTT协议QoS2 准确一次送达的实现</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/MQ/" rel="tag"># MQ</a>
+              <a href="/tags/EMQTT/" rel="tag"># EMQTT</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2020/12/22/mysql%E4%B9%8B%E7%B4%A2%E5%BC%95/" rel="prev" title="mysql之索引">
+                  <i class="fa fa-chevron-left"></i> mysql之索引
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/12/22/%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%B9%8BMQTT%E4%B9%8B%E7%AE%80%E5%8D%95%E4%BD%BF%E7%94%A8/" rel="next" title="MQTT之简单使用">
+                  MQTT之简单使用 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>

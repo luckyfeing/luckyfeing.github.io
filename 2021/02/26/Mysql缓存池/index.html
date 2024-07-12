@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.2.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.1/css/all.min.css">
+  <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css">
+
+<script class="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","images":"/images","scheme":"Gemini","version":"8.0.2","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":false,"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"Searching...","empty":"We didn't find any results for the search: ${query}","hits_time":"${hits} results found in ${time} ms","hits":"${hits} results found"}};
+  </script>
+
+  <meta name="description" content="今天来聊一聊 Mysql 缓存池原理。 提纲附上，话不多说，直接干货。  前言面试官：同学，你能说说Mysql 缓存池吗？ 狂聊君：啊，这么难吗，容我组织一下语言。（内心OS：这TM还不简单？我能给你扯半小时！） 面试官：可以，给你一分钟时间想一想吧。 为什么要有缓存池？Mysql 的 innodb 存储引擎是基于磁盘存储的，并且是按照页的方式进行管理的。 在数据库系统中，CPU 速度与磁盘速度之">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mysql缓存池">
+<meta property="og:url" content="http://example.com/2021/02/26/Mysql%E7%BC%93%E5%AD%98%E6%B1%A0/index.html">
+<meta property="og:site_name" content="个人博客">
+<meta property="og:description" content="今天来聊一聊 Mysql 缓存池原理。 提纲附上，话不多说，直接干货。  前言面试官：同学，你能说说Mysql 缓存池吗？ 狂聊君：啊，这么难吗，容我组织一下语言。（内心OS：这TM还不简单？我能给你扯半小时！） 面试官：可以，给你一分钟时间想一想吧。 为什么要有缓存池？Mysql 的 innodb 存储引擎是基于磁盘存储的，并且是按照页的方式进行管理的。 在数据库系统中，CPU 速度与磁盘速度之">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_png/RM9eAwLoEFB4BTrdRkl9xicYTic9LbId0UlVBbYzdDQ1AcJDicwOVicSTFITUHRWnBpoPaM0miaibv8KFdzI24JSUGeA/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_png/RM9eAwLoEFB4BTrdRkl9xicYTic9LbId0U7N0aFIbzkyjSnmeRiaibdRicvmf6B8ylOIXIdiazPLib0Vuo1f5KInOe3VQ/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_png/RM9eAwLoEFB4BTrdRkl9xicYTic9LbId0Uq7lPibDTEeZnDGC2LibZrb14MDXlMGZ2zVtfwJ6SYvOMm1pypL9kYgXQ/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_png/RM9eAwLoEFB4BTrdRkl9xicYTic9LbId0UZH5zZQvdLAa3IhDasmjUE7AfDibmEWtR6aH0fjw1XFCtPLyafdjhTzg/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1">
+<meta property="og:image" content="https://mmbiz.qpic.cn/mmbiz_png/RM9eAwLoEFB4BTrdRkl9xicYTic9LbId0UYZKoGqCJ4KGib4uJV2r9G25CnTwLTPic3SGYcJmM5QFJiapOuRshaRP3Q/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1">
+<meta property="article:published_time" content="2021-02-26T02:43:15.000Z">
+<meta property="article:modified_time" content="2024-07-12T02:34:26.835Z">
+<meta property="article:author" content="灰(｢･ω･)｢嘿灰">
+<meta property="article:tag" content="mysql">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://mmbiz.qpic.cn/mmbiz_png/RM9eAwLoEFB4BTrdRkl9xicYTic9LbId0UlVBbYzdDQ1AcJDicwOVicSTFITUHRWnBpoPaM0miaibv8KFdzI24JSUGeA/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1">
+
+
+<link rel="canonical" href="http://example.com/2021/02/26/Mysql%E7%BC%93%E5%AD%98%E6%B1%A0/">
+
+
+<script class="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>Mysql缓存池 | 个人博客</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  body { margin-top: 2rem; }
+
+  .use-motion .menu-item,
+  .use-motion .sidebar,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header {
+    visibility: visible;
+  }
+
+  .use-motion .header,
+  .use-motion .site-brand-container .toggle,
+  .use-motion .footer { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle,
+  .use-motion .custom-logo-image {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line {
+    transform: scaleX(1);
+  }
+
+  .search-pop-overlay, .sidebar-nav { display: none; }
+  .sidebar-panel { display: block; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+        <span class="toggle-line"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">个人博客</h1>
+      <i class="logo-line"></i>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  <ul class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about/" rel="section"><i class="fa fa-user fa-fw"></i>About</a>
+
+  </li>
+        <li class="menu-item menu-item-tags">
+
+    <a href="/tags/" rel="section"><i class="fa fa-tags fa-fw"></i>Tags</a>
+
+  </li>
+        <li class="menu-item menu-item-categories">
+
+    <a href="/categories/" rel="section"><i class="fa fa-th fa-fw"></i>Categories</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+        <li class="menu-item menu-item-schedule">
+
+    <a href="/schedule/" rel="section"><i class="fa fa-calendar fa-fw"></i>Schedule</a>
+
+  </li>
+        <li class="menu-item menu-item-sitemap">
+
+    <a href="/sitemap.xml" rel="section"><i class="fa fa-sitemap fa-fw"></i>Sitemap</a>
+
+  </li>
+        <li class="menu-item menu-item-commonweal">
+
+    <a href="/404/" rel="section"><i class="fa fa-heartbeat fa-fw"></i>Commonweal 404</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <section class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E6%9C%89%E7%BC%93%E5%AD%98%E6%B1%A0%EF%BC%9F"><span class="nav-number">2.</span> <span class="nav-text">为什么要有缓存池？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E6%B1%A0%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%8E%9F%E7%90%86"><span class="nav-number">3.</span> <span class="nav-text">缓存池的基本原理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E6%B1%A0%E7%BB%93%E6%9E%84"><span class="nav-number">4.</span> <span class="nav-text">缓存池结构</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E6%B1%A0%E5%8F%82%E6%95%B0%E8%AE%BE%E7%BD%AE"><span class="nav-number">5.</span> <span class="nav-text">缓存池参数设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%93%E5%AD%98%E6%B1%A0%E7%AE%A1%E7%90%86"><span class="nav-number">6.</span> <span class="nav-text">缓存池管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Free-%E9%93%BE%E8%A1%A8"><span class="nav-number">6.1.</span> <span class="nav-text">Free 链表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2%E3%80%81Lru-%E9%93%BE%E8%A1%A8"><span class="nav-number">6.2.</span> <span class="nav-text">2、Lru 链表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3%E3%80%81Flush-%E9%93%BE%E8%A1%A8"><span class="nav-number">6.3.</span> <span class="nav-text">3、Flush 链表</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%BB%E6%93%8D%E4%BD%9C"><span class="nav-number">7.</span> <span class="nav-text">读操作</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%99%E6%93%8D%E4%BD%9C"><span class="nav-number">8.</span> <span class="nav-text">写操作</span></a></li></ol></div>
+        </section>
+        <!--/noindex-->
+
+        <section class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">灰(｢･ω･)｢嘿灰</p>
+  <div class="site-description" itemprop="description">学习还是需要记录</div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">158</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-categories">
+            <a href="/categories/">
+          
+        <span class="site-state-item-count">30</span>
+        <span class="site-state-item-name">categories</span></a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+          
+        <span class="site-state-item-count">91</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </section>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+      
+
+      
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2021/02/26/Mysql%E7%BC%93%E5%AD%98%E6%B1%A0/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="灰(｢･ω･)｢嘿灰">
+      <meta itemprop="description" content="学习还是需要记录">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="个人博客">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Mysql缓存池
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2021-02-26 10:43:15" itemprop="dateCreated datePublished" datetime="2021-02-26T10:43:15+08:00">2021-02-26</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2024-07-12 10:34:26" itemprop="dateModified" datetime="2024-07-12T10:34:26+08:00">2024-07-12</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">In</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/mysql/" itemprop="url" rel="index"><span itemprop="name">mysql</span></a>
+        </span>
+    </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p>今天来聊一聊 Mysql 缓存池原理。</p>
+<p>提纲附上，话不多说，直接干货。</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/RM9eAwLoEFB4BTrdRkl9xicYTic9LbId0UlVBbYzdDQ1AcJDicwOVicSTFITUHRWnBpoPaM0miaibv8KFdzI24JSUGeA/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片"></p>
+<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>面试官：同学，你能说说Mysql 缓存池吗？</p>
+<p>狂聊君：啊，这么难吗，容我组织一下语言。（内心OS：这TM还不简单？我能给你扯半小时！）</p>
+<p>面试官：可以，给你一分钟时间想一想吧。</p>
+<h2 id="为什么要有缓存池？"><a href="#为什么要有缓存池？" class="headerlink" title="为什么要有缓存池？"></a>为什么要有缓存池？</h2><p>Mysql 的 innodb 存储引擎是基于磁盘存储的，并且是按照页的方式进行管理的。</p>
+<p>在数据库系统中，CPU 速度与磁盘速度之间的差距是非常大的，为了最大可能的弥补之间的差距，提出了缓存池的概念。</p>
+<p>所以缓存池，简单来说就是一块<strong>「内存区域」</strong>，通过内存的速度来弥补磁盘速度较慢，导致对数据库造成性能的影响。</p>
+<h2 id="缓存池的基本原理"><a href="#缓存池的基本原理" class="headerlink" title="缓存池的基本原理"></a>缓存池的基本原理</h2><p><strong>「读操作」</strong></p>
+<p>在数据库中进行读取页的操作，首先把从磁盘读到的页存放在缓存池中，下一次读取相同的页时，首先判断该页是不是在缓存池中。</p>
+<p>若在，称该页在缓存池中被命中，则直接读取该页，否则，还是去读取磁盘上的页。</p>
+<p><strong>「写操作」</strong></p>
+<p>对于数据库中页的修改操作，首先修改在缓存池中的页，然后在以一定的频率刷新到磁盘，并不是每次页发生改变就刷新回磁盘，而是通过 checkpoint 的机制把页刷新回磁盘。</p>
+<p><strong>可以看到，无论是读操作还是写操纵，都是对缓存池进行操作，而不是直接对磁盘进行操纵。</strong></p>
+<h2 id="缓存池结构"><a href="#缓存池结构" class="headerlink" title="缓存池结构"></a>缓存池结构</h2><p>Buffer Pool 是一片连续的内存空间，innodb 存储引擎是通过页的方式对这块内存进行管理的。</p>
+<p>缓存池的结构如下图：</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/RM9eAwLoEFB4BTrdRkl9xicYTic9LbId0U7N0aFIbzkyjSnmeRiaibdRicvmf6B8ylOIXIdiazPLib0Vuo1f5KInOe3VQ/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片"></p>
+<p>可以看到缓存池中包括数据页、索引页、插入缓存、自适应哈希索引、锁信息、数据字段。</p>
+<p>其中数据页和索引页会用掉多数内存。</p>
+<p><strong>「但是，innodb 是如何管理缓存池中的这么多页呢？」</strong></p>
+<p>为了更好的管理这些缓存的页，innodb 为每一个缓存页都创建了一些所谓的控制信息，这些控制信息包括该页所属的：</p>
+<ul>
+<li>表空间编号(sapce id)</li>
+<li>页号(page numeber)</li>
+<li>页在 buffer Pool 的地址</li>
+<li>一些锁信息以及 LSN 信息日志序列号</li>
+<li>其他控制信息</li>
+</ul>
+<p>每个缓存页对应的控制信息占用的内存大小是相同的，我们把每个页对应的控制信息占用的一块内存称为一个<strong>「控制块」。</strong></p>
+<p><strong>「控制块」</strong>和缓存页是一一对应的，它们都被存放到 Buffer Pool 中，其中控制块被存放到 Buffer Pool 的前边，缓存页被存放到 Buffer Pool 的后边。</p>
+<p>Buffer Pool 对应的内存空间示意图：</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/RM9eAwLoEFB4BTrdRkl9xicYTic9LbId0Uq7lPibDTEeZnDGC2LibZrb14MDXlMGZ2zVtfwJ6SYvOMm1pypL9kYgXQ/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片"></p>
+<h2 id="缓存池参数设置"><a href="#缓存池参数设置" class="headerlink" title="缓存池参数设置"></a>缓存池参数设置</h2><ul>
+<li>innodb_buffer_pool_size：缓存池的大小最多应设置为物理内存的 80%</li>
+<li>innodb_buffer_pool_instance：设置有多少个缓存池，通常建议把缓存池个数设置为 CPU 的个数，多个缓存池可以减少数据库内部的资源竞争，增加数据库并发访问的能力</li>
+<li>innodb_old_blocks_pct：老生代占整个 LRU 的链长比例，默认是 3：7</li>
+<li>innodb_old_blocks_time：老生代停留时间窗口，单位是毫秒，默认是 1000，即同时满足“被访问”与“在老生代停留时间超过 1 秒”两个条件，才会被插入到新生代头部</li>
+</ul>
+<h2 id="缓存池管理"><a href="#缓存池管理" class="headerlink" title="缓存池管理"></a>缓存池管理</h2><p><strong>「管理缓存池依赖的链表结构」：</strong></p>
+<h3 id="Free-链表"><a href="#Free-链表" class="headerlink" title="Free 链表"></a>Free 链表</h3><p>当启动 Mysql 服务器的时候，需要完成对 Buffer Pool 的初始化过程，即分配 Buffer Pool 的内存空间，把它划分为若干对控制块和缓存页，但是此时并没有真正的磁盘页被缓存到 Buffer Pool 中，之后随着程序的运行，会不断的有磁盘上的页被缓存到 Buffer Pool 中。</p>
+<p>在使用过程中，为了记录哪些缓存页是可用的，我们把所有空闲的页包装成一个节点组成一个链表，这个链表可以称作为 Free 链表（空闲链表）。因为刚刚完成初始化的 Buffer Pool 中所有的缓存页都是空闲的，所以每一个缓存页都会被加入到 Free 链表中。</p>
+<p>为了方便管理 Free 链表，特意为这个链表定义了一些<strong>「控制信息」</strong>，里面包含链表的头节点地址，尾节点地址，以及当前链表中节点的数量等信息。</p>
+<p>另外会在每个 Free 链表的节点中都记录了某个<strong>「缓存页控制块」</strong>的地址，而每个<strong>「缓存页控制块」</strong>都记录着对应的<strong>「缓存页地址」</strong>，所以相当于每个 Free 链表节点都对应一个空闲的缓存页。</p>
+<p>给大家画了个结构图：</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/RM9eAwLoEFB4BTrdRkl9xicYTic9LbId0UZH5zZQvdLAa3IhDasmjUE7AfDibmEWtR6aH0fjw1XFCtPLyafdjhTzg/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片"></p>
+<p>这图怎么样，这下能看的懂了吧！</p>
+<h3 id="2、Lru-链表"><a href="#2、Lru-链表" class="headerlink" title="2、Lru 链表"></a>2、Lru 链表</h3><p>Lru 链表用来管理已经读取的页，当数据库刚启动时，Lru 链表是空的，此时页也都放在 Free 列表中，当需要读取数据时，会从 Free 链表中申请一个页，把从放入到磁盘读取的数据放入到申请的页中，这个页的集合叫做 Lru 链表。</p>
+<h3 id="3、Flush-链表"><a href="#3、Flush-链表" class="headerlink" title="3、Flush 链表"></a>3、Flush 链表</h3><p>Flush 链表用来管理被修改的页，Buffer Pool 中被修改的页也被称之为<strong>「脏页」</strong>，脏页既存在于 Lru 链表中，也存在于 Flush 链表中，Flush 链表中存的是一个指向 Lru 链表中具体数据的指针。</p>
+<p>因此只有 Lru 链表中的页第一次被修改时，对应的指针才会存入到 Flush 中，若之后再修改这个页，则是直接更新 Lru 链表中的页对应的数据。</p>
+<p>这三者之间是这么个关系：</p>
+<p><img src="https://mmbiz.qpic.cn/mmbiz_png/RM9eAwLoEFB4BTrdRkl9xicYTic9LbId0UYZKoGqCJ4KGib4uJV2r9G25CnTwLTPic3SGYcJmM5QFJiapOuRshaRP3Q/640?wx_fmt=png&tp=webp&wxfrom=5&wx_lazy=1&wx_co=1" alt="图片"></p>
+<h2 id="读操作"><a href="#读操作" class="headerlink" title="读操作"></a>读操作</h2><p>Buffer Pool 一个最主要的功能是<strong>「加速读」</strong>。加速读是当需要访问一个数据页面的时候，如果这个页面已经在缓存池中，那么就不再需要访问磁盘，直接从缓冲池中就能获取这个页面的内容。当我们需要访问某个页中的数据时，就会把该页加载到 Buffer Pool 中，如果该页已经在 Buffer Pool 中的话直接使用就可以了。</p>
+<p><strong>问题：那么如何快速查找在 Buffer Pool 中的页呢？</strong></p>
+<p>为了避免查询数据页时扫描 Lru，其实是根据表空间号 + 页号来定位一个页的，也就相当于表空间号 + 页号是一个 key，缓存页就是对应的 value。用表空间号 + 页号作为 key，缓存页作为 value 创建一个哈希表，在需要访问某个页的数据时，先从哈希表中根据表空间号 + 页号看看有没有对应的缓存页。</p>
+<p>如果有，直接使用该缓存页就好。</p>
+<p>如果没有，那就从 Free 链表中选一个空闲的缓存页，然后把磁盘中对应的页加载到该缓存页的位置。每当需要从磁盘中加载一个页到 Buffer Pool 中时，就从 Free 链表中取一个空闲的缓存页，并且把该缓存页对应的控制块的信息填上，然后把该缓存页对应的 Free 链表节点从链表中移除，表示该缓存页已经被使用了，并且把该页写入 Lru 链表。</p>
+<p>在初始化的时候，Buffer pool 中所有的页都是空闲页，需要读数据时，就会从 Free 链表中申请页，但是物理内存不可能无限增大，数据库的数据却是在不停增大的，所以 Free 链表的页是会用完的。</p>
+<p>因此需要考虑把已经缓存的页从 Buffer pool 中删除一部分，进而需要考虑如何删除及删除哪些已经缓存的页。假设一共访问了 n 次页，那么被访问的页在缓存中的次数除以 n 就是缓存命中率，缓存命中率越高，和磁盘的 IO 交互也就越少 。</p>
+<p>为了提高缓存命中率，InnoDB 在传统 Lru 算法的基础上做了优化，解决了两个问题：1、预读失效 2、缓存池污染</p>
+<h2 id="写操作"><a href="#写操作" class="headerlink" title="写操作"></a>写操作</h2><p>Buffer pool 另一个主要的功能是<strong>「加速写」</strong>，即当需要修改一个页面的时候，先将这个页面在缓冲池中进行修改，记下相关的重做日志，这个页面的修改就算已经完成了。</p>
+<p>被修改的页面真正刷新到磁盘，这个是后台刷新线程来完成的。前面页面更新是在缓存池中先进行的，那它就和磁盘上的页不一致了，这样的缓存页被称为脏页（dirty page）。</p>
+<p><strong>问题：这些被修改的页面什么时候刷新到磁盘？以什么样的顺序刷新到磁盘？</strong></p>
+<p>最简单的做法就是每发生一次修改就立即同步到磁盘上对应的页上，但是频繁的往磁盘中写数据会严重的影响程序的性能。所以每次修改缓存页后，不能立即把修改同步到磁盘上，而是在未来的某个时间点进行同步，由后台刷新线程依次刷新到磁盘，实现修改落地到磁盘。</p>
+<p>但是如果不立即同步到磁盘的话，那之后再同步的时候如何判断 Buffer Pool 中哪些页是脏页，哪些页从来没被修改过呢？</p>
+<p>InnoDB 并没有一次性把所有的缓存页都同步到磁盘上，InnoDB 创建一个存储脏页的链表，凡是在 Lru 链表中被修改过的页都需要加入这个链表中，因为这个链表中的页都是需要被刷新到磁盘上的，所以这个链表也叫 Flush 链表，链表的构造和 Free 链表一致。</p>
+<p>这里的脏页修改指的此页被加载进 Buffer Pool 后第一次被修改，只有第一次被修改时才需要加入 Flush 链表，对于已经存在在 Flush 链表中的页，如果这个页被再次修改就不会再放到 Flush 链表。</p>
+<p>需要注意，脏页数据实际还在 Lru 链表中，而 Flush 链表中的脏页记录只是通过指针指向 Lru 链表中的脏页。并且在 Flush 链表中的脏页是根据 oldest_lsn（这个值表示这个页第一次被更改时的 lsn 号，对应值 oldest_modification，每个页头部记录）进行排序刷新到磁盘的，值越小表示要最先被刷新，避免数据不一致。</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/suifeng629/article/details/93649148">预读失效和缓冲池污染</a> </p>
+<p>BufferPool是引擎级别的缓存</p>
+<p><a target="_blank" rel="noopener" href="https://www.cnblogs.com/michael9/p/14135436.html">RC隔离级别，半一致性读，提高并发读</a><br><a target="_blank" rel="noopener" href="https://www.cnblogs.com/michael9/p/14135436.html">互联网项目中使用RC隔离级别</a><br>    <em>在RR隔离级别下，存在间隙锁，导致出现死锁的几率比RC大的多！</em><br>    <em>在RR隔离级别下，条件列未命中索引会锁表！而在RC隔离级别下，只锁行</em><br>    <em>在RC隔离级别下，半一致性读(semi-consistent)特性增加了update、delete操作的并发性！</em></p>
+<p><em>在RC级别下，不可重复读问题需要解决么？</em></p>
+<p>不用解决，这个问题是可以接受的！毕竟你数据都已经提交了，读出来本身就没有太大问题！Oracle的默认隔离级别就是RC，你们改过Oracle的默认隔离级别么？</p>
+<p><em>在RC级别下，主从复制用什么binlog格式？</em><br>OK,在该隔离级别下，用的binlog为row格式，是基于行的复制！Innodb的创始人也是建议binlog使用该格式！</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/SnailMann/article/details/94724197">RC、RR下MVCC</a></p>
+<p>ibd文件结构由segment inode、extent和page组成。page是InnoDB管理存储空间的基本单位，一个页的大小一般是16KB。</p>
+<p>MyISAM -&gt;.frm(描述表结构文件，字段长度等)、.MYD(数据信息文件，存储数据信息)、.MYI(索引信息文件)</p>
+<p>Innodb -&gt;.frm(描述表结构文件，字段长度等) 、.idb(存储数据信息和索引信息)</p>
+<p>Innodb的idb文件组成：由segment inode、extent和page组成。page是InnoDB管理存储空间的基本单位，一个页的大小一般是16KB。</p>
+<p>page组成：page header（page number、prev page、next page） 、页尾 、行记录（Infimun+Supremum  user record）</p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_38629422/article/details/105813338?spm=1001.2014.3001.5501">redo日志的刷盘策略</a><br><a target="_blank" rel="noopener" href="https://www.jianshu.com/p/2b7fdad5fc0c">binlog/redolog/undolog详解</a></p>
+<p>mysql发生崩溃恢复的过程中，会根据redo log日志，结合 binlog 记录来做事务回滚：</p>
+<p>1、如果redo log 和 binlog都存在，逻辑上一致，那么提交事务；</p>
+<p>2、如果redo log存在而binlog不存在，逻辑上不一致，那么回滚事务；</p>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/mysql/" rel="tag"># mysql</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2021/02/26/mysql%E9%A1%B5%E7%9A%84%E6%A6%82%E5%BF%B5/" rel="prev" title="mysql页的概念">
+                  <i class="fa fa-chevron-left"></i> mysql页的概念
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2021/02/26/%E6%80%BB%E7%BB%93/" rel="next" title="总结">
+                  总结 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+
+      
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      const activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      const commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      
+
+      
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">灰(｢･ω･)｢嘿灰</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="//cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
